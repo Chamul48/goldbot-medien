@@ -3,30 +3,35 @@ Gold-Agent Videos und Reels
 
 ## Shopify Agent
 
-A terminal agent that runs your Shopify store through Claude (Claude API with
-tool use, Shopify Admin GraphQL API).
+Ein Terminal-Agent, der deinen Shopify-Shop über Claude steuert (Claude API mit
+Tool-Nutzung, Shopify Admin GraphQL API).
 
-**What it can do**
-- Show shop info, search products, show product details
-- Change title, description, tags and status (`ACTIVE`/`DRAFT`/`ARCHIVED`)
-- Change variant prices
-- List recent orders
-- Upload videos and images from `social/` to Shopify Files and attach them to a product
-- Run any GraphQL query (mutations only with approval)
+**Was er kann**
+- Shop-Infos anzeigen, Produkte suchen, Produktdetails anzeigen
+- Titel, Beschreibung, Tags und Status (`ACTIVE`/`DRAFT`/`ARCHIVED`) ändern
+- Variantenpreise ändern
+- Neueste Bestellungen auflisten
+- Videos und Bilder aus `social/` zu Shopify Files hochladen und an ein Produkt hängen
+- Beliebige GraphQL-Abfragen ausführen (Änderungen nur mit Freigabe)
 
-Every change to the store is shown first and needs approval with `y`
-(`--yes` turns this off).
+Jede Änderung am Shop wird vorher angezeigt und muss mit `j` bestätigt werden
+(`--yes` schaltet das ab).
 
-**Setup**
-1. In Shopify: *Settings → Apps → Develop apps* → create an app, grant the Admin API scopes
-   `read_products, write_products, read_orders, write_files, read_files`, install it and
-   copy the Admin API access token (`shpat_...`).
+**Einrichtung**
+1. In Shopify: *Einstellungen → Apps → Apps entwickeln* → App erstellen, Admin-API-Berechtigungen
+   `read_products, write_products, read_orders, read_files, write_files` vergeben, installieren und
+   den Admin-API-Zugriffstoken (`shpat_...`) kopieren.
 2. `pip install -r requirements.txt`
-3. Copy `.env.example`, fill in the values and export them (e.g. `set -a; . ./.env; set +a`).
+3. `.env.example` nach `.env` kopieren, Werte eintragen und laden: `set -a; . ./.env; set +a`
 
-**Run**
+**Starten**
 ```bash
-python -m shopify_agent                       # interactive chat
-python -m shopify_agent "Which products are still drafts?"
-python -m shopify_agent --media-dir social "Upload the newest reel and attach it to the gold bar product"
+python -m shopify_agent                       # interaktiver Chat
+python -m shopify_agent "Welche Produkte sind noch Entwürfe?"
+python -m shopify_agent --media-dir social "Lade das neueste Reel hoch und häng es an den Goldbarren"
+```
+
+**Tests** (ohne Netzwerk, Shopify und Claude werden simuliert)
+```bash
+python -m pytest tests
 ```
