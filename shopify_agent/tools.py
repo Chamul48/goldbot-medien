@@ -271,7 +271,7 @@ class Toolbox:
             return []
         return [
             {
-                "path": (rel := str(p.relative_to(self.media_dir))),
+                "path": (rel := p.relative_to(self.media_dir).as_posix()),
                 "bytes": p.stat().st_size,
                 "already_uploaded": rel in self.state["uploaded"],
             }
@@ -342,6 +342,7 @@ class Toolbox:
         full = (self.media_dir / path).resolve()
         if not full.is_relative_to(self.media_dir) or not full.is_file():
             raise ValueError(f"{path} is not a file inside {self.media_dir}")
+        path = full.relative_to(self.media_dir).as_posix()
         done = self.state["uploaded"].get(path)
         if done:
             raise ValueError(f"{path} was already uploaded as {done['file_id']} on {done['date']}.")
