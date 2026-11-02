@@ -37,14 +37,39 @@ python -m shopify_agent "Welche Produkte sind noch Entwürfe?"
 python -m shopify_agent --media-dir social "Lade das neueste Reel hoch und häng es an den Goldbarren"
 ```
 
+## Shop-Kontrolle, Sicherung und Rückgängig
+
+```bash
+python -m shopify_agent --audit                     # nur lesen: Sicherung + Bericht, ändert nichts
+python -m shopify_agent --restore autopilot/backup-2026-11-02.json   # Texte zurücksetzen
+```
+
+`--audit` liest den ganzen Shop (Produkte mit Texten, Bildern, Alt-Texten, SEO,
+Preisen und Bestand; Kollektionen; Seiten; Rechtstexte; Theme; letzte
+Bestellungen) und schreibt
+
+- `autopilot/backup-<datum>.json` – die Originalwerte aller Texte, SEO-Felder,
+  Alt-Texte und Kollektionsbeschreibungen (eine Sicherung pro Lauf, nie überschrieben),
+- `autopilot/audit-<datum>.md` – was für ein hochwertiges Einkaufserlebnis fehlt,
+  nach Wichtigkeit sortiert und getrennt nach „entscheidest du“ und „kann der
+  Agent sicher allein“.
+
+`--restore` schreibt aus einer Sicherung nur Inhalte zurück (Titel, Beschreibung,
+Produktart, Tags, SEO, Alt-Texte, Kollektionstexte) – nie Preise oder Status – und
+fragt pro Produkt nach.
+
 ## Autopilot – der Shop läuft allein
 
 `python -m shopify_agent --autopilot` macht einen Durchlauf ohne dich:
+
+Jeder Lauf macht zuerst die Kontrolle mit Sicherung (siehe oben). Kann der Shop
+nicht vollständig gelesen werden, ändert er keine Texte.
 
 | Darf der Bot allein | Gibt er immer an dich ab |
 |---|---|
 | Neue Reels/Bilder aus `social/` hochladen und ans passende Produkt hängen | Preise ändern |
 | Fehlende Produktbeschreibungen und Tags schreiben (max. 10 pro Lauf, keine erfundenen Fakten) | Produkte veröffentlichen, archivieren, löschen |
+| SEO-Titel/-Beschreibungen, Alt-Texte, Kollektionstexte; neue Kollektionen (unveröffentlicht) | Rechtstexte (Impressum, AGB, Widerruf, Datenschutz), Theme |
 | Bestellungen prüfen | Bestellungen ändern, Kundenprobleme, Unklares |
 
 Jeder Lauf schreibt einen Bericht nach `autopilot/reports/<datum>.md`. Schon
@@ -52,7 +77,8 @@ hochgeladene Dateien merkt er sich in `autopilot/state.json`.
 
 **Automatisch jeden Tag (GitHub Actions):** `.github/workflows/autopilot.yml`
 läuft täglich um 06:17 UTC, sofort nach jedem neuen Upload in `social/` auf
-`main`, und auf Knopfdruck (*Actions → Shopify Autopilot → Run workflow*).
+`main`, und auf Knopfdruck (*Actions → Shopify Autopilot → Run workflow*; dort mit
+`mode: audit` nur Kontrolle und Sicherung, ohne Änderungen und ohne Claude-Kosten).
 Braucht der Shop dich, öffnet er ein GitHub-Issue „Shop braucht dich“ – GitHub
 schickt dir dazu eine E-Mail. Schlägt ein Lauf fehl, gibt es ebenfalls ein Issue.
 

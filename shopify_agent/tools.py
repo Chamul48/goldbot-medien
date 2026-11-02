@@ -56,8 +56,9 @@ TOOLS: list[dict[str, Any]] = [
     {
         "name": "update_product",
         "description": (
-            "Update a product's title, description (HTML), tags, or status. Pass null for "
-            "fields to leave unchanged. Tags replace the existing tag list. Requires approval."
+            "Update a product's title, description (HTML), tags, product type, SEO title/description "
+            "or status. Pass null for fields to leave unchanged. Tags replace the existing tag list. "
+            "SEO title max 70 characters, SEO description max 160. Requires approval."
         ),
         "input_schema": _schema(
             {
@@ -66,6 +67,9 @@ TOOLS: list[dict[str, Any]] = [
                 "description_html": {"type": ["string", "null"]},
                 "tags": {"type": ["array", "null"], "items": {"type": "string"}},
                 "status": {"type": ["string", "null"], "enum": ["ACTIVE", "DRAFT", "ARCHIVED", None]},
+                "product_type": {"type": ["string", "null"]},
+                "seo_title": {"type": ["string", "null"]},
+                "seo_description": {"type": ["string", "null"]},
             }
         ),
     },
@@ -118,6 +122,56 @@ TOOLS: list[dict[str, Any]] = [
         ),
     },
     {
+        "name": "set_media_alt",
+        "description": (
+            "Set the alt text of product images/videos (media ids from get_product). Describe what "
+            "is visible, in German, max ~125 characters. Requires approval."
+        ),
+        "input_schema": _schema(
+            {
+                "items": {
+                    "type": "array",
+                    "items": _schema({"media_id": {"type": "string"}, "alt": {"type": "string"}}),
+                }
+            }
+        ),
+    },
+    {
+        "name": "list_collections",
+        "description": "All collections with description, SEO, image and product count.",
+        "input_schema": _schema({}),
+    },
+    {
+        "name": "update_collection",
+        "description": (
+            "Update a collection's description (HTML) and/or SEO title/description. Pass null to "
+            "leave a field unchanged. Requires approval."
+        ),
+        "input_schema": _schema(
+            {
+                "collection_id": {"type": "string"},
+                "description_html": {"type": ["string", "null"]},
+                "seo_title": {"type": ["string", "null"]},
+                "seo_description": {"type": ["string", "null"]},
+            }
+        ),
+    },
+    {
+        "name": "create_collection",
+        "description": (
+            "Create a new collection as a smart collection from tag/type rules, or a manual one with "
+            "product ids. It is created unpublished; the owner decides about publishing. Requires approval."
+        ),
+        "input_schema": _schema(
+            {
+                "title": {"type": "string"},
+                "description_html": {"type": "string"},
+                "product_ids": {"type": ["array", "null"], "items": {"type": "string"}},
+                "tag_rule": {"type": ["string", "null"], "description": "Products with this tag (smart collection)."},
+            }
+        ),
+    },
+    {
         "name": "graphql",
         "description": (
             "Run any Shopify Admin GraphQL query for data the other tools do not cover. "
@@ -153,6 +207,19 @@ MEDIA_EXTS = {".mp4", ".mov", ".webm", ".jpg", ".jpeg", ".png", ".webp", ".gif"}
 
 def _edges(conn: dict[str, Any]) -> list[dict[str, Any]]:
     return [e["node"] for e in conn["edges"]]
+
+
+def _seo(title: str | None, description: str | None) -> dict[str, str]:
+    seo = {}
+    if title is not None:
+        if len(title) > 70:
+            raise ValueError(f"SEO title is {len(title)} characters; keep it at 70 or fewer.")
+        seo["title"] = title
+    if description is not None:
+        if len(description) > 160:
+            raise ValueError(f"SEO description is {len(description)} characters; keep it at 160 or fewer.")
+        seo["description"] = description
+    return seo
 
 
 def _clamp(n: int | None, lo: int = 1, hi: int = 50, default: int = 10) -> int:
@@ -199,6 +266,17 @@ class Toolbox:
                 "Not approved. In chat: ask the owner what they want instead. "
                 "In autopilot: this was recorded for the owner; do not retry it another way."
             )
+
+    def _full_seo(self, kind: str, gid: str, title: str | None, description: str | None) -> dict[str, str]:
+        """SEO input with both fields, so changing one never blanks the other."""
+        seo = _seo(title, description)
+        if len(seo) == 1:
+            cur = self.shop.graphql(
+                f"query($id: ID!) {{ {kind}(id: $id) {{ seo {{ title description }} }} }}", {"id": gid}
+            )[kind]
+            current = (cur or {}).get("seo") or {}
+            seo = {"title": current.get("title") or "", "description": current.get("description") or "", **seo}
+        return seo
 
     # ---- read tools ------------------------------------------------------
 
@@ -288,14 +366,21 @@ class Toolbox:
         description_html: str | None,
         tags: list[str] | None,
         status: str | None,
+        product_type: str | None = None,
+        seo_title: str | None = None,
+        seo_description: str | None = None,
     ) -> Any:
-        fields = {
+        fields: dict[str, Any] = {
             "title": title,
             "descriptionHtml": description_html,
             "tags": tags,
             "status": status,
+            "productType": product_type,
         }
         fields = {k: v for k, v in fields.items() if v is not None}
+        seo = self._full_seo("product", product_id, seo_title, seo_description)
+        if seo:
+            fields["seo"] = seo
         if not fields:
             raise ValueError("Nothing to update.")
         kind = "status" if status is not None else "content"
@@ -388,6 +473,101 @@ class Toolbox:
         self._save_state()
         file["note"] = "Videos are processed asynchronously; fileStatus may show UPLOADED/PROCESSING first."
         return file
+
+    def t_set_media_alt(self, items: list[dict[str, str]]) -> Any:
+        if not items:
+            raise ValueError("No media given.")
+        for it in items:
+            if not it["alt"].strip():
+                raise ValueError(f"Empty alt text for {it['media_id']}.")
+            if len(it["alt"]) > 512:
+                raise ValueError(f"Alt text for {it['media_id']} is too long (max 512).")
+        lines = "\n".join(f"- {it['media_id']}: {it['alt']}" for it in items)
+        self._approve("content", f"Set alt texts:\n{lines}")
+        data = self.shop.graphql(
+            """
+            mutation($files: [FileUpdateInput!]!) {
+              fileUpdate(files: $files) {
+                files { id alt }
+                userErrors { field message }
+              }
+            }
+            """,
+            {"files": [{"id": it["media_id"], "alt": it["alt"].strip()} for it in items]},
+        )["fileUpdate"]
+        if data["userErrors"]:
+            raise ShopifyError(str(data["userErrors"]))
+        return data["files"]
+
+    def t_list_collections(self) -> Any:
+        from .audit import snapshot_collections
+
+        return snapshot_collections(self.shop)
+
+    def t_update_collection(
+        self,
+        collection_id: str,
+        description_html: str | None,
+        seo_title: str | None,
+        seo_description: str | None,
+    ) -> Any:
+        fields: dict[str, Any] = {}
+        if description_html is not None:
+            fields["descriptionHtml"] = description_html
+        seo = self._full_seo("collection", collection_id, seo_title, seo_description)
+        if seo:
+            fields["seo"] = seo
+        if not fields:
+            raise ValueError("Nothing to update.")
+        self._approve("content", f"Update collection {collection_id}:\n{json.dumps(fields, ensure_ascii=False, indent=1)}")
+        data = self.shop.graphql(
+            """
+            mutation($input: CollectionInput!) {
+              collectionUpdate(input: $input) {
+                collection { id title }
+                userErrors { field message }
+              }
+            }
+            """,
+            {"input": {"id": collection_id, **fields}},
+        )["collectionUpdate"]
+        if data["userErrors"]:
+            raise ShopifyError(str(data["userErrors"]))
+        return data["collection"]
+
+    def t_create_collection(
+        self,
+        title: str,
+        description_html: str,
+        product_ids: list[str] | None,
+        tag_rule: str | None,
+    ) -> Any:
+        if bool(product_ids) == bool(tag_rule):
+            raise ValueError("Give either product_ids (manual) or tag_rule (smart), not both or neither.")
+        col: dict[str, Any] = {"title": title, "descriptionHtml": description_html}
+        if tag_rule:
+            col["ruleSet"] = {
+                "appliedDisjunctively": False,
+                "rules": [{"column": "TAG", "relation": "EQUALS", "condition": tag_rule}],
+            }
+        else:
+            col["products"] = product_ids
+        what = f"tag = {tag_rule}" if tag_rule else f"{len(product_ids or [])} products"
+        self._approve("content", f"Create unpublished collection '{title}' ({what})")
+        data = self.shop.graphql(
+            """
+            mutation($input: CollectionInput!) {
+              collectionCreate(input: $input) {
+                collection { id title handle }
+                userErrors { field message }
+              }
+            }
+            """,
+            {"input": col},
+        )["collectionCreate"]
+        if data["userErrors"]:
+            raise ShopifyError(str(data["userErrors"]))
+        return data["collection"]
 
     def t_escalate(self, topic: str, details: str) -> Any:
         self.escalations.append({"topic": topic, "details": details})

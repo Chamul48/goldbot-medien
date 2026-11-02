@@ -6,7 +6,13 @@ on:
   push:
     branches: [main]
     paths: ["social/**"]   # new reel pushed -> run right away
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "autopilot = Shop pflegen, audit = nur lesen, sichern und Bericht schreiben"
+        type: choice
+        options: [autopilot, audit]
+        default: autopilot
 
 permissions:
   contents: write
@@ -33,7 +39,12 @@ jobs:
           SHOPIFY_ACCESS_TOKEN: ${{ secrets.SHOPIFY_ACCESS_TOKEN }}
           SHOPIFY_CLIENT_ID: ${{ secrets.SHOPIFY_CLIENT_ID }}
           SHOPIFY_CLIENT_SECRET: ${{ secrets.SHOPIFY_CLIENT_SECRET }}
-        run: python -m shopify_agent --autopilot --media-dir social --out-dir autopilot
+        run: |
+          if [ "${{ inputs.mode }}" = "audit" ]; then
+            python -m shopify_agent --audit --out-dir autopilot
+          else
+            python -m shopify_agent --autopilot --media-dir social --out-dir autopilot
+          fi
 
       - name: Save report and state
         if: always()
@@ -45,7 +56,7 @@ jobs:
           git pull --rebase && git push
 
       - name: Notify owner when needed
-        if: always()
+        if: always() && inputs.mode != 'audit'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |

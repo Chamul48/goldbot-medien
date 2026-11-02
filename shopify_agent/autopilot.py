@@ -1,6 +1,9 @@
 """Autopilot: one unattended run that looks after the store.
 
-Safe changes (texts, tags, media uploads) are made directly. Anything risky
+Before anything changes, the run reads the whole shop and stores the original
+values in autopilot/backup-<date>.json (see audit.py), so every text, SEO and
+alt-text change can be undone with `--restore`. Safe changes (texts, tags, SEO,
+alt texts, collections, media uploads) are made directly. Anything risky
 (prices, status changes, raw mutations) is never executed; it becomes an
 escalation in the report so the owner decides. The run writes
 autopilot/reports/<date>.md and, if the owner is needed, autopilot/ESCALATIONS.md.
@@ -13,12 +16,14 @@ import json
 import sys
 from pathlib import Path
 
+from . import audit
 from .agent import ShopifyAgent
 from .shopify import ShopifyClient, ShopifyError
 from .tools import Toolbox
 
 ALLOWED_ALONE = {"content", "media"}
 MAX_CONTENT_EDITS = 10
+MAX_FINDINGS_IN_TASK = 40
 
 AUTOPILOT_TASK = f"""\
 Autopilot run, {{date}}. The owner is not watching; work on your own and \
@@ -35,17 +40,27 @@ did not see in the data) and sensible tags. If facts are missing, escalate \
 instead of guessing.
 3. Orders: list recent orders. Do not change orders. Escalate paid orders \
 that are still unfulfilled after 2 days, and anything unusual.
-4. Prices, status changes (publish/archive) and deletions are never yours to \
-decide: escalate them with your recommendation.
+4. Polish (only items from the audit list below, at most {MAX_CONTENT_EDITS} \
+products per run, highest priority first): missing SEO titles/descriptions \
+(update_product, update_collection), alt texts that describe what is visible \
+(set_media_alt), collection descriptions (update_collection). If there are no collections at all, \
+propose at most 3 smart collections by tag with create_collection (they stay \
+unpublished). Read each product with get_product before you write.
+5. Prices, status changes (publish/archive), legal texts (Impressum, AGB, \
+Widerruf, Datenschutz), theme changes and deletions are never yours to decide: \
+escalate them with your recommendation.
+
+Audit findings the owner allowed you to fix alone:
+{{findings}}
 
 Finish with a short German report: what you changed, what you escalated, and \
 anything that blocked you.
 """
 
 
-def autopilot_policy(toolbox_ref: list[Toolbox]):
+def autopilot_policy(toolbox_ref: list[Toolbox], allowed: set[str] = ALLOWED_ALONE):
     def confirm(kind: str, summary: str) -> bool:
-        if kind in ALLOWED_ALONE:
+        if kind in allowed:
             return True
         toolbox_ref[0].escalations.append(
             {"topic": f"Needs approval ({kind})", "details": summary}
@@ -64,14 +79,28 @@ def run(media_dir: Path, out_dir: Path) -> int:
         print(exc, file=sys.stderr)
         return 2
 
+    # Back up first; without a complete backup, texts are not touched.
+    report_path, backup_path, found = audit.run_audit(shop, out_dir)
+    snap_errors = [f for f in found if f["area"] == "Technik"]
+    allowed = ALLOWED_ALONE if not snap_errors else {"media"}
+
     ref: list[Toolbox] = []
-    toolbox = Toolbox(shop, media_dir, autopilot_policy(ref), state_file=out_dir / "state.json")
+    toolbox = Toolbox(shop, media_dir, autopilot_policy(ref, allowed), state_file=out_dir / "state.json")
     ref.append(toolbox)
+    if snap_errors:
+        toolbox.escalations.append({
+            "topic": "Shop konnte nicht vollständig gelesen werden",
+            "details": "Ohne vollständige Sicherung ändert der Autopilot keine Texte.\n"
+                       + "\n".join(f["text"] for f in snap_errors),
+        })
     agent = ShopifyAgent(toolbox)
 
-    summary = agent.send(AUTOPILOT_TASK.format(date=date))
+    todo = [f for f in found if f["who"] == "auto"][:MAX_FINDINGS_IN_TASK]
+    todo_text = "\n".join(f"- P{f['prio']} [{f['area']}] {f['text']}" for f in todo) or "- (none)"
+    summary = agent.send(AUTOPILOT_TASK.format(date=date, findings=todo_text))
 
-    report = [f"# Autopilot {date}", "", summary or "(no summary)", ""]
+    report = [f"# Autopilot {date}", "", summary or "(no summary)", "",
+              f"Sicherung: `{backup_path.as_posix()}` · Kontrolle: `{report_path.as_posix()}`", ""]
     if toolbox.escalations:
         report += ["## Needs you", ""]
         for e in toolbox.escalations:

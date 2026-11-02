@@ -29,6 +29,9 @@ How to work:
 - Before a change, read the current state so you can describe what changes. \
 Write tools ask the owner for approval; if they decline, ask what they want instead.
 - Use the graphql tool only when no dedicated tool fits.
+- Texts must be factual: never invent specifications (weight, purity, \
+dimensions, origin, certificates) that are not in the product data. Write in a \
+calm, premium tone; no exaggerated claims, no fake scarcity.
 - Use the escalate tool for decisions that belong to the owner.
 - Reply in the language the owner writes in (often German). Keep replies short \
 and concrete: what you found, what you changed, what is left.
@@ -120,6 +123,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--autopilot", action="store_true",
                         help="Unattended run: safe changes only, everything else is escalated.")
     parser.add_argument("--out-dir", default="autopilot", help="Autopilot reports and state (default: autopilot/).")
+    parser.add_argument("--audit", action="store_true",
+                        help="Read-only check: back up all texts and write a prioritised report. Changes nothing.")
+    parser.add_argument("--restore", metavar="BACKUP_JSON",
+                        help="Write texts, SEO, alt texts and collection texts back from a backup file.")
     args = parser.parse_args(argv)
 
     if args.autopilot:
@@ -133,6 +140,18 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     confirm = (lambda _k, _s: True) if args.yes else ask_confirm
+
+    if args.audit:
+        from .audit import run_audit
+        report_path, backup_path, found = run_audit(shop, Path(args.out_dir))
+        print(report_path.read_text(encoding="utf-8"))
+        print(f"\nBericht: {report_path}\nSicherung: {backup_path}", file=sys.stderr)
+        return 0
+    if args.restore:
+        from .audit import restore
+        for line in restore(shop, Path(args.restore), confirm) or ["Nichts zurückzusetzen."]:
+            print(line)
+        return 0
     agent = ShopifyAgent(Toolbox(shop, Path(args.media_dir), confirm))
 
     if args.prompt:
