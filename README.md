@@ -19,7 +19,7 @@ Jede Änderung am Shop wird vorher angezeigt und muss mit `j` bestätigt werden
 
 **Einrichtung**
 1. In Shopify: *Einstellungen → Apps → Apps entwickeln* → App erstellen, Admin-API-Berechtigungen
-   `read_products, write_products, read_orders, read_files, write_files` vergeben, installieren und
+   `read_products, write_products, read_orders, read_files, write_files, read_themes, write_themes, read_content, write_content` vergeben, installieren und
    den Admin-API-Zugriffstoken (`shpat_...`) kopieren.
 2. `pip install -r requirements.txt`
 3. `.env.example` nach `.env` kopieren, Werte eintragen und laden: `set -a; . ./.env; set +a`
