@@ -188,3 +188,77 @@ def test_dotenv_does_not_override_existing(tmp_path, monkeypatch):
     assert os.environ["GB_TEST_A"] == "schon da"
     assert os.environ["GB_TEST_B"] == "zwei"
     monkeypatch.delenv("GB_TEST_B")
+
+
+def test_mutation_anywhere_needs_approval(tmp_path):
+    _, tb, approvals = make(tmp_path)
+    tb.run("graphql", {"query": "{ shop { name } }, mutation { productDelete(input: {id: \"x\"}) { deletedProductId } }",
+                       "variables_json": "{}"})
+    assert len(approvals) == 1
+
+
+class UploadShop:
+    def __init__(self, statuses, attach_errors=None):
+        self.statuses = list(statuses)
+        self.attach_errors = attach_errors or []
+        self.calls = []
+
+    def staged_upload(self, path):
+        return "https://staged/x", "VIDEO"
+
+    def graphql(self, query, variables=None):
+        self.calls.append(query)
+        if "fileCreate" in query:
+            return {"fileCreate": {"files": [{"id": "gid://shopify/Video/7", "fileStatus": "UPLOADED", "alt": "a"}],
+                                   "userErrors": []}}
+        if "node(id" in query:
+            return {"node": {"fileStatus": self.statuses.pop(0) if self.statuses else "PROCESSING"}}
+        if "fileUpdate" in query:
+            return {"fileUpdate": {"files": [{"id": "gid://shopify/Video/7"}], "userErrors": self.attach_errors}}
+        raise AssertionError(query)
+
+
+def upload_tb(tmp_path, shop):
+    (tmp_path / "v.mp4").write_bytes(b"1")
+    tb = Toolbox(shop, tmp_path, lambda k, s: True, state_file=tmp_path / "state.json")
+    tb.sleep = lambda s: None
+    tb.ready_polls = 3
+    return tb
+
+
+def test_upload_attaches_only_when_ready(tmp_path):
+    shop = UploadShop(["PROCESSING", "READY"])
+    tb = upload_tb(tmp_path, shop)
+    out, err = tb.run("upload_media", {"path": "v.mp4", "alt": "a", "product_id": "gid://shopify/Product/1"})
+    assert not err and '"attachedTo": "gid://shopify/Product/1"' in out
+    assert [q for q in shop.calls if "fileUpdate" in q]
+    entry = tb.state["uploaded"]["v.mp4"]
+    assert entry["product_id"] == "gid://shopify/Product/1" and not entry["attach_pending"]
+
+
+def test_upload_still_processing_is_saved_and_attached_later(tmp_path):
+    import json
+
+    shop = UploadShop(["PROCESSING"] * 3)
+    tb = upload_tb(tmp_path, shop)
+    out, err = tb.run("upload_media", {"path": "v.mp4", "alt": "a", "product_id": "gid://shopify/Product/1"})
+    assert not err and "Still processing" in out
+    assert not [q for q in shop.calls if "fileUpdate" in q]
+    saved = json.loads((tmp_path / "state.json").read_text())["uploaded"]["v.mp4"]
+    assert saved["attach_pending"] is True
+    # next call: no second upload, only the attach
+    shop.statuses = ["READY"]
+    out, err = tb.run("upload_media", {"path": "v.mp4", "alt": "a", "product_id": "gid://shopify/Product/1"})
+    assert not err and sum("fileCreate" in q for q in shop.calls) == 1
+    assert '"attachedTo": "gid://shopify/Product/1"' in out
+
+
+def test_failed_attach_does_not_cause_second_upload(tmp_path):
+    shop = UploadShop(["READY"], attach_errors=[{"field": "x", "message": "nope"}])
+    tb = upload_tb(tmp_path, shop)
+    out, err = tb.run("upload_media", {"path": "v.mp4", "alt": "a", "product_id": "gid://shopify/Product/1"})
+    assert err and "attaching failed" in out
+    assert "v.mp4" in tb.state["uploaded"]
+    out, err = tb.run("upload_media", {"path": "v.mp4", "alt": "a", "product_id": None})
+    assert err and "already uploaded" in out
+    assert sum("fileCreate" in q for q in shop.calls) == 1

@@ -11,6 +11,7 @@ from __future__ import annotations
 import datetime
 import json
 import re
+import time
 from pathlib import Path
 from typing import Any, Callable
 
@@ -243,6 +244,9 @@ class Toolbox:
             self.state = json.loads(state_file.read_text())
             self.state.setdefault("uploaded", {})
         self.escalations: list[dict[str, str]] = []
+        self.sleep = time.sleep
+        self.ready_polls = 20
+        self.ready_wait = 3.0
 
     def _save_state(self) -> None:
         if self.state_file:
@@ -331,7 +335,6 @@ class Toolbox:
                 edges { node {
                   id name createdAt displayFinancialStatus displayFulfillmentStatus
                   totalPriceSet { shopMoney { amount currencyCode } }
-                  customer { displayName }
                   lineItems(first: 10) { edges { node { title quantity } } }
                 } }
               }
@@ -352,6 +355,7 @@ class Toolbox:
                 "path": (rel := p.relative_to(self.media_dir).as_posix()),
                 "bytes": p.stat().st_size,
                 "already_uploaded": rel in self.state["uploaded"],
+                "attach_pending": bool(self.state["uploaded"].get(rel, {}).get("attach_pending")),
             }
             for p in sorted(self.media_dir.rglob("*"))
             if p.is_file() and p.suffix.lower() in MEDIA_EXTS
@@ -429,6 +433,8 @@ class Toolbox:
             raise ValueError(f"{path} is not a file inside {self.media_dir}")
         path = full.relative_to(self.media_dir).as_posix()
         done = self.state["uploaded"].get(path)
+        if done and done.get("attach_pending") and product_id:
+            return self._attach_when_ready(path, done["file_id"], product_id)
         if done:
             raise ValueError(f"{path} was already uploaded as {done['file_id']} on {done['date']}.")
         target = f" and attach to {product_id}" if product_id else ""
@@ -449,30 +455,59 @@ class Toolbox:
         if data["userErrors"]:
             raise ShopifyError(str(data["userErrors"]))
         file = data["files"][0]
-
-        if product_id:
-            ref = self.shop.graphql(
-                """
-                mutation($files: [FileUpdateInput!]!) {
-                  fileUpdate(files: $files) {
-                    files { id }
-                    userErrors { field message }
-                  }
-                }
-                """,
-                {"files": [{"id": file["id"], "referencesToAdd": [product_id]}]},
-            )["fileUpdate"]
-            if ref["userErrors"]:
-                raise ShopifyError(f"Uploaded {file['id']} but attaching failed: {ref['userErrors']}")
-            file["attachedTo"] = product_id
+        # Remember the upload immediately, so a later failure can never cause a second upload.
         self.state["uploaded"][path] = {
             "file_id": file["id"],
-            "product_id": product_id,
+            "product_id": None,
+            "attach_pending": bool(product_id),
             "date": datetime.date.today().isoformat(),
         }
         self._save_state()
+        if product_id:
+            return self._attach_when_ready(path, file["id"], product_id)
         file["note"] = "Videos are processed asynchronously; fileStatus may show UPLOADED/PROCESSING first."
         return file
+
+    def _file_status(self, file_id: str) -> str | None:
+        node = self.shop.graphql(
+            "query($id: ID!) { node(id: $id) { ... on File { fileStatus } } }", {"id": file_id}
+        )["node"]
+        return (node or {}).get("fileStatus")
+
+    def _attach_when_ready(self, path: str, file_id: str, product_id: str) -> Any:
+        """Attach only once Shopify has processed the file; otherwise leave it pending."""
+        status = None
+        for i in range(self.ready_polls):
+            status = self._file_status(file_id)
+            if status in ("READY", "FAILED"):
+                break
+            if i + 1 < self.ready_polls:
+                self.sleep(self.ready_wait)
+        entry = self.state["uploaded"][path]
+        if status == "FAILED":
+            entry["attach_pending"] = False
+            entry["failed"] = True
+            self._save_state()
+            raise ShopifyError(f"Shopify could not process {path} ({file_id}); not attached.")
+        if status != "READY":
+            return {"id": file_id, "fileStatus": status, "attachedTo": None,
+                    "note": "Still processing. Call upload_media again with the same path and product later to attach it."}
+        ref = self.shop.graphql(
+            """
+            mutation($files: [FileUpdateInput!]!) {
+              fileUpdate(files: $files) {
+                files { id }
+                userErrors { field message }
+              }
+            }
+            """,
+            {"files": [{"id": file_id, "referencesToAdd": [product_id]}]},
+        )["fileUpdate"]
+        if ref["userErrors"]:
+            raise ShopifyError(f"Uploaded {file_id} but attaching failed: {ref['userErrors']}")
+        entry.update({"product_id": product_id, "attach_pending": False})
+        self._save_state()
+        return {"id": file_id, "fileStatus": status, "attachedTo": product_id}
 
     def t_set_media_alt(self, items: list[dict[str, str]]) -> Any:
         if not items:
@@ -577,6 +612,7 @@ class Toolbox:
         variables = json.loads(variables_json or "{}")
         if not isinstance(variables, dict):
             raise ValueError("variables_json must be a JSON object")
-        if re.search(r"^\s*mutation\b", query, re.IGNORECASE | re.MULTILINE):
+        # Any "mutation" keyword counts, not just at the start ("{ a }, mutation { ... }").
+        if re.search(r"\bmutation\b", query, re.IGNORECASE):
             self._approve("graphql", f"Run GraphQL mutation:\n{query}\nvariables: {variables_json}")
         return self.shop.graphql(query, variables)
