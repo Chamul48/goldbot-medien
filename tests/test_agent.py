@@ -152,3 +152,37 @@ def test_autopilot_run_writes_report_and_escalations(tmp_path, monkeypatch):
     esc = (tmp_path / "out" / "ESCALATIONS.md").read_text()
     assert "Preis prüfen" in esc and "Bericht" in esc
     assert list((tmp_path / "out" / "reports").glob("*.md"))
+
+
+def test_client_credentials_token_is_fetched(monkeypatch):
+    import shopify_agent.shopify as sh
+
+    for k in ("SHOPIFY_ACCESS_TOKEN", "SHOPIFY_STORE"):
+        monkeypatch.delenv(k, raising=False)
+    monkeypatch.setenv("SHOPIFY_CLIENT_ID", "cid")
+    monkeypatch.setenv("SHOPIFY_CLIENT_SECRET", "secret")
+    calls = []
+
+    def fake_post(url, data, timeout):
+        calls.append((url, data))
+        return NS(status_code=200, json=lambda: {"access_token": "tok123", "expires_in": 86399})
+
+    monkeypatch.setattr(sh.requests, "post", fake_post)
+    client = sh.ShopifyClient(store="https://mein-shop.myshopify.com/")
+    assert calls == [("https://mein-shop.myshopify.com/admin/oauth/access_token",
+                      {"grant_type": "client_credentials", "client_id": "cid", "client_secret": "secret"})]
+    assert client.session.headers["X-Shopify-Access-Token"] == "tok123"
+
+
+def test_dotenv_does_not_override_existing(tmp_path, monkeypatch):
+    from shopify_agent.shopify import load_dotenv
+
+    env = tmp_path / ".env"
+    env.write_text('# kommentar\nGB_TEST_A="eins"\nexport GB_TEST_B=zwei\n', encoding="utf-8")
+    monkeypatch.setenv("GB_TEST_A", "schon da")
+    monkeypatch.delenv("GB_TEST_B", raising=False)
+    load_dotenv(env)
+    import os
+    assert os.environ["GB_TEST_A"] == "schon da"
+    assert os.environ["GB_TEST_B"] == "zwei"
+    monkeypatch.delenv("GB_TEST_B")

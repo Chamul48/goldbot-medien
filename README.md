@@ -18,11 +18,17 @@ Jede Änderung am Shop wird vorher angezeigt und muss mit `j` bestätigt werden
 (`--yes` schaltet das ab).
 
 **Einrichtung**
-1. In Shopify: *Einstellungen → Apps → Apps entwickeln* → App erstellen, Admin-API-Berechtigungen
-   `read_products, write_products, read_orders, read_files, write_files, read_themes, write_themes, read_content, write_content` vergeben, installieren und
-   den Admin-API-Zugriffstoken (`shpat_...`) kopieren.
+1. Shopify-Zugang anlegen – eine der beiden Varianten:
+   - **Neue App (seit 2026):** [Dev Dashboard](https://dev.shopify.com/dashboard) → App erstellen →
+     Version mit den Admin-API-Berechtigungen
+     `read_products, write_products, read_orders, read_files, write_files, read_themes, write_themes, read_content, write_content`
+     freigeben → App im eigenen Shop installieren → *Client-ID* und *Secret* in die `.env`
+     (`SHOPIFY_CLIENT_ID`, `SHOPIFY_CLIENT_SECRET`). Der Agent holt sich damit selbst alle 24 h einen Token.
+   - **Alte eigene App (vor 2026 angelegt):** *Einstellungen → Apps → Apps entwickeln* → Admin-API-Token
+     (`shpat_...`) als `SHOPIFY_ACCESS_TOKEN` eintragen.
 2. `pip install -r requirements.txt`
-3. `.env.example` nach `.env` kopieren, Werte eintragen und laden: `set -a; . ./.env; set +a`
+3. `.env.example` nach `.env` kopieren und Werte eintragen. Der Agent liest die `.env` im
+   aktuellen Ordner selbst ein (auch unter Windows).
 
 **Starten**
 ```bash
@@ -51,7 +57,7 @@ Braucht der Shop dich, öffnet er ein GitHub-Issue „Shop braucht dich“ – G
 schickt dir dazu eine E-Mail. Schlägt ein Lauf fehl, gibt es ebenfalls ein Issue.
 
 Einmalig einrichten: *Repo → Settings → Secrets and variables → Actions* und
-drei Secrets anlegen: `ANTHROPIC_API_KEY`, `SHOPIFY_STORE`, `SHOPIFY_ACCESS_TOKEN`.
+Secrets anlegen: `ANTHROPIC_API_KEY`, `SHOPIFY_STORE` und entweder `SHOPIFY_ACCESS_TOKEN` oder `SHOPIFY_CLIENT_ID` + `SHOPIFY_CLIENT_SECRET`.
 
 **Tests** (ohne Netzwerk, Shopify und Claude werden simuliert)
 ```bash
