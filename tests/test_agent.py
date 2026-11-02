@@ -154,8 +154,10 @@ def test_autopilot_run_writes_report_and_escalations(tmp_path, monkeypatch):
     assert list((tmp_path / "out" / "reports").glob("*.md"))
 
 
-def test_client_credentials_token_is_fetched(monkeypatch):
+def test_client_credentials_token_is_fetched(tmp_path, monkeypatch):
     import shopify_agent.shopify as sh
+
+    monkeypatch.chdir(tmp_path)  # keep a real .env out of the test
 
     for k in ("SHOPIFY_ACCESS_TOKEN", "SHOPIFY_STORE"):
         monkeypatch.delenv(k, raising=False)
