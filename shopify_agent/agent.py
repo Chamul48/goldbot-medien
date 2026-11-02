@@ -29,12 +29,13 @@ How to work:
 - Before a change, read the current state so you can describe what changes. \
 Write tools ask the owner for approval; if they decline, ask what they want instead.
 - Use the graphql tool only when no dedicated tool fits.
+- Use the escalate tool for decisions that belong to the owner.
 - Reply in the language the owner writes in (often German). Keep replies short \
 and concrete: what you found, what you changed, what is left.
 """
 
 
-def ask_confirm(summary: str) -> bool:
+def ask_confirm(kind: str, summary: str) -> bool:
     print(f"\n\033[33m⚠ Approval needed:\033[0m\n{summary}")
     try:
         return input("Proceed? [y/N] ").strip().lower() in {"y", "yes", "j", "ja"}
@@ -116,7 +117,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--media-dir", default=os.environ.get("MEDIA_DIR", "social"),
                         help="Folder with videos/images to upload (default: social/).")
     parser.add_argument("--yes", action="store_true", help="Approve all store changes without asking.")
+    parser.add_argument("--autopilot", action="store_true",
+                        help="Unattended run: safe changes only, everything else is escalated.")
+    parser.add_argument("--out-dir", default="autopilot", help="Autopilot reports and state (default: autopilot/).")
     args = parser.parse_args(argv)
+
+    if args.autopilot:
+        from .autopilot import run
+        return run(Path(args.media_dir), Path(args.out_dir))
 
     try:
         shop = ShopifyClient()
@@ -124,7 +132,7 @@ def main(argv: list[str] | None = None) -> int:
         print(exc, file=sys.stderr)
         return 2
 
-    confirm = (lambda _s: True) if args.yes else ask_confirm
+    confirm = (lambda _k, _s: True) if args.yes else ask_confirm
     agent = ShopifyAgent(Toolbox(shop, Path(args.media_dir), confirm))
 
     if args.prompt:

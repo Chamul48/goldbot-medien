@@ -1,11 +1,14 @@
 """Tools the agent can call, plus their Shopify implementations.
 
-Every tool that changes the store goes through `confirm()` first, so a human
-approves each write unless the agent runs with --yes.
+Every tool that changes the store goes through `confirm(kind, summary)` first.
+Interactively a human approves each write; in autopilot mode a policy decides
+by `kind` (content, media, price, status, graphql) and anything it may not do
+alone is recorded as an escalation for the owner.
 """
 
 from __future__ import annotations
 
+import datetime
 import json
 import re
 from pathlib import Path
@@ -127,6 +130,19 @@ TOOLS: list[dict[str, Any]] = [
             }
         ),
     },
+    {
+        "name": "escalate",
+        "description": (
+            "Hand something to the owner that needs a human decision: a price change, "
+            "deleting/archiving, a customer problem, an unclear choice, or an error you cannot fix."
+        ),
+        "input_schema": _schema(
+            {
+                "topic": {"type": "string", "description": "Short title."},
+                "details": {"type": "string", "description": "What you found and what you recommend."},
+            }
+        ),
+    },
 ]
 
 for _t in TOOLS:
@@ -148,11 +164,23 @@ class Toolbox:
         self,
         shop: ShopifyClient,
         media_dir: Path,
-        confirm: Callable[[str], bool],
+        confirm: Callable[[str, str], bool],
+        state_file: Path | None = None,
     ) -> None:
         self.shop = shop
         self.media_dir = media_dir.resolve()
         self.confirm = confirm
+        self.state_file = state_file
+        self.state: dict[str, Any] = {"uploaded": {}}
+        if state_file and state_file.is_file():
+            self.state = json.loads(state_file.read_text())
+            self.state.setdefault("uploaded", {})
+        self.escalations: list[dict[str, str]] = []
+
+    def _save_state(self) -> None:
+        if self.state_file:
+            self.state_file.parent.mkdir(parents=True, exist_ok=True)
+            self.state_file.write_text(json.dumps(self.state, ensure_ascii=False, indent=1))
 
     def run(self, name: str, args: dict[str, Any]) -> tuple[str, bool]:
         """Execute a tool. Returns (result_text, is_error)."""
@@ -165,9 +193,12 @@ class Toolbox:
             return f"Error: {exc}", True
         return json.dumps(result, ensure_ascii=False, indent=1), False
 
-    def _approve(self, summary: str) -> None:
-        if not self.confirm(summary):
-            raise ValueError("The user declined this change. Ask what they want instead.")
+    def _approve(self, kind: str, summary: str) -> None:
+        if not self.confirm(kind, summary):
+            raise ValueError(
+                "Not approved. In chat: ask the owner what they want instead. "
+                "In autopilot: this was recorded for the owner; do not retry it another way."
+            )
 
     # ---- read tools ------------------------------------------------------
 
@@ -239,7 +270,11 @@ class Toolbox:
         if not self.media_dir.is_dir():
             return []
         return [
-            {"path": str(p.relative_to(self.media_dir)), "bytes": p.stat().st_size}
+            {
+                "path": (rel := str(p.relative_to(self.media_dir))),
+                "bytes": p.stat().st_size,
+                "already_uploaded": rel in self.state["uploaded"],
+            }
             for p in sorted(self.media_dir.rglob("*"))
             if p.is_file() and p.suffix.lower() in MEDIA_EXTS
         ]
@@ -263,7 +298,8 @@ class Toolbox:
         fields = {k: v for k, v in fields.items() if v is not None}
         if not fields:
             raise ValueError("Nothing to update.")
-        self._approve(f"Update product {product_id}:\n{json.dumps(fields, ensure_ascii=False, indent=1)}")
+        kind = "status" if status is not None else "content"
+        self._approve(kind, f"Update product {product_id}:\n{json.dumps(fields, ensure_ascii=False, indent=1)}")
         data = self.shop.graphql(
             """
             mutation($product: ProductUpdateInput!) {
@@ -286,7 +322,7 @@ class Toolbox:
             if v.get("compare_at_price") is not None:
                 item["compareAtPrice"] = v["compare_at_price"]
             payload.append(item)
-        self._approve(f"Set prices on {product_id}:\n{json.dumps(payload, indent=1)}")
+        self._approve("price", f"Set prices on {product_id}:\n{json.dumps(payload, indent=1)}")
         data = self.shop.graphql(
             """
             mutation($pid: ID!, $v: [ProductVariantsBulkInput!]!) {
@@ -306,8 +342,11 @@ class Toolbox:
         full = (self.media_dir / path).resolve()
         if not full.is_relative_to(self.media_dir) or not full.is_file():
             raise ValueError(f"{path} is not a file inside {self.media_dir}")
+        done = self.state["uploaded"].get(path)
+        if done:
+            raise ValueError(f"{path} was already uploaded as {done['file_id']} on {done['date']}.")
         target = f" and attach to {product_id}" if product_id else ""
-        self._approve(f"Upload {path} ({full.stat().st_size:,} bytes) to Shopify Files{target}")
+        self._approve("media", f"Upload {path} ({full.stat().st_size:,} bytes) to Shopify Files{target}")
 
         resource_url, content_type = self.shop.staged_upload(full)
         data = self.shop.graphql(
@@ -340,13 +379,23 @@ class Toolbox:
             if ref["userErrors"]:
                 raise ShopifyError(f"Uploaded {file['id']} but attaching failed: {ref['userErrors']}")
             file["attachedTo"] = product_id
+        self.state["uploaded"][path] = {
+            "file_id": file["id"],
+            "product_id": product_id,
+            "date": datetime.date.today().isoformat(),
+        }
+        self._save_state()
         file["note"] = "Videos are processed asynchronously; fileStatus may show UPLOADED/PROCESSING first."
         return file
+
+    def t_escalate(self, topic: str, details: str) -> Any:
+        self.escalations.append({"topic": topic, "details": details})
+        return {"recorded": True}
 
     def t_graphql(self, query: str, variables_json: str) -> Any:
         variables = json.loads(variables_json or "{}")
         if not isinstance(variables, dict):
             raise ValueError("variables_json must be a JSON object")
         if re.search(r"^\s*mutation\b", query, re.IGNORECASE | re.MULTILINE):
-            self._approve(f"Run GraphQL mutation:\n{query}\nvariables: {variables_json}")
+            self._approve("graphql", f"Run GraphQL mutation:\n{query}\nvariables: {variables_json}")
         return self.shop.graphql(query, variables)

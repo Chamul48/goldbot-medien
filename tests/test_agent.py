@@ -43,7 +43,7 @@ def tool_use(id_, name, inp):
 def make(tmp_path, approve=True):
     shop = FakeShop()
     approvals = []
-    tb = Toolbox(shop, tmp_path, confirm=lambda s: approvals.append(s) or approve)
+    tb = Toolbox(shop, tmp_path, confirm=lambda k, s: approvals.append((k, s)) or approve)
     return shop, tb, approvals
 
 
@@ -78,7 +78,7 @@ def test_declined_change_is_not_sent(tmp_path):
     out, is_error = tb.run("update_product", {
         "product_id": "gid://shopify/Product/1", "title": "X",
         "description_html": None, "tags": None, "status": None})
-    assert is_error and "declined" in out
+    assert is_error and "Not approved" in out
     assert not shop.calls
 
 
@@ -110,3 +110,45 @@ def test_refusal_stops_without_running_tools(tmp_path):
     client = FakeClient([NS(stop_reason="refusal", content=[tool_use("t1", "get_shop_info", {})])])
     assert "declined" in ShopifyAgent(tb, client=client).send("hi")
     assert not shop.calls
+
+
+def test_autopilot_policy_allows_content_escalates_price(tmp_path):
+    from shopify_agent.autopilot import autopilot_policy
+
+    ref = []
+    tb = Toolbox(FakeShop(), tmp_path, autopilot_policy(ref))
+    ref.append(tb)
+    out, err = tb.run("update_product", {"product_id": "gid://shopify/Product/1", "title": "Neu",
+                                         "description_html": None, "tags": None, "status": None})
+    assert not err
+    out, err = tb.run("update_variant_prices", {"product_id": "gid://shopify/Product/1", "variants": [
+        {"variant_id": "gid://shopify/ProductVariant/9", "price": "1.00", "compare_at_price": None}]})
+    assert err and tb.escalations[0]["topic"] == "Needs approval (price)"
+    out, err = tb.run("update_product", {"product_id": "gid://shopify/Product/1", "title": None,
+                                         "description_html": None, "tags": None, "status": "ARCHIVED"})
+    assert err and len(tb.escalations) == 2
+
+
+def test_upload_is_not_repeated(tmp_path):
+    (tmp_path / "v.mp4").write_bytes(b"1")
+    state = tmp_path / "state.json"
+    state.write_text('{"uploaded": {"v.mp4": {"file_id": "gid://shopify/Video/1", "product_id": null, "date": "2026-11-01"}}}')
+    tb = Toolbox(FakeShop(), tmp_path, lambda k, s: True, state_file=state)
+    out, err = tb.run("upload_media", {"path": "v.mp4", "alt": "x", "product_id": None})
+    assert err and "already uploaded" in out
+    assert '"already_uploaded": true' in tb.run("list_local_media", {})[0]
+
+
+def test_autopilot_run_writes_report_and_escalations(tmp_path, monkeypatch):
+    import shopify_agent.autopilot as ap
+
+    client = FakeClient([
+        NS(stop_reason="tool_use", content=[tool_use("t1", "escalate", {"topic": "Preis prüfen", "details": "Zu billig"})]),
+        NS(stop_reason="end_turn", content=[NS(type="text", text="Bericht: 1 Eskalation.")]),
+    ])
+    monkeypatch.setattr(ap, "ShopifyClient", FakeShop)
+    monkeypatch.setattr(ap, "ShopifyAgent", lambda tb: ShopifyAgent(tb, client=client))
+    assert ap.run(tmp_path / "media", tmp_path / "out") == 0
+    esc = (tmp_path / "out" / "ESCALATIONS.md").read_text()
+    assert "Preis prüfen" in esc and "Bericht" in esc
+    assert list((tmp_path / "out" / "reports").glob("*.md"))

@@ -31,6 +31,28 @@ python -m shopify_agent "Welche Produkte sind noch Entwürfe?"
 python -m shopify_agent --media-dir social "Lade das neueste Reel hoch und häng es an den Goldbarren"
 ```
 
+## Autopilot – der Shop läuft allein
+
+`python -m shopify_agent --autopilot` macht einen Durchlauf ohne dich:
+
+| Darf der Bot allein | Gibt er immer an dich ab |
+|---|---|
+| Neue Reels/Bilder aus `social/` hochladen und ans passende Produkt hängen | Preise ändern |
+| Fehlende Produktbeschreibungen und Tags schreiben (max. 10 pro Lauf, keine erfundenen Fakten) | Produkte veröffentlichen, archivieren, löschen |
+| Bestellungen prüfen | Bestellungen ändern, Kundenprobleme, Unklares |
+
+Jeder Lauf schreibt einen Bericht nach `autopilot/reports/<datum>.md`. Schon
+hochgeladene Dateien merkt er sich in `autopilot/state.json`.
+
+**Automatisch jeden Tag (GitHub Actions):** `.github/workflows/autopilot.yml`
+läuft täglich um 06:17 UTC, sofort nach jedem neuen Upload in `social/` auf
+`main`, und auf Knopfdruck (*Actions → Shopify Autopilot → Run workflow*).
+Braucht der Shop dich, öffnet er ein GitHub-Issue „Shop braucht dich“ – GitHub
+schickt dir dazu eine E-Mail. Schlägt ein Lauf fehl, gibt es ebenfalls ein Issue.
+
+Einmalig einrichten: *Repo → Settings → Secrets and variables → Actions* und
+drei Secrets anlegen: `ANTHROPIC_API_KEY`, `SHOPIFY_STORE`, `SHOPIFY_ACCESS_TOKEN`.
+
 **Tests** (ohne Netzwerk, Shopify und Claude werden simuliert)
 ```bash
 python -m pytest tests
