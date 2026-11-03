@@ -25,6 +25,7 @@ LIMITS = {
     "tag_count": 5,
     "tag_len": 20,
     "gig_description": 1200,
+    "package_desc": 100,  # Fiverr: Feld „Beschreibe die Details deines Angebots“ je Paket
 }
 
 _PACKAGE = {
@@ -170,8 +171,30 @@ def enforce_limits(pack: dict[str, Any]) -> tuple[dict[str, Any], list[str]]:
             if clean and clean not in tags:
                 tags.append(clean)
         gig["tags"] = tags[: LIMITS["tag_count"]]
+        short = gig["title"][:40]
+        if len(gig["tags"]) < LIMITS["tag_count"]:
+            notes.append(f"Nur {len(gig['tags'])} Tags bei „{short}…“ – bitte auf 5 ergänzen.")
+        if not re.match(r"(?i)\s*(I will|Ich werde)\b", gig["title"]):
+            notes.append(f"Gig-Titel „{short}…“ beginnt nicht mit „I will“.")
+        if len(gig["description"]) > LIMITS["gig_description"]:
+            notes.append(f"Gig-Beschreibung „{short}…“ auf 1200 Zeichen gekürzt.")
         gig["description"] = _cut(gig["description"], LIMITS["gig_description"], multiline=True)
+        for pkg in gig.get("packages", []):
+            pkg["description"] = package_description(pkg)
     return pack, notes
+
+
+def package_description(pkg: dict[str, Any]) -> str:
+    """Paket-Beschreibung für Fiverr (max. 100 Zeichen): so viele Leistungen wie passen."""
+    if pkg.get("description") and len(pkg["description"]) <= LIMITS["package_desc"]:
+        return pkg["description"]
+    out = ""
+    for item in pkg.get("includes", []):
+        nxt = f"{out}; {item}" if out else item
+        if len(nxt) > LIMITS["package_desc"]:
+            break
+        out = nxt
+    return out or _cut("; ".join(pkg.get("includes", [])), LIMITS["package_desc"])
 
 
 _COUNTRY_EN = {"Österreich": "Austria", "Deutschland": "Germany", "Schweiz": "Switzerland"}

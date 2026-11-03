@@ -11,7 +11,9 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import re
+import time
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -63,7 +65,10 @@ REPLY_SYSTEM = (
 CLAIM_RE = re.compile(
     r"\b(i specialize|i specialise|specializ\w* in|i have (been|worked|experience|edited|helped)|"
     r"years? of|experienced|my clients|for various|i work with|i('ve| have) (worked|edited|created)|"
-    r"proven|track record|many clients|top[- ]rated)\b|https?://|www\.|@\w+\.\w+",
+    r"proven|track record|many clients|top[- ]rated|experience|expert|hundreds of|"
+    r"(past|previous|former) clients|\d+\+? ?(years?|jahre?n?)|"
+    r"erfahrung|ich habe (bereits|schon)|spezialisiert|meine kunden)\b|"
+    r"https?://|www\.|@\w+\.\w+|\b[\w-]+\.(com|io|me|de|at|net|tv)\b|\+?\d[\d ()/-]{7,}\d",
     re.I,
 )
 
@@ -81,10 +86,20 @@ def state_path(cfg: dict[str, Any]) -> Path:
 
 
 def load_state(path: Path) -> dict[str, str]:
+    if not path.exists():
+        return {}
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
-        return {str(k): str(v) for k, v in data.items()} if isinstance(data, dict) else {}
-    except (OSError, ValueError):
+        if not isinstance(data, dict):
+            raise ValueError("kein Objekt")
+        return {str(k): str(v) for k, v in data.items()}
+    except (OSError, ValueError) as exc:
+        # Kaputte Datei beiseitelegen statt still alles neu zu melden
+        log.warning("Gedächtnis %s unlesbar (%s) – wird als .defekt gesichert.", path.name, exc)
+        try:
+            os.replace(path, path.with_name(path.name + ".defekt"))
+        except OSError:
+            pass
         return {}
 
 
@@ -92,7 +107,21 @@ def save_state(path: Path, state: dict[str, str], now: datetime) -> None:
     cutoff = (now - timedelta(days=KEEP_DAYS)).isoformat()
     kept = {url: ts for url, ts in state.items() if ts >= cutoff}
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(kept, indent=1, sort_keys=True), encoding="utf-8")
+    # Erst in eine Nachbardatei schreiben, dann ersetzen: ein Absturz mitten im
+    # Schreiben lässt das alte Gedächtnis heil (os.replace ist auf NTFS atomar).
+    tmp = path.with_name(path.name + ".tmp")
+    with open(tmp, "w", encoding="utf-8") as fh:
+        fh.write(json.dumps(kept, indent=1, sort_keys=True))
+        fh.flush()
+        os.fsync(fh.fileno())
+    for attempt in range(5):
+        try:
+            os.replace(tmp, path)
+            return
+        except PermissionError:  # Windows: Virenscanner/Indexer hält die Datei kurz offen
+            if attempt == 4:
+                raise
+            time.sleep(0.5)
 
 
 def _key(item: TrendItem) -> str:

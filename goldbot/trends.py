@@ -30,10 +30,12 @@ HIRING_RE = re.compile(r"\[(hiring|task|paid)\]", re.I)
 # Aufträge ohne Tag, z. B. "Looking for a video editor for TikTok" oder
 # "Need someone to edit my videos". Zählt nur in Auftrags-Subreddits.
 HIRING_PHRASE_RE = re.compile(
-    r"\b(looking for|need(ed|ing)?|seeking|searching for|hiring|suche)\s+"
+    r"\b(looking for|need(ed|ing)?|seeking|searching for|hiring|suche)[\s:\-–|]+"
     r"(an?\s+|some\s+|einen?\s+)?([\w/&+-]+\s+){0,3}?"
     r"(video\s?)?(editors?|cutters?|creators?|videograph\w*)\b"
-    r"|\bneed(ed|ing)?\s+(someone|somebody|help)\s+to\s+edit\b",
+    r"|\b(video\s?)?(editors?|cutters?)\s+(needed|wanted|gesucht)\b"
+    r"|\b(looking for|need(ed|ing)?)\s+(someone|somebody|help)\s+to\s+edit\b"
+    r"|\bneed(ed|ing)?\s+help\s+edit(ing)?\s+(my|our|a)\b",
     re.I,
 )
 # Fragen und Hilfe-Posts sind keine Aufträge
@@ -44,13 +46,21 @@ QUESTION_RE = re.compile(
 )
 # Unbezahlt / Hobby
 UNPAID_RE = re.compile(r"\[(hobby|unpaid|free|collab)\]|\b(unpaid|for free|no budget|rev(enue)? ?share)\b", re.I)
-# Anbieter (Konkurrenz) – mit und ohne Tag
-FORHIRE_RE = re.compile(
-    r"\[(for ?hire|offer|available)\]|^\s*for hire\b|\b(i'?m|i am) an? [\w ]{0,20}?(editor|creator)\b|"
-    r"\b(hire me|my services|dm me|available for (work|hire|projects)|searching for clients|"
-    r"looking for (new )?(clients|work|projects)|disponível|disponible|creo videos)\b",
+# Anbieter (Konkurrenz). Starke Zeichen gelten immer (außer bei [Hiring]-Tag) …
+OFFER_TAG_RE = re.compile(r"\[(for ?hire|offer|available)\]", re.I)
+FORHIRE_STRONG_RE = re.compile(
+    r"\[(for ?hire|offer|available)\]|^\s*for hire\b|"
+    r"\b(hire me|my services|available for (work|hire|projects)|searching for clients|"
+    r"looking for (new )?(clients|work|projects|gigs?)|looking for (a )?(job|gig)\b|"
+    r"(video )?editor (is )?available|i'?m your (guy|girl|editor)|creators? who needs?|"
+    r"disponível|disponible|creo videos)\b|"
+    r"^\s*need (work|clients|projects)\b|\bneed an? [\w ]{0,25}?editor\s*\?",
     re.I,
 )
+# … schwache nur, wenn der Titel nicht zugleich einen Auftrag beschreibt
+# ("I'm a fitness creator, need a shorts editor" ist ein Kunde).
+FORHIRE_WEAK_RE = re.compile(r"\b(i'?m|i am) an? [\w ]{0,20}?(editor|creator)\b|\bdm me\b", re.I)
+FORHIRE_RE = re.compile(f"{FORHIRE_STRONG_RE.pattern}|{FORHIRE_WEAK_RE.pattern}", re.I)  # für Tests/Altcode
 # Subreddits, in denen auch Posts ohne [Hiring]-Tag als Auftrag zählen
 HIRING_SUBREDDITS = {"forhire", "hireaneditor", "videoeditingrequests", "freelance_forhire"}
 PRICE_RE = re.compile(r"(?:\$|€|usd|eur)\s?\d[\d.,]*|\d[\d.,]*\s?(?:\$|€|usd|eur)\b", re.I)
@@ -93,13 +103,17 @@ def _parse_traffic(value: str) -> int:
     return int(digits) if digits else 0
 
 
-def parse_feed(xml_text: str, source: str) -> list[TrendItem]:
-    """Parst RSS 2.0 und Atom. Robust gegenüber fremden Namespaces."""
+def parse_feed(xml_text: str | bytes, source: str) -> list[TrendItem]:
+    """Parst RSS 2.0 und Atom. Robust gegenüber fremden Namespaces.
+
+    Bytes übergeben (resp.content), damit die Kodierung aus der XML-Deklaration gilt.
+    Unlesbares XML (z. B. eine HTML-Sperrseite) löst ValueError aus – die Quelle zählt
+    dann als nicht erreichbar.
+    """
     try:
         root = ET.fromstring(xml_text)
     except ET.ParseError as exc:
-        log.warning("%s: Feed nicht lesbar (%s)", source, exc)
-        return []
+        raise ValueError(f"Feed nicht lesbar ({exc})") from exc
 
     items: list[TrendItem] = []
     for node in root.iter():
@@ -109,7 +123,11 @@ def parse_feed(xml_text: str, source: str) -> list[TrendItem]:
         for child in node:
             name = _strip(child.tag)
             if name == "link":
-                data.setdefault("link", child.get("href") or (child.text or "").strip())
+                # Atom: rel="alternate" (oder ohne rel) ist die Seite selbst
+                rel = child.get("rel")
+                if "link" not in data or (rel in (None, "alternate") and data.get("_rel") not in (None, "alternate")):
+                    data["link"] = child.get("href") or (child.text or "").strip()
+                    data["_rel"] = rel
             elif name in ("title", "pubDate", "published", "updated", "approx_traffic"):
                 data.setdefault(name, (child.text or "").strip())
             elif name in ("description", "summary", "content"):
@@ -136,7 +154,9 @@ def parse_feed(xml_text: str, source: str) -> list[TrendItem]:
 
 def parse_hackernews(payload: dict[str, Any], source: str) -> list[TrendItem]:
     items = []
-    for hit in payload.get("hits", []):
+    for hit in (payload.get("hits") or []) if isinstance(payload, dict) else []:
+        if not isinstance(hit, dict):
+            continue
         title = hit.get("title") or hit.get("story_title")
         if not title:
             continue
@@ -186,8 +206,16 @@ class Fetcher:
             try:
                 resp = self.session.get(url, timeout=TIMEOUT)
             except requests.RequestException as exc:
+                if attempt < self.MAX_RETRIES:
+                    log.info("Abruf fehlgeschlagen (%s) – neuer Versuch.", exc.__class__.__name__)
+                    self.sleep(5.0 * (attempt + 1))
+                    continue
                 log.warning("Abruf fehlgeschlagen: %s (%s)", url, exc.__class__.__name__)
                 return None
+            if resp.status_code in (500, 502, 503, 504) and attempt < self.MAX_RETRIES:
+                log.info("%s antwortet mit %s – neuer Versuch.", urlparse(url).netloc, resp.status_code)
+                self.sleep(5.0 * (attempt + 1))
+                continue
             if resp.status_code == 429 and attempt < self.MAX_RETRIES:
                 try:
                     retry_after = float(resp.headers.get("Retry-After", ""))
@@ -211,12 +239,12 @@ def collect(
 
     Gibt (Einträge, Fehlerliste) zurück. Eine ausgefallene Quelle stoppt nicht den Lauf.
     """
-    tcfg = cfg.get("trends", {})
+    tcfg = cfg.get("trends") or {}
     limit = int(tcfg.get("max_items_per_source", 25))
     fetcher = fetcher or Fetcher(delay=float(tcfg.get("request_delay_seconds", 2)))
 
     jobs: list[tuple[str, str, Callable[[requests.Response, str], list[TrendItem]]]] = []
-    feed = lambda r, s: parse_feed(r.text, s)  # noqa: E731
+    feed = lambda r, s: parse_feed(r.content, s)  # noqa: E731
     hn = lambda r, s: parse_hackernews(r.json(), s)  # noqa: E731
 
     use = lambda kind: only is None or kind in only  # noqa: E731
@@ -245,8 +273,12 @@ def collect(
             continue
         try:
             parsed = parser(resp, name)
-        except (ValueError, KeyError) as exc:
+        except Exception as exc:  # eine kaputte Quelle darf den Lauf nicht stoppen
             log.warning("%s: Antwort nicht auswertbar (%s)", name, exc)
+            errors.append(name)
+            continue
+        if not parsed and not name.startswith("Hacker News"):
+            log.warning("%s: Feed ohne Einträge – zählt als nicht erreichbar.", name)
             errors.append(name)
             continue
         cap = limit * max(len(subs), 1) if name.startswith("Reddit") else limit
@@ -266,13 +298,40 @@ def _plain(title: str) -> str:
     return re.sub(r"[_*~`]+", " ", title)
 
 
+def _unpaid(title: str) -> bool:
+    """Unbezahlt? Ein genannter Betrag oder "not for free" heben "revenue share" usw. auf."""
+    if not UNPAID_RE.search(title):
+        return False
+    if re.search(r"\[(hobby|unpaid|free|collab)\]|\bunpaid\b", title, re.I):
+        return True
+    return not (PRICE_RE.search(title) or re.search(r"\bnot for free\b", title, re.I))
+
+
+def is_offer(title: str) -> bool:
+    """Bietet hier jemand selbst Leistungen an (Konkurrenz)?"""
+    plain = _plain(title)
+    if OFFER_TAG_RE.search(plain):
+        return True
+    if HIRING_RE.search(plain):
+        return False
+    if FORHIRE_STRONG_RE.search(plain):
+        return True
+    return bool(FORHIRE_WEAK_RE.search(plain)) and not HIRING_PHRASE_RE.search(plain)
+
+
 def is_job_post(item: TrendItem) -> bool:
     """Echter, bezahlter Auftrag? (Anbieter vorher schon aussortiert)"""
     title = _plain(item.title)
-    if UNPAID_RE.search(title) or QUESTION_RE.search(title):
-        return False
     if HIRING_RE.search(title):
-        return True
+        # Mit Tag zählen Themenwörter ("cooking tips", "How to videos") nicht als Frage;
+        # "revenue share" nur, wenn kein Betrag genannt ist.
+        return not (
+            re.search(r"\[(hobby|unpaid|free|collab)\]", title, re.I)
+            or _unpaid(title)
+            or re.search(r"^\s*(\[\w+\]\s*)?(how (do|to|can) i|feedback on|advice)\b", title, re.I)
+        )
+    if _unpaid(title) or QUESTION_RE.search(title):
+        return False
     # Ohne Tag nur in Subreddits, in denen gezielt Aufträge gepostet werden
     sub = (item.category or "").lower()
     in_hiring_sub = sub in HIRING_SUBREDDITS or (not sub and any(
@@ -294,7 +353,7 @@ def score(items: Iterable[TrendItem], keywords: list[str]) -> list[TrendItem]:
         item.matched = [kw for kw, pat in patterns.items() if pat.search(text)]
         s = 2.0 * len(item.matched)
         is_reddit = item.source.startswith("Reddit")
-        if is_reddit and FORHIRE_RE.search(_plain(item.title)):
+        if is_reddit and is_offer(item.title):
             # Andere Anbieter: kein Trend, aber nützlich für den Preisvergleich
             item.kind = "konkurrenz"
             price = PRICE_RE.search(f"{item.title} {item.summary}")
@@ -315,7 +374,8 @@ def dedupe(items: Iterable[TrendItem]) -> list[TrendItem]:
     seen: set[str] = set()
     out = []
     for item in items:
-        key = re.sub(r"\W+", "", item.title.lower())[:80]
+        # Reddit: jeder Post ist eigen (viele Aufträge heißen schlicht "[Hiring] Video Editor")
+        key = item.url if item.source.startswith("Reddit") and item.url else re.sub(r"\W+", "", item.title.lower())[:80]
         if key in seen:
             continue
         seen.add(key)
@@ -328,5 +388,5 @@ def scan(
 ) -> tuple[list[TrendItem], list[str]]:
     """only: z. B. ("reddit",) für den schnellen Auftrags-Check."""
     items, errors = collect(cfg, fetcher, only)
-    keywords = cfg.get("trends", {}).get("keywords", [])
+    keywords = (cfg.get("trends") or {}).get("keywords") or []
     return score(dedupe(items), keywords), errors

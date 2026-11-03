@@ -30,5 +30,18 @@ ist Deutsch mit echten Umlauten. Fiverr-Texte und Reddit-Antworten bleiben Engli
 - **Doppelstart:** Dauerbetrieb hält eine Datei-Sperre (`reports\.dauer.lock`); zweiter Start endet mit Code 2.
 - **Prozess-Filter:** Beim Beenden per Befehlszeile (`-like '*xyz*'`) den eigenen Prozess (`$PID`)
   ausnehmen – sonst beendet sich der Befehl selbst.
-- **Fehlersuche:** Protokoll in `reports\goldbot.log` (rotiert, 3 × 1 MB).
+- **Fehlersuche:** Protokoll in `reports\goldbot.log` (rotiert nur im Dauerbetrieb, 3 × 1 MB). Auch eine
+  kaputte `config.yaml` landet dort (das Fenster schließt sich sonst ungesehen).
+- **Auftrag vor Anbieter:** Ein `[Hiring]`-Tag schlägt „DM me“/„I'm a creator“; Themenwörter („tips“,
+  „How to“) zählen bei Tag nicht als Frage, ein Betrag hebt „revenue share“ auf. Starke Anbieter-Zeichen
+  (`FORHIRE_STRONG_RE`) vs. schwache (`FORHIRE_WEAK_RE`, nur ohne Auftrags-Satz) – siehe `trends.is_offer`.
+- **Reddit-Dedupe nach URL**, nicht nach Titel (viele Aufträge heißen gleich).
+- **Feeds als Bytes parsen** (`resp.content`), sonst Umlaute kaputt ohne charset; unlesbare/leere Feeds
+  zählen als „nicht erreichbar“.
+- **Eingeschränkter Komplett-Lauf** (kein Netz/keine KI direkt nach der Anmeldung) wird nach 15 min
+  wiederholt (max. 3×), die Aufgabe startet 1 min nach der Anmeldung.
+- **Gedächtnis atomar schreiben** (`.tmp` + `os.replace`); unlesbares wird als `.defekt` gesichert.
+- **ffmpeg drawbox kennt keine Zeit** (`t` = Rahmendicke) → animierte Balken per `overlay` mit `t`.
+- **Fiverr-Paketbeschreibung max. 100 Zeichen**; Gig-Titel ohne „I will“ kopieren (Fiverr setzt es davor).
+- **Update-Skript** startet Goldbot nach einem Fehler wieder; `$ProgressPreference = 'SilentlyContinue'`.
 - `reports\` und `config.yaml` sind nicht im Repo – nichts Persönliches committen.

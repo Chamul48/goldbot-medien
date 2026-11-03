@@ -48,13 +48,14 @@ def test_parse_hackernews():
     assert items[0].url.endswith("id=42") and items[0].traffic == 120
 
 
-def test_bad_feed_returns_empty():
-    assert trends.parse_feed("<not xml", "x") == []
+def test_bad_feed_counts_as_error():
+    with pytest.raises(ValueError):
+        trends.parse_feed("<html>Sperrseite", "x")
 
 
 def test_collect_survives_failing_sources(cfg):
     class FakeResp:
-        def __init__(self, text): self.text = text
+        def __init__(self, text): self.text, self.content = text, text.encode("utf-8")
         def json(self): return json.loads(self.text)
 
     class FakeFetcher:
@@ -422,6 +423,29 @@ JOB_CASES = [
     ("HireAnEditor", "Video editor available - need a YouTube editor? DM me", False),
     ("NewTubers", "Looking for a video editor for my channel", False),
     ("slavelabour", "[Offer] Reliable, affordable VA / data entry / chat support, $3-4 an hour", False),
+    # Review 2026-11-03: Kunden, die "DM me" / "I'm a creator" schreiben, sind Aufträge
+    ("HireAnEditor", "[Hiring] Reels editor, DM me with your portfolio", True),
+    ("HireAnEditor", "[HIRING] I'm a fitness creator, need a shorts editor", True),
+    ("HireAnEditor", "I'm a content creator looking for a reels editor", True),
+    ("HireAnEditor", "Need video editor ASAP, DM me", True),
+    # Themenwörter im Titel sind keine Frage, ein Betrag schlägt "revenue share"
+    ("HireAnEditor", "[Hiring] Video editor for a cooking tips channel", True),
+    ("HireAnEditor", "[Hiring] Editor for How to videos on YouTube", True),
+    ("HireAnEditor", "[Hiring] Shorts editor, $500/month + revenue share", True),
+    ("HireAnEditor", "Hiring video editor - not for free, $30 per video", True),
+    # Aufträge ohne Tag
+    ("HireAnEditor", "Hiring: YouTube video editor", True),
+    ("HireAnEditor", "Video editor needed for weekly YouTube videos", True),
+    ("HireAnEditor", "Editor wanted for gaming channel", True),
+    ("HireAnEditor", "Looking for someone to edit my YouTube videos", True),
+    ("HireAnEditor", "Need help editing my videos", True),
+    # Jobsuchende sind keine Aufträge
+    ("HireAnEditor", "Looking for a job as a video editor", False),
+    ("HireAnEditor", "Need work - video editor with 3 years experience", False),
+    ("HireAnEditor", "Need a video editor? I'm your guy", False),
+    ("HireAnEditor", "Looking for creators who need an editor", False),
+    ("HireAnEditor", "[Hiring] Unpaid editor for my channel", False),
+    ("HireAnEditor", "[HIRING] How do I find a good editor?", False),
 ]
 
 
@@ -489,6 +513,7 @@ def test_reddit_source_shows_real_subreddit(cfg):
            '<category term="HireAnEditor"/><link href="https://r/1"/></entry></feed>')
     class R:
         text = xml
+        content = xml.encode("utf-8")
     class F:
         def get(self, url):
             return R() if "reddit" in url else None
@@ -571,3 +596,136 @@ def test_windows_scripts_use_crlf():
     for f in list(root.glob("*.bat")) + list(root.glob("*.ps1")):
         data = f.read_bytes()
         assert b"\n" in data and data.count(b"\r\n") == data.count(b"\n"), f"{f.name} braucht CRLF"
+
+
+# --------------------------------------------------------------------------- #
+# Review 2026-11-03
+# --------------------------------------------------------------------------- #
+
+def test_empty_config_key_keeps_default(tmp_path):
+    user = tmp_path / "config.yaml"
+    user.write_text("trends:\n  keywords:\n  #  - gold\nllm:\n", encoding="utf-8")
+    c = load_config(user)
+    assert c["trends"]["keywords"] and c["llm"]["provider"]
+
+
+def test_broken_config_is_logged(tmp_path, monkeypatch):
+    from goldbot import __main__ as cli, config as config_mod
+    bad = tmp_path / "config.yaml"
+    bad.write_text("profile:\n\tusername: x\n", encoding="utf-8")
+    monkeypatch.setattr(config_mod, "ROOT", tmp_path)
+    assert cli.main(["-c", str(bad), "trends"]) == 1
+    assert "kein gültiges YAML" in (tmp_path / "reports" / "goldbot.log").read_text(encoding="utf-8")
+
+
+def test_ansi_config_is_read(tmp_path):
+    user = tmp_path / "config.yaml"
+    user.write_bytes("profile:\n  country: Österreich\n".encode("cp1252"))
+    assert load_config(user)["profile"]["country"] == "Österreich"
+
+
+def test_reddit_posts_with_same_title_are_kept():
+    a = trends.TrendItem(source="Reddit r/HireAnEditor", title="[Hiring] Video Editor", url="u1")
+    b = trends.TrendItem(source="Reddit r/HireAnEditor", title="[Hiring] Video editor", url="u2")
+    assert len(trends.dedupe([a, b])) == 2
+
+
+def test_feed_bytes_use_xml_encoding():
+    xml = ('<?xml version="1.0" encoding="utf-8"?><rss><channel><item><title>Goldpreis Österreich</title>'
+           '</item></channel></rss>').encode("utf-8")
+    assert trends.parse_feed(xml, "x")[0].title == "Goldpreis Österreich"
+
+
+def test_atom_alternate_link_wins():
+    xml = ('<feed xmlns="http://www.w3.org/2005/Atom"><entry><title>x</title>'
+           '<link rel="replies" href="https://a/comments"/><link rel="alternate" href="https://a/post"/></entry></feed>')
+    assert trends.parse_feed(xml, "x")[0].url == "https://a/post"
+
+
+def test_fetcher_retries_network_errors_and_5xx():
+    import requests as rq
+
+    class R:
+        def __init__(self, code): self.status_code, self.headers = code, {}
+
+    class S:
+        headers = {}
+        calls = 0
+        def get(self, url, timeout):
+            S.calls += 1
+            if S.calls == 1:
+                raise rq.ConnectionError("weg")
+            return R(503) if S.calls == 2 else R(200)
+
+    f = trends.Fetcher(delay=0, session=S())
+    f.sleep = lambda s: None
+    assert f.get("https://x").status_code == 200 and S.calls == 3
+
+
+def test_empty_feed_counts_as_failed_source(cfg):
+    class R:
+        content = b"<rss><channel></channel></rss>"
+    class F:
+        def get(self, url): return R()
+    _, errors = trends.collect(cfg, F(), only=("reddit",))
+    assert errors and errors[0].startswith("Reddit")
+
+
+def test_claim_check_catches_more_invented_experience(cfg):
+    from goldbot import leads as leads_mod
+    for bad in ["With 5 years editing shorts I can help", "I'm an expert in reels",
+                "Ich habe bereits viele Reels geschnitten", "See mywork.com", "Call me +43 660 1234567"]:
+        assert leads_mod.CLAIM_RE.search(bad), bad
+    assert not leads_mod.CLAIM_RE.search(leads_mod.template_reply(_lead(1), cfg))
+
+
+def test_state_write_is_atomic_and_corrupt_file_is_kept(tmp_path):
+    from datetime import datetime
+    from goldbot import leads as leads_mod
+    path = tmp_path / ".gesehen.json"
+    leads_mod.save_state(path, {"u": "2026-11-03T10:00:00"}, datetime(2026, 11, 3))
+    assert leads_mod.load_state(path) == {"u": "2026-11-03T10:00:00"}
+    assert not (tmp_path / ".gesehen.json.tmp").exists()
+    path.write_text('{"u": "2026', encoding="utf-8")
+    assert leads_mod.load_state(path) == {}
+    assert (tmp_path / ".gesehen.json.defekt").exists()
+
+
+def test_lead_ideas_need_video_connection():
+    items = [trends.TrendItem(source="Reddit r/forhire", title="[Hiring] AI chatbot developer", url="a",
+                              kind="auftrag", matched=["ai"]),
+             trends.TrendItem(source="Reddit r/forhire", title="[Hiring] AI video editor", url="b",
+                              kind="auftrag", matched=["ai"])]
+    assert [i["url"] for i in ideas.lead_ideas(items)] == ["b"]
+
+
+def test_package_descriptions_fit_fiverr(cfg):
+    cfg["llm"]["provider"] = "aus"
+    pack, _, _ = profile.build_profile(cfg)
+    for gig in pack["gigs"]:
+        for p in gig["packages"]:
+            assert 0 < len(p["description"]) <= profile.LIMITS["package_desc"]
+
+
+def test_helper_title_without_i_will_and_single_tags(cfg):
+    from goldbot import helper
+    cfg["llm"]["provider"] = "aus"
+    pack, _, _ = profile.build_profile(cfg)
+    page = helper.build_page(pack)
+    assert "Tag 5" in page and "Paket" in page
+    title = pack["gigs"][0]["title"]
+    assert title.startswith("I will") and f"<pre>{title[7:]}</pre>" in page
+
+
+def test_degraded_full_run_is_retried_soon(cfg, tmp_path, monkeypatch):
+    from goldbot import __main__ as cli
+    cfg["output_dir"] = str(tmp_path)
+    monkeypatch.setattr(cli.trends_mod, "scan", lambda c: ([], ["Reddit"]))
+    monkeypatch.setattr(cli.leads_mod, "check", lambda c, items=None: [])
+    assert cli.run(cfg, "trends") is False
+
+
+def test_demo_progress_bar_is_animated(tmp_path):
+    from goldbot import demo as demo_mod
+    graph, _ = demo_mod.filtergraph(demo_mod.DEMOS[0], tmp_path)
+    assert "drawbox" not in graph  # drawbox kann nicht animieren – Balken kommt per overlay
