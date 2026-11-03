@@ -562,6 +562,12 @@ def render(demo: dict[str, Any], out: Path, ffmpeg: str, font: tuple[str, str], 
             say(f"{demo['name']}: Szene {i + 1}/{len(scenes)} – " + (clip.name if clip else "Farbverlauf"))
             part = work / f"scene_{i}.mp4"
             scene_video(clip, sc["dur"], demo, part, ffmpeg, work, duration(clip, ffmpeg) if clip else 0.0)
+            if sc["kind"] == "line":  # Standbild ohne Text für die Gig-Titelbilder
+                stills = out / "standbilder"
+                stills.mkdir(exist_ok=True)
+                _run([ffmpeg, "-y", "-hide_banner", "-loglevel", "error", "-ss", f"{sc['dur'] * 0.6:.2f}",
+                      "-i", str(part), "-frames:v", "1", "-q:v", "2",
+                      str((stills / f"{demo['name']}_{sc['index']}.jpg").resolve())], work)
             files.append(part)
         (work / "list.txt").write_text("".join(f"file '{f.name}'\n" for f in files), encoding="utf-8")
 
@@ -672,16 +678,23 @@ def render_cover(videos: list[Path], title: str, accent: str, target: Path, ffmp
     with tempfile.TemporaryDirectory() as tmp:
         work = Path(tmp)
         shutil.copy(font[0], work / "font.ttf")
-        # Ein Video, drei verschiedene Szenen (Hook mit großem Text auslassen)
-        length = duration(videos[0], ffmpeg) or 16.0
-        picks = [(videos[0], length * f) for f in (0.30, 0.52, 0.74)]
         cmd = [ffmpeg, "-y", "-hide_banner", "-loglevel", "error"]
-        for path, t in picks:
-            length = duration(path, ffmpeg)
-            cmd += ["-ss", f"{min(t, max(length - 1, 0)):.2f}", "-i", str(path)]
+        stills_dir = videos[0].parent / "standbilder"
+        name = videos[0].stem
+        stills = [stills_dir / f"{name}_{k}.jpg" for k in (1, 2, 3)]
+        if all(f.exists() for f in stills):
+            # Standbilder der drei Inhalts-Szenen – ganzes Bild, ohne Untertitel
+            for f in stills:
+                cmd += ["-i", str(f)]
+            prep = "format=rgb24,scale=-2:{h}"
+        else:
+            # Ältere Videos ohne Standbilder: Bilder aus dem Video, nur oberer Teil (ohne Untertitel)
+            length = duration(videos[0], ffmpeg) or 16.0
+            for f in (0.30, 0.52, 0.74):
+                cmd += ["-ss", f"{length * f:.2f}", "-i", str(videos[0])]
+            prep = "format=rgb24,crop=iw:ih*0.58:0:ih*0.02,scale=-2:{h}"
         tile_w = COVER_W // 3 + 1
-        # nur der obere Bildteil: ohne Fortschrittsbalken und ohne Untertitel (die sitzen bei 66 %)
-        fg = [f"[{k}:v]format=rgb24,crop=iw:ih*0.58:0:ih*0.02,scale=-2:{COVER_H},crop={tile_w}:{COVER_H},setsar=1[t{k}]" for k in range(3)]
+        fg = [f"[{k}:v]{prep.format(h=COVER_H)},crop={tile_w}:{COVER_H},setsar=1[t{k}]" for k in range(3)]
         fg.append("[t0][t1][t2]hstack=3,crop=1280:769[s]")
         fg.append("[s]drawbox=x=0:y=ih-300:w=iw:h=300:color=black@0.62:t=fill,"
                   f"drawbox=x=0:y=ih-300:w=iw:h=8:color={accent}@1:t=fill")
