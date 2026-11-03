@@ -69,7 +69,7 @@ DEMOS: list[dict[str, Any]] = [
                   "20 % zum Sparen und für Rücklagen."],
         "cta": "Speichern und später nachrechnen",
         "footer": "Beispiel-Edit · keine Finanzberatung",
-        "clips": ["money counting", "house keys", "travel suitcase", "piggy bank", "calculator money"],
+        "clips": ["money counting", "grocery shopping", "travel suitcase", "piggy bank", "calculator money"],
     },
     {
         "name": "finance_en", "lang": "en", "colors": ("0x07131f", "0x0f4c5c"), "accent": "0x1dbf73",
@@ -80,7 +80,7 @@ DEMOS: list[dict[str, Any]] = [
                   "20% for savings and an emergency fund."],
         "cta": "Save this for your next budget",
         "footer": "Sample edit · not financial advice",
-        "clips": ["money counting", "house keys", "travel suitcase", "piggy bank", "calculator money"],
+        "clips": ["money counting", "grocery shopping", "travel suitcase", "piggy bank", "calculator money"],
     },
     {
         "name": "krypto_de", "lang": "de", "colors": ("0x120a1f", "0x3b1e6b"), "accent": "0xf7931a",
@@ -91,7 +91,7 @@ DEMOS: list[dict[str, Any]] = [
                   "Wer einen Block ändert, müsste alle folgenden mit ändern."],
         "cta": "Folge für mehr Krypto-Grundlagen",
         "footer": "Beispiel-Edit · keine Anlageberatung",
-        "clips": ["blockchain", "network technology", "fingerprint", "binary code", "bitcoin"],
+        "clips": ["blockchain", "network technology", "fingerprint", "metal chain", "bitcoin coin"],
     },
     {
         "name": "crypto_en", "lang": "en", "colors": ("0x120a1f", "0x3b1e6b"), "accent": "0xf7931a",
@@ -102,7 +102,7 @@ DEMOS: list[dict[str, Any]] = [
                   "Changing one block means changing every block after it."],
         "cta": "Follow for more crypto basics",
         "footer": "Sample edit · not financial advice",
-        "clips": ["blockchain", "network technology", "fingerprint", "binary code", "bitcoin"],
+        "clips": ["blockchain", "network technology", "fingerprint", "metal chain", "bitcoin coin"],
     },
 ]
 
