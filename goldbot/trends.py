@@ -27,6 +27,8 @@ USER_AGENT = "goldbot-trendscanner/0.1 (personal research tool)"
 TIMEOUT = 20
 
 HIRING_RE = re.compile(r"\[(hiring|task)\]", re.I)
+FORHIRE_RE = re.compile(r"\[for ?hire\]", re.I)
+PRICE_RE = re.compile(r"(?:\$|€|usd|eur)\s?\d[\d.,]*|\d[\d.,]*\s?(?:\$|€|usd|eur)\b", re.I)
 
 
 @dataclass
@@ -37,7 +39,8 @@ class TrendItem:
     published: str = ""
     summary: str = ""
     traffic: int = 0
-    kind: str = "trend"  # "trend" oder "auftrag"
+    kind: str = "trend"  # "trend", "auftrag" oder "konkurrenz"
+    price: str = ""
     matched: list[str] = field(default_factory=list)
     score: float = 0.0
 
@@ -223,7 +226,12 @@ def collect(cfg: dict[str, Any], fetcher: Fetcher | None = None) -> tuple[list[T
 
 def score(items: Iterable[TrendItem], keywords: list[str]) -> list[TrendItem]:
     """Bewertet Einträge nach Relevanz für deine Nische und sortiert absteigend."""
-    patterns = {kw: re.compile(rf"\b{re.escape(kw.lower())}\b") for kw in keywords}
+    # Ab 4 Zeichen auch als Wortanfang (Deutsch: "gold" -> "Goldpreis"),
+    # kurze Wörter wie "ai" nur exakt (sonst Treffer in "air").
+    patterns = {
+        kw: re.compile(rf"\b{re.escape(kw.lower())}" + ("" if len(kw) >= 4 else r"\b"))
+        for kw in keywords
+    }
     scored = []
     for item in items:
         text = f"{item.title} {item.summary}".lower()
@@ -231,6 +239,11 @@ def score(items: Iterable[TrendItem], keywords: list[str]) -> list[TrendItem]:
         s = 2.0 * len(item.matched)
         if item.source.startswith("Reddit") and HIRING_RE.search(item.title):
             item.kind = "auftrag"
+        elif item.source.startswith("Reddit") and FORHIRE_RE.search(item.title):
+            # Andere Anbieter: kein Trend, aber nützlich für den Preisvergleich
+            item.kind = "konkurrenz"
+            price = PRICE_RE.search(f"{item.title} {item.summary}")
+            item.price = price.group(0) if price else ""
             s += 3.0 if item.matched else 0.5
         if item.traffic:
             # Logarithmisch, damit riesige Zahlen nicht alles dominieren

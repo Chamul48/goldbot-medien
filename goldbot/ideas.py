@@ -74,7 +74,8 @@ def template_ideas(profile: dict[str, Any], trends: list[TrendItem]) -> dict[str
             "revenue_potential": "mittel",
         })
 
-    hot = [t for t in trends if t.kind == "trend" and t.matched][:3]
+    # Content-Ideen nur aus echten Suchtrends (Google Trends), nicht aus Tech-News
+    hot = [t for t in trends if t.kind == "trend" and t.matched and t.source.startswith("Google")][:3]
     for trend in hot:
         ideas.append({
             "title": f"Trend-Content: '{trend.title[:60]}'",

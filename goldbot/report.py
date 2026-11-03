@@ -56,6 +56,13 @@ def _trends_md(trends: list[TrendItem], errors: list[str], top: int = 25) -> str
         for t in leads[:10]:
             out.append(f"- **[{t.score}]** [{t.title}]({t.url}) – {t.source}")
         out.append("")
+    rivals = [t for t in trends if t.kind == "konkurrenz" and t.matched]
+    if rivals:
+        out.append("## Konkurrenz (andere Anbieter – zum Preisvergleich)")
+        for t in rivals[:10]:
+            price = f" · Preis: {t.price}" if t.price else ""
+            out.append(f"- [{t.title}]({t.url}){price}")
+        out.append("")
     out.append("## Relevante Trends")
     for t in [t for t in trends if t.kind == "trend"][:top]:
         hits = f" · Treffer: {', '.join(t.matched)}" if t.matched else ""

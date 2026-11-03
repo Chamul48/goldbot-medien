@@ -32,8 +32,8 @@ def test_parse_reddit_atom_and_detect_leads(cfg):
     scored = trends.score(items, cfg["trends"]["keywords"])
     top = scored[0]
     assert top.kind == "auftrag" and "tiktok" in top.matched
-    # "[For Hire]" ist ein Anbieter, kein Auftrag
-    assert next(i for i in scored if "Logo" in i.title).kind == "trend"
+    # "[For Hire]" ist ein Anbieter (Konkurrenz), kein Auftrag
+    assert next(i for i in scored if "Logo" in i.title).kind == "konkurrenz"
 
 
 def test_score_prefers_niche_over_raw_traffic(cfg):
@@ -157,3 +157,25 @@ def test_hn_video_tag_is_not_a_topic_match():
     items = trends.parse_hackernews({"hits": [{"title": "Future of AI [video]", "objectID": "1"}]}, "HN")
     assert items[0].title == "Future of AI"
     assert trends.score(items, ["video"])[0].matched == []
+
+
+def test_for_hire_posts_are_competitors_not_trends(cfg):
+    item = trends.TrendItem(source="Reddit r/forhire", title="[For Hire] UGC video packs | From $97")
+    scored = trends.score([item], cfg["trends"]["keywords"])[0]
+    assert scored.kind == "konkurrenz" and scored.price == "$97"
+    result, _ = ideas.build_ideas(cfg, [scored])
+    assert not any("UGC video packs" in i["title"] for i in result["ideas"])
+
+
+def test_trend_ideas_only_from_google_trends(cfg):
+    hn = trends.TrendItem(source="Hacker News 'ai video'", title="AI video model released")
+    gt = trends.TrendItem(source="Google Trends AT", title="Goldpreis", traffic=20000)
+    result, _ = ideas.build_ideas(cfg, trends.score([hn, gt], cfg["trends"]["keywords"]))
+    titles = [i["title"] for i in result["ideas"]]
+    assert any("Goldpreis" in t for t in titles) and not any("AI video model" in t for t in titles)
+
+
+def test_keyword_matches_german_compounds_but_not_short_substrings():
+    items = [trends.TrendItem(source="G", title="Goldpreis steigt"), trends.TrendItem(source="G", title="Air Max")]
+    a, b = trends.score(items, ["gold", "ai"])
+    assert a.matched == ["gold"] and b.matched == []
