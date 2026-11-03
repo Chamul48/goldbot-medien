@@ -1,0 +1,109 @@
+# Goldbot – Konfiguration
+# Kopieren nach config.yaml und anpassen:  cp config.example.yaml config.yaml
+
+profile:
+  username: chuchcapone
+  country: Österreich
+  # Sprachen, die du wirklich sprichst (Fiverr prüft das teilweise)
+  languages:
+    - Deutsch (Muttersprache)
+    - Englisch (fließend)
+  # Was du verkaufst – je konkreter, desto besser die Texte
+  services:
+    - Kurzvideos und Reels (TikTok, Instagram, YouTube Shorts)
+    - Faceless-Videos für Finanz- und Gold-Kanäle
+    - KI-gestützte Video-Automatisierung
+  skills:
+    - Video-Editing
+    - Untertitel und Captions
+    - Skript-Schreiben
+    - KI-Tools (Text, Bild, Stimme)
+    - Social-Media-Strategie
+  # Echte Erfahrung / Referenzen – keine Erfindungen, Fiverr sperrt Fake-Angaben
+  experience: "Erstelle seit 2024 Kurzvideos und automatisierte Content-Workflows."
+  target_customers:
+    - Coaches und Berater
+    - Finanz-, Krypto- und Edelmetall-Kanäle
+    - kleine Online-Shops
+  tone: professionell, freundlich, klar
+  # Preisrahmen in USD für Basic / Standard / Premium (Richtwert laut Recherche 03.11.2026)
+  price_range: [25, 60, 150]
+  # Recherchiertes Profil-Paket – wird ohne API-Key statt der Vorlage verwendet
+  pack_file: docs/profil-paket.json
+  # true = lokale KI (Ollama) ersetzt das geprüfte Recherche-Profil nicht (nur Claude darf)
+  prefer_pack: true
+
+trends:
+  # Begriffe, nach denen Trends/Chancen bewertet werden.
+  # Ab 4 Buchstaben zählen auch zusammengesetzte Wörter (gold -> Goldpreis, Goldkurs).
+  keywords:
+    - reels
+    - shorts
+    - tiktok
+    - video
+    - faceless
+    - ai
+    - ki
+    - automation
+    - bot
+    - gold
+    - silber
+    - krypto
+    - ugc
+    - podcast
+    - caption
+    # aus der Recherche vom 03.11.2026
+    - youtube automation
+    - cash cow
+    - ai voiceover
+    - ai label
+    - ai disclosure
+    - german video editor
+    - deutsch
+    - untertitel
+    - edelmetall
+    - precious metals
+    - silver
+  google_trends_geo: [AT, DE]
+  reddit_subreddits: [forhire, HireAnEditor, freelance, Entrepreneur, NewTubers, socialmedia, VideoEditing]
+  hackernews_queries: [ai video, automation, short form video]
+  # Beliebige weitere RSS/Atom-Feeds (Blogs, News, Branchen-Seiten)
+  rss_feeds: []
+  max_items_per_source: 25
+  request_delay_seconds: 2
+
+leads:
+  # Wie oft im Dauerbetrieb nach neuen Aufträgen gesucht wird (Stunden, min. 0.25)
+  check_every_hours: 1
+  # KI schreibt zu jedem neuen Auftrag einen Antwort-Entwurf (du schickst ihn selbst ab)
+  reply_drafts: true
+
+notify:
+  # Windows-Hinweis bei neuen Aufträgen
+  windows: true
+  # Optional Telegram: Token als Umgebungsvariable GOLDBOT_TELEGRAM_TOKEN, hier nur die Chat-ID
+  telegram_chat_id: ""
+
+llm:
+  # auto = Claude, wenn ANTHROPIC_API_KEY gesetzt ist, sonst lokale KI über Ollama.
+  # Ohne KI nutzt der Bot das recherchierte Profil (pack_file) bzw. eingebaute Vorlagen.
+  provider: auto        # auto | claude | ollama | aus
+  # Claude
+  model: claude-opus-5-5
+  effort: medium
+  # Lokale KI (kostenlos, ohne Key): https://ollama.com – Modell laden mit "ollama pull qwen3:14b"
+  ollama_host: http://127.0.0.1:11434
+  ollama_model: qwen3:14b
+  ollama_timeout: 900   # Sekunden pro Anfrage
+
+output_dir: reports
+
+# Muster-Videos (python -m goldbot muster): echtes Bildmaterial von Pixabay (kostenlos,
+# kommerziell nutzbar) + Sprecherstimme. Schlüssel: PIXABAY_API_KEY als Umgebungsvariable,
+# in einer .env im Projektordner oder in der Datei unter pixabay_env (wird nur gelesen, nie angezeigt).
+muster:
+  pixabay_env: "~/Desktop/golden_bot/.env"
+  stimme: true            # Sprecher über edge-tts (Microsoft-Neural-Stimmen)
+  stimmen:
+    de: de-DE-ConradNeural
+    en: en-US-AndrewNeural
