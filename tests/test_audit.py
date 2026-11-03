@@ -258,7 +258,7 @@ def test_autopilot_backs_up_first_and_blocks_texts_without_full_backup(tmp_path,
         task = client.requests[0]["messages"][0]["content"]
         assert "Audit findings" in task and "Medien ohne Alt-Text" in task
         if not expect_change:
-            assert "nicht vollständig gelesen" in (out / "ESCALATIONS.md").read_text()
+            assert "nicht vollständig gelesen" in (out / "ESCALATIONS.md").read_text(encoding="utf-8")
 
 
 def test_cli_audit_and_restore(tmp_path, monkeypatch, capsys):

@@ -51,4 +51,4 @@ Antworten auf Deutsch, Ergebnis zuerst, einfach erklärt (der Inhaber ist kein P
     Kostengrenze 1000 (jetzt `PRODUCT_PAGE = 10`); abgeschnittene/abgelehnte Antworten ließen ein `tool_use` ohne
     `tool_result` zurück (jede weitere Chat-Anfrage HTTP 400); `--yes` gab auch Preise/Status frei; Chat schrieb ohne
     Sicherung; Änderungen wurden nicht protokolliert; keine Wiederholung bei THROTTLED/429/5xx; Dateien ohne
-    `encoding="utf-8"` (Windows cp1252).
+    `encoding="utf-8"` (Windows cp1252). Gilt auch für Tests: `read_text`/`write_text` mit Umlauten immer mit `encoding="utf-8"`, sonst schlagen sie nur auf dem PC fehl – nach jedem PC-Abgleich dort `pytest` laufen lassen.

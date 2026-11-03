@@ -132,7 +132,7 @@ def test_autopilot_policy_allows_content_escalates_price(tmp_path):
 def test_upload_is_not_repeated(tmp_path):
     (tmp_path / "v.mp4").write_bytes(b"1")
     state = tmp_path / "state.json"
-    state.write_text('{"uploaded": {"v.mp4": {"file_id": "gid://shopify/Video/1", "product_id": null, "date": "2026-11-01"}}}')
+    state.write_text('{"uploaded": {"v.mp4": {"file_id": "gid://shopify/Video/1", "product_id": null, "date": "2026-11-01"}}}', encoding="utf-8")
     tb = Toolbox(FakeShop(), tmp_path, lambda k, s: True, state_file=state)
     out, err = tb.run("upload_media", {"path": "v.mp4", "alt": "x", "product_id": None})
     assert err and "already uploaded" in out
@@ -149,7 +149,7 @@ def test_autopilot_run_writes_report_and_escalations(tmp_path, monkeypatch):
     monkeypatch.setattr(ap, "ShopifyClient", FakeShop)
     monkeypatch.setattr(ap, "ShopifyAgent", lambda tb: ShopifyAgent(tb, client=client))
     assert ap.run(tmp_path / "media", tmp_path / "out") == 0
-    esc = (tmp_path / "out" / "ESCALATIONS.md").read_text()
+    esc = (tmp_path / "out" / "ESCALATIONS.md").read_text(encoding="utf-8")
     assert "Preis prüfen" in esc and "Bericht" in esc
     assert list((tmp_path / "out" / "reports").glob("*.md"))
 
@@ -244,7 +244,7 @@ def test_upload_still_processing_is_saved_and_attached_later(tmp_path):
     out, err = tb.run("upload_media", {"path": "v.mp4", "alt": "a", "product_id": "gid://shopify/Product/1"})
     assert not err and "Still processing" in out
     assert not [q for q in shop.calls if "fileUpdate" in q]
-    saved = json.loads((tmp_path / "state.json").read_text())["uploaded"]["v.mp4"]
+    saved = json.loads((tmp_path / "state.json").read_text(encoding="utf-8"))["uploaded"]["v.mp4"]
     assert saved["attach_pending"] is True
     # next call: no second upload, only the attach
     shop.statuses = ["READY"]
