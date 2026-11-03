@@ -640,3 +640,70 @@ def render_all(out: Path, only: list[str] | None = None, cfg: dict[str, Any] | N
         except subprocess.CalledProcessError as exc:
             log.error("ffmpeg-Fehler bei %s: %s", demo["name"], (exc.stderr or "").strip()[-600:])
     return done
+
+
+# --------------------------------------------------------------------------- #
+# Gig-Titelbilder (Fiverr-Galerie, 1280×769)
+# --------------------------------------------------------------------------- #
+
+COVER_W, COVER_H = 1280, 769
+
+
+def cover_headline(title: str) -> list[str]:
+    """Gig-Titel ohne „I will“, als höchstens 2 Zeilen für das Titelbild."""
+    import textwrap
+    text = re.sub(r"^\s*(I will|Ich werde)\s+", "", title, flags=re.I).strip()
+    text = text[:1].upper() + text[1:]
+    rows = textwrap.wrap(text, 30, break_on_hyphens=False)
+    if len(rows) > 2:
+        rows = rows[:2]
+        rows[1] = rows[1].rstrip(" ,") + " …"
+    return rows
+
+
+def render_cover(videos: list[Path], title: str, accent: str, target: Path, ffmpeg: str,
+                 font: tuple[str, str]) -> Path:
+    """Drei Standbilder aus den Muster-Videos nebeneinander + Gig-Titel."""
+    with tempfile.TemporaryDirectory() as tmp:
+        work = Path(tmp)
+        shutil.copy(font[0], work / "font.ttf")
+        picks = [(videos[k % len(videos)], t) for k, t in enumerate((5.5, 9.5, 13.5))]
+        cmd = [ffmpeg, "-y", "-hide_banner", "-loglevel", "error"]
+        for path, t in picks:
+            length = duration(path, ffmpeg)
+            cmd += ["-ss", f"{min(t, max(length - 1, 0)):.2f}", "-i", str(path)]
+        tile_w = COVER_W // 3 + 1
+        fg = [f"[{k}:v]format=rgb24,scale=-2:{COVER_H},crop={tile_w}:{COVER_H},setsar=1[t{k}]" for k in range(3)]
+        fg.append("[t0][t1][t2]hstack=3,crop=1280:769[s]")
+        fg.append("[s]drawbox=x=0:y=ih-300:w=iw:h=300:color=black@0.62:t=fill,"
+                  f"drawbox=x=0:y=ih-300:w=iw:h=8:color={accent}@1:t=fill")
+        rows = cover_headline(title)
+        for k, row in enumerate(rows):
+            (work / f"r{k}.txt").write_text(row, encoding="utf-8")
+            y = COVER_H - 300 + 60 + k * 92 + (46 if len(rows) == 1 else 0)
+            fg[-1] += (f",drawtext=fontfile=font.ttf:textfile=r{k}.txt:expansion=none:fontsize=72:"
+                       f"fontcolor=white:x=(w-text_w)/2:y={y}:shadowcolor=black@0.6:shadowx=3:shadowy=3")
+        fg[-1] += "[v]"
+        cmd += ["-filter_complex", ";".join(fg), "-map", "[v]", "-frames:v", "1", "-q:v", "2",
+                str(target.resolve())]
+        _run(cmd, work)
+    return target
+
+
+def render_covers(out: Path, gigs: list[dict[str, Any]], groups: list[list[str]]) -> list[Path]:
+    """Ein Titelbild je Gig aus den zugehörigen Muster-Videos (nur, wenn die Videos da sind)."""
+    ffmpeg, font = find_ffmpeg(), find_font()
+    if not ffmpeg or not font:
+        return []
+    done = []
+    accents = {d["name"]: d["accent"] for d in DEMOS}
+    for i, (gig, names) in enumerate(zip(gigs, groups), 1):
+        videos = [out / f"{n}.mp4" for n in names if (out / f"{n}.mp4").exists()]
+        if not videos:
+            continue
+        target = out / f"gig{i}_titelbild.jpg"
+        try:
+            done.append(render_cover(videos, gig["title"], accents.get(names[0], "0xd4a017"), target, ffmpeg, font))
+        except subprocess.CalledProcessError as exc:
+            log.error("Titelbild Gig %d: %s", i, (exc.stderr or "").strip()[-300:])
+    return done

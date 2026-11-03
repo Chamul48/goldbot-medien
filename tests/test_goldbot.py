@@ -323,7 +323,7 @@ def lead_cfg(cfg, tmp_path, monkeypatch):
     cfg["output_dir"] = str(tmp_path / "reports")
     cfg["leads"] = {"state_file": str(tmp_path / "state.json")}
     sent = []
-    monkeypatch.setattr(notify, "send", lambda c, t, b, d="": sent.append((t, b)) or ["test"])
+    monkeypatch.setattr(notify, "send", lambda c, t, b, d="", open_path=None: sent.append((t, b)) or ["test"])
     cfg["_sent"] = sent
     return cfg
 
@@ -780,3 +780,44 @@ def test_helper_next_button_progress_and_videos(cfg, tmp_path):
     assert 'id="next"' in page and "localStorage" in page and 'data-key="Einzeiler"' in page
     assert "gold_de.mp4" in page and "finance_en.mp4" not in page  # nur vorhandene Videos
     assert 'f.dataset.key=i+"·"+f.dataset.key' in page  # Gig-Felder gleichen Namens getrennt abhaken
+
+
+def test_cover_headline_short_and_without_i_will():
+    rows = demo_mod.cover_headline("I will create faceless gold and finance shorts in german or english")
+    assert rows[0].startswith("Create") and len(rows) <= 2 and all(len(r) <= 32 for r in rows)
+
+
+@pytest.mark.skipif(not demo_mod.find_ffmpeg() or not demo_mod.find_font(), reason="ffmpeg/Schrift fehlt")
+def test_gig_cover_is_fiverr_size(tmp_path):
+    import subprocess as sp
+    ff = demo_mod.find_ffmpeg()
+    v = tmp_path / "gold_de.mp4"
+    sp.run([ff, "-v", "error", "-f", "lavfi", "-i", "testsrc2=s=1080x1920:d=16", "-pix_fmt", "yuv420p", str(v)], check=True)
+    out = demo_mod.render_covers(tmp_path, [{"title": "I will edit short form reels in german or english"}],
+                                 [["gold_de", "gold_en"]])
+    assert out and out[0].name == "gig1_titelbild.jpg"
+    probe = sp.run([demo_mod._ffprobe(ff), "-v", "error", "-show_entries", "stream=width,height", "-of", "csv=p=0",
+                    str(out[0])], capture_output=True, text=True).stdout.strip()
+    assert probe == "1280,769"
+
+
+def test_old_leads_are_skipped():
+    from datetime import datetime, timezone
+    from goldbot import leads as leads_mod
+    now = datetime(2026, 11, 3, 12, tzinfo=timezone.utc)
+    fresh = trends.TrendItem(source="Reddit r/forhire", title="[Hiring] Video editor", url="a",
+                             kind="auftrag", matched=["video"], published="2026-11-03T08:00:00+00:00")
+    old = trends.TrendItem(source="Reddit r/forhire", title="[Hiring] Video editor", url="b",
+                           kind="auftrag", matched=["video"], published="2026-10-28T08:00:00+00:00")
+    rss = trends.TrendItem(source="Reddit r/forhire", title="[Hiring] Reels editor", url="c",
+                           kind="auftrag", matched=["video"], published="Tue, 03 Nov 2026 10:00:00 +0000")
+    assert [i.url for i in leads_mod.find_new([fresh, old, rss], {}, now=now)] == ["a", "c"]
+
+
+def test_toast_opens_leads_file(monkeypatch, tmp_path):
+    import sys as _sys
+    seen = {}
+    monkeypatch.setattr(_sys, "platform", "win32")
+    monkeypatch.setattr(notify.subprocess, "run", lambda *a, **k: seen.update(k["env"]))
+    assert notify.windows_toast("t", "b", tmp_path / "x.md")
+    assert seen["GOLDBOT_TOAST_LAUNCH"].startswith("file://") and "launch" in notify._TOAST_SCRIPT
