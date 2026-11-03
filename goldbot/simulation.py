@@ -481,10 +481,13 @@ def advice(base: dict[str, Any], scen: list[tuple[str, dict[str, Any]]], p: dict
         out.append("- Zeit ist im ersten Monat nicht der Engpass, sondern Sichtbarkeit. 1,5 h am Tag reichen meist.")
     cheap = by.get("Basic-Preise −20 % (mehr Bestellungen)")
     if cheap:
-        better = cheap["mind_ein_auftrag"] > base["mind_ein_auftrag"]
-        out.append(f"- Günstigere Basic-Pakete: erster Auftrag wahrscheinlicher ({cheap['mind_ein_auftrag']:.0%} statt "
-                   f"{base['mind_ein_auftrag']:.0%})" + (". Für die ersten Bewertungen sinnvoll, danach wieder anheben."
-                                                          if better else ", kaum Unterschied."))
+        a, b = cheap["mind_ein_auftrag"], base["mind_ein_auftrag"]
+        if a > b + 0.02:
+            out.append(f"- Günstigere Basic-Pakete machen den ersten Auftrag wahrscheinlicher ({a:.0%} statt {b:.0%}). "
+                       "Für die ersten Bewertungen sinnvoll, danach wieder anheben.")
+        else:
+            out.append(f"- Billigere Basic-Pakete bringen kaum etwas ({a:.0%} statt {b:.0%} für ≥ 1 Auftrag). "
+                       "Lieber bei den jetzigen Preisen bleiben.")
     out.append("- Die erste Bewertung ist der Wendepunkt: schnell liefern (vor der Frist) und den Kunden freundlich "
                "um eine Bewertung bitten.")
     return out
