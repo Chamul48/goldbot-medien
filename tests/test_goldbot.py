@@ -267,3 +267,27 @@ def test_ideas_from_ollama_end_to_end(fake_ollama, cfg):
         "effort": "niedrig", "revenue_potential": "hoch"}]}
     result, source = ideas.build_ideas(cfg, [])
     assert result["ideas"][0]["title"] == "KI-Idee" and "Ollama" in source
+
+
+def test_cut_drops_dangling_words():
+    assert profile._cut("Professional video creator and AI automation expert for creators", 55) == \
+        "Professional video creator and AI automation expert"
+
+
+def test_local_ai_does_not_replace_research_pack(fake_ollama, cfg):
+    pack, source, _ = profile.build_profile(cfg)
+    assert source == "recherche" and not fake_ollama["posted"]
+
+
+def test_local_ai_writes_profile_when_preferred(fake_ollama, cfg):
+    cfg["profile"]["prefer_pack"] = False
+    fake_ollama["answer"] = profile.template_profile(cfg["profile"])
+    pack, source, _ = profile.build_profile(cfg)
+    assert "Ollama" in source and fake_ollama["posted"]
+
+
+def test_ideas_prompt_lists_only_matching_signals_with_links():
+    items = [trends.TrendItem(source="Reddit", title="[Hiring] reels editor", url="https://x/1", matched=["reels"], kind="auftrag"),
+             trends.TrendItem(source="HN", title="Unrelated", url="https://x/2")]
+    text = ideas._prompt({}, items)
+    assert "https://x/1" in text and "Unrelated" not in text and "viele Anfragen" in text

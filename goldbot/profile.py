@@ -115,12 +115,19 @@ def _prompt(profile: dict[str, Any], trend_hints: list[str]) -> str:
     return "\n".join(lines)
 
 
+_DANGLING = {"for", "and", "with", "of", "to", "in", "on", "the", "a", "an", "or", "&", "+",
+             "für", "und", "mit", "von", "zu", "im", "in", "der", "die", "das", "oder"}
+
+
 def _cut(text: str, limit: int) -> str:
     text = re.sub(r"\s+", " ", text).strip()
     if len(text) <= limit:
         return text
-    cut = text[: limit + 1].rsplit(" ", 1)[0].rstrip(",;:-–")
-    return cut[:limit]
+    words = text[: limit + 1].rsplit(" ", 1)[0].split(" ")
+    # Kein hängendes "for", "and", "&" … am Ende stehen lassen
+    while len(words) > 1 and words[-1].lower().strip(",;:-–") in _DANGLING:
+        words.pop()
+    return " ".join(words).rstrip(",;:-–& ")[:limit]
 
 
 def _clean_tag(tag: str) -> str:
@@ -305,15 +312,21 @@ def _load_pack(path: str | None) -> dict[str, Any] | None:
 
 
 def build_profile(cfg: dict[str, Any], trend_hints: list[str] | None = None) -> tuple[dict[str, Any], str, list[str]]:
-    """Gibt (Profil-Paket, Quelle, Hinweise) zurück. Quelle: 'claude' oder 'vorlage'."""
+    """Gibt (Profil-Paket, Quelle, Hinweise) zurück.
+
+    Reihenfolge: Claude > geprüftes Recherche-Paket > lokale KI > Vorlage.
+    Ein lokales Modell schreibt schwächere, teils erfundene Profiltexte –
+    deshalb hat das Recherche-Paket Vorrang (abschaltbar mit
+    profile.prefer_pack: false).
+    """
     profile = cfg.get("profile", {})
     llm_cfg = cfg.get("llm", {})
-    pack = llm.ask_json(
-        SYSTEM,
-        _prompt(profile, trend_hints or []),
-        PROFILE_SCHEMA,
-        llm_cfg,
-    )
+    which = llm.provider(llm_cfg)
+    pack = None
+    if which == "ollama" and profile.get("prefer_pack", True) and _load_pack(profile.get("pack_file")):
+        which = None  # Recherche-Paket nehmen
+    if which:
+        pack = llm.ask_json(SYSTEM, _prompt(profile, trend_hints or []), PROFILE_SCHEMA, llm_cfg)
     source = llm.describe(llm_cfg)
     if not pack:
         pack, source = _load_pack(profile.get("pack_file")), "recherche"

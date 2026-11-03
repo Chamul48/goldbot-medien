@@ -30,6 +30,8 @@ profile:
   price_range: [25, 60, 150]
   # Recherchiertes Profil-Paket – wird ohne API-Key statt der Vorlage verwendet
   pack_file: docs/profil-paket.json
+  # true = lokale KI (Ollama) ersetzt das geprüfte Recherche-Profil nicht (nur Claude darf)
+  prefer_pack: true
 
 trends:
   # Begriffe, nach denen Trends/Chancen bewertet werden.

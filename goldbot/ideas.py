@@ -48,10 +48,19 @@ def _prompt(profile: dict[str, Any], trends: list[TrendItem]) -> str:
         f"Zielkunden: {', '.join(profile.get('target_customers', []))}",
         f"Preisrahmen USD: {profile.get('price_range')}",
         "",
-        "Aktuelle Signale (Quelle | Titel | Treffer):",
+        "Regeln für 'why_now':",
+        "- Nenne nur konkrete Einträge aus der Signal-Liste unten: Titel zitieren und Link angeben.",
+        "- Keine Verallgemeinerungen wie 'viele Anfragen' oder 'wachsender Markt', wenn die Liste das nicht zeigt.",
+        "- Gibt es für eine Idee kein passendes Signal, schreibe ehrlich 'kein aktuelles Signal – Grundlagen-Maßnahme'.",
+        "- Jede Idee muss sich klar von den anderen unterscheiden.",
+        "",
+        "Aktuelle Signale (Art | Quelle | Titel | Treffer | Link):",
     ]
-    for item in trends[:30]:
-        lines.append(f"- {item.source} | {item.title} | {', '.join(item.matched) or '-'}")
+    relevant = [t for t in trends if t.matched][:30]
+    for item in relevant:
+        lines.append(f"- {item.kind} | {item.source} | {item.title} | {', '.join(item.matched)} | {item.url}")
+    if not relevant:
+        lines.append("- (heute keine passenden Signale)")
     return "\n".join(lines)
 
 
