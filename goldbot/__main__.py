@@ -5,6 +5,7 @@ Befehle:
   trends   Trends und Auftrags-Chancen scannen
   ideen    Trends scannen und Vertriebsideen erzeugen
   auftraege  Nur neue passende Aufträge suchen (mit Antwort-Entwurf + Hinweis)
+  einfuegen  Einfüge-Hilfe für Fiverr öffnen (Kopieren-Knöpfe für jedes Feld)
   alles    Alles zusammen (Standard)
   dauer    Dauerbetrieb: Aufträge jede Stunde (--auftraege-alle),
            alles andere alle 24 Stunden (--alle)
@@ -17,6 +18,7 @@ import logging
 import sys
 import time
 
+from . import helper
 from . import ideas as ideas_mod
 from . import leads as leads_mod
 from . import llm, profile as profile_mod, report, trends as trends_mod
@@ -62,7 +64,7 @@ def run(cfg: dict, command: str) -> None:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="goldbot", description="Profil-, Trend- und Vertriebsassistent")
     parser.add_argument("befehl", nargs="?", default="alles",
-                        choices=["profil", "trends", "ideen", "auftraege", "alles", "dauer"])
+                        choices=["profil", "trends", "ideen", "auftraege", "einfuegen", "alles", "dauer"])
     parser.add_argument("-c", "--config", help="Pfad zur config.yaml")
     parser.add_argument("--alle", type=float, default=24.0,
                         help="Stunden zwischen zwei Komplett-Läufen im Modus 'dauer' (Standard 24)")
@@ -75,6 +77,14 @@ def main(argv: list[str] | None = None) -> int:
                         format="%(asctime)s %(levelname)s %(message)s", datefmt="%H:%M:%S")
     cfg = load_config(args.config)
 
+    if args.befehl == "einfuegen":
+        pack, source, _ = profile_mod.build_profile(cfg)
+        languages = pack.get("languages") or cfg.get("profile", {}).get("languages")
+        page = helper.write(output_dir(cfg) / "einfuegen.html", pack, languages)
+        print(f"Einfüge-Hilfe ({source}): {page}")
+        import webbrowser
+        webbrowser.open(page.as_uri())
+        return 0
     if args.befehl == "auftraege":
         leads_mod.check(cfg)
         return 0

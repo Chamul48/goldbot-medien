@@ -504,3 +504,16 @@ def test_missing_placeholder_is_added_not_rejected(fake_ollama, lead_cfg):
     draft = leads.draft_replies(lead_cfg, items)["https://reddit.com/p/6"]
     assert draft == ("I'd cut fast-paced promotional reels for your studio. Samples: [PORTFOLIO-LINK]. "
                      "What's the expected length of each reel?")
+
+
+def test_insert_helper_page(cfg, tmp_path):
+    from goldbot import helper
+    pack, _, _ = profile.build_profile(cfg)
+    page = helper.write(tmp_path / "e.html", pack, pack.get("languages"))
+    text = page.read_text()
+    assert text.count("data-copy=") >= 3 + 3 * 5  # Profil + je Gig Titel/Kategorie/Tags/Beschreibung/FAQ
+    import html as _hh
+    assert _hh.escape(pack["one_liner"]) in text and "seller_onboarding" in text
+    import html as _h, json as _j, re as _re
+    first = _re.search(r'data-copy="([^"]*)"', text).group(1)
+    assert _j.loads(_h.unescape(first)) == pack["one_liner"]
