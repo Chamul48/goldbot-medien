@@ -186,8 +186,12 @@ def collect(cfg: dict[str, Any], fetcher: Fetcher | None = None) -> tuple[list[T
 
     for geo in tcfg.get("google_trends_geo", []):
         jobs.append((f"Google Trends {geo}", f"https://trends.google.com/trending/rss?geo={geo}", feed))
-    for sub in tcfg.get("reddit_subreddits", []):
-        jobs.append((f"Reddit r/{sub}", f"https://www.reddit.com/r/{sub}/new/.rss", feed))
+    subs = tcfg.get("reddit_subreddits", [])
+    if subs:
+        # Ein einziger Sammel-Feed statt einer Anfrage pro Subreddit –
+        # Reddit drosselt anonyme Abrufe sonst sofort (HTTP 429).
+        joined = "+".join(subs)
+        jobs.append((f"Reddit r/{joined}", f"https://www.reddit.com/r/{joined}/new/.rss?limit=100", feed))
     for query in tcfg.get("hackernews_queries", []):
         url = ("https://hn.algolia.com/api/v1/search_by_date?tags=story&hitsPerPage="
                f"{limit}&query={quote_plus(query)}")
@@ -208,7 +212,8 @@ def collect(cfg: dict[str, Any], fetcher: Fetcher | None = None) -> tuple[list[T
             log.warning("%s: Antwort nicht auswertbar (%s)", name, exc)
             errors.append(name)
             continue
-        items.extend(parsed[:limit])
+        cap = limit * max(len(subs), 1) if name.startswith("Reddit") else limit
+        items.extend(parsed[:cap])
     return items, errors
 
 

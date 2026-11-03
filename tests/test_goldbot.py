@@ -65,9 +65,17 @@ def test_collect_survives_failing_sources(cfg):
                 return FakeResp((FIX / "reddit.xml").read_text())
             return None
 
-    items, errors = trends.scan(cfg, FakeFetcher())
+    fetched = []
+    class Recording(FakeFetcher):
+        def get(self, url):
+            fetched.append(url)
+            return super().get(url)
+
+    items, errors = trends.scan(cfg, Recording())
     assert items and errors
     assert all(e.startswith("Hacker News") for e in errors)
+    reddit = [u for u in fetched if "reddit" in u]
+    assert len(reddit) == 1 and "forhire+freelance" in reddit[0]
 
 
 def test_template_profile_respects_fiverr_limits(cfg):
@@ -102,6 +110,7 @@ def test_ideas_and_report(cfg, tmp_path):
     result, source = ideas.build_ideas(cfg, items)
     assert source == "vorlage" and 1 <= len(result["ideas"]) <= 8
     assert result["ideas"][0]["title"].startswith("Auftrag prüfen")
+    assert not any("Bookkeeper" in i["title"] for i in result["ideas"])
 
     folder = report.write(tmp_path, profile=profile.build_profile(cfg), trends=(items, ["HN"]),
                           ideas=(result, source))

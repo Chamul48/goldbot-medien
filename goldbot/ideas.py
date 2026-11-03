@@ -58,11 +58,12 @@ def _prompt(profile: dict[str, Any], trends: list[TrendItem]) -> str:
 def template_ideas(profile: dict[str, Any], trends: list[TrendItem]) -> dict[str, Any]:
     """Regelbasierte Ideen ohne KI."""
     ideas: list[dict[str, Any]] = []
-    leads = [t for t in trends if t.kind == "auftrag"][:3]
+    # Nur Aufträge, die zu deinen Stichwörtern passen (kein "Grafik-Praktikum")
+    leads = [t for t in trends if t.kind == "auftrag" and t.matched][:3]
     for lead in leads:
         ideas.append({
             "title": f"Auftrag prüfen: {lead.title[:80]}",
-            "why_now": f"Frisch gepostete Anfrage in {lead.source}, passt zu: {', '.join(lead.matched) or 'deiner Nische'}.",
+            "why_now": f"Frisch gepostete Anfrage in {lead.source}, passt zu: {', '.join(lead.matched)}.",
             "action_steps": [
                 "Beitrag lesen und Regeln des Subreddits prüfen.",
                 "Kurze, persönliche Antwort mit 1–2 passenden Arbeitsproben senden.",
