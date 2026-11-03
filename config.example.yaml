@@ -97,3 +97,13 @@ llm:
   ollama_timeout: 900   # Sekunden pro Anfrage
 
 output_dir: reports
+
+# Muster-Videos (python -m goldbot muster): echtes Bildmaterial von Pixabay (kostenlos,
+# kommerziell nutzbar) + Sprecherstimme. Schlüssel: PIXABAY_API_KEY als Umgebungsvariable,
+# in einer .env im Projektordner oder in der Datei unter pixabay_env (wird nur gelesen, nie angezeigt).
+muster:
+  pixabay_env: "~/Desktop/golden_bot/.env"
+  stimme: true            # Sprecher über edge-tts (Microsoft-Neural-Stimmen)
+  stimmen:
+    de: de-DE-ConradNeural
+    en: en-US-AndrewNeural

@@ -6,7 +6,7 @@ Befehle:
   ideen    Trends scannen und Vertriebsideen erzeugen
   auftraege  Nur neue passende Aufträge suchen (mit Antwort-Entwurf + Hinweis)
   einfuegen  Einfüge-Hilfe für Fiverr öffnen (Kopieren-Knöpfe für jedes Feld)
-  muster   Muster-Videos (9:16) für dein Portfolio erstellen – braucht ffmpeg
+  muster   Muster-Videos (9:16) mit echtem Bildmaterial und Sprecher – braucht ffmpeg
   alles    Alles zusammen (Standard)
   dauer    Dauerbetrieb: Aufträge jede Stunde (--auftraege-alle),
            alles andere alle 24 Stunden (--alle)
@@ -131,7 +131,7 @@ def main(argv: list[str] | None = None) -> int:
         from . import demo
         target = output_dir(cfg) / "muster"
         try:
-            made = demo.render_all(target)
+            made = demo.render_all(target, cfg=cfg)
         except RuntimeError as exc:
             log.error("%s", exc)
             return 1
