@@ -112,6 +112,8 @@ def main(argv: list[str] | None = None) -> int:
                         help="Stunden zwischen zwei Komplett-Läufen im Modus 'dauer' (Standard 24)")
     parser.add_argument("--auftraege-alle", type=float, default=None,
                         help="Stunden zwischen zwei Auftrags-Checks im Modus 'dauer' (Standard aus config, sonst 1)")
+    parser.add_argument("--nur", nargs="+", metavar="NAME",
+                        help="Nur diese Muster-Videos neu erstellen, z. B. --nur finanzen_de krypto_de")
     parser.add_argument("-v", "--verbose", action="store_true")
     args = parser.parse_args(argv)
 
@@ -131,7 +133,7 @@ def main(argv: list[str] | None = None) -> int:
         from . import demo
         target = output_dir(cfg) / "muster"
         try:
-            made = demo.render_all(target, cfg=cfg)
+            made = demo.render_all(target, only=args.nur, cfg=cfg)
         except RuntimeError as exc:
             log.error("%s", exc)
             return 1
