@@ -551,27 +551,61 @@ def test_insert_helper_page(cfg, tmp_path):
 from goldbot import demo as demo_mod
 
 
-def test_demo_filtergraph_has_all_lines_and_no_percent_expansion(tmp_path):
+def test_demo_word_times_follow_voice_and_numbers():
+    marks = [(0.0, 0.4, "Gold"), (0.4, 0.9, "passt"), (0.9, 2.0, "zweiundzwanzig"), (2.0, 2.6, "Meter")]
+    words = demo_mod.word_times("Gold passt 22 Meter", marks, 2.6)
+    assert [w[2] for w in words] == ["Gold", "passt", "22", "Meter"]
+    starts = [w[0] for w in words]
+    assert starts == sorted(starts) and starts[0] == 0.0 and words[-1][1] == 2.6
+
+
+def test_demo_ass_has_karaoke_hook_cta_and_footer():
     d = next(x for x in demo_mod.DEMOS if x["name"] == "finanzen_de")
-    graph, total = demo_mod.filtergraph(d, tmp_path)
-    assert total == demo_mod.HOOK + 3 * demo_mod.LINE + demo_mod.CTA
-    texts = " ".join(p.read_text(encoding="utf-8") for p in sorted(tmp_path.glob("*.txt")))
-    assert "50 % deines" in texts and "Rücklagen" in texts
-    assert graph.count("expansion=none") == len(list(tmp_path.glob("*.txt")))
-    # Kommas nur in Anführungszeichen (sonst trennt ffmpeg dort die Filter)
-    import re as _re
-    assert "min(t/" in graph and _re.search(r"y='[^']*min\(t/[^']*'", graph)
+    scenes, start = [], 0.0
+    for i, (kind, text) in enumerate([("hook", d["hook"])] + [("line", t) for t in d["lines"]] + [("cta", d["cta"])]):
+        scenes.append({"kind": kind, "text": text, "index": i, "start": start, "dur": 3.0,
+                       "words": demo_mod.word_times(text, None, 2.5)})
+        start += 3.0
+    ass = demo_mod.build_ass(d, scenes, "DejaVu Sans", start)
+    assert "50/30/20-Regel" in ass and "Rücklagen." in ass and d["footer"] in ass
+    assert ass.count("Style: Cap,") == 1 and "\\1c&H0073BF1D" in ass  # Akzent 0x1dbf73 als BGR
+    assert d["cta"] in ass and "1/3" in ass and "3/3" in ass
+    assert ass.count(",Cap,,") >= 9  # Untertitel in Gruppen, nicht als ein Block
+
+
+def test_pixabay_prefers_vertical_full_hd():
+    vids = {"large": {"url": "l", "width": 2160, "height": 3840, "size": 9},
+            "medium": {"url": "m", "width": 1080, "height": 1920, "size": 5},
+            "small": {"url": "s", "width": 720, "height": 1280, "size": 2}}
+    assert demo_mod._pick_size(vids)["url"] == "m"
+    assert demo_mod._pick_size({"large": {"url": "q", "width": 3840, "height": 2160}})["url"] == "q"
+
+
+def test_pixabay_key_from_env_file(tmp_path, monkeypatch):
+    monkeypatch.delenv("PIXABAY_API_KEY", raising=False)
+    env = tmp_path / ".env"
+    env.write_text("OTHER=1\nPIXABAY_API_KEY=abc123\n", encoding="utf-8")
+    assert demo_mod.pixabay_key({"muster": {"pixabay_env": str(env)}}) == "abc123"
+
+
+def test_footage_cache_and_no_key_offline(tmp_path):
+    f = demo_mod.Footage(tmp_path, None)
+    assert f.search("gold") == [] and f.pick("gold", 3, set()) is None
 
 
 def test_demo_contents_are_marked_as_demo():
     for d in demo_mod.DEMOS:
-        assert "DEMO" in d["footer"] and ("beratung" in d["footer"].lower() or "advice" in d["footer"])
+        assert ("Beispiel" in d["footer"] or "Sample" in d["footer"]) and \
+            ("beratung" in d["footer"].lower() or "advice" in d["footer"])
 
 
 @pytest.mark.skipif(not demo_mod.find_ffmpeg() or not demo_mod.find_font(), reason="ffmpeg/Schrift fehlt")
-def test_demo_render_real_video(tmp_path):
-    out = demo_mod.render_all(tmp_path, ["krypto_de"])
+def test_demo_render_real_video(tmp_path, monkeypatch):
+    monkeypatch.delenv("PIXABAY_API_KEY", raising=False)
+    monkeypatch.setattr(demo_mod, "pixabay_key", lambda cfg=None: None)  # offline: Farbverlauf
+    out = demo_mod.render_all(tmp_path, ["krypto_de"], voice=False)
     assert out and out[0].stat().st_size > 50_000
+    assert abs(demo_mod.duration(out[0], demo_mod.find_ffmpeg()) - 5 * 2.6) < 8
 
 
 def test_file_log_written(tmp_path):
@@ -723,9 +757,3 @@ def test_degraded_full_run_is_retried_soon(cfg, tmp_path, monkeypatch):
     monkeypatch.setattr(cli.trends_mod, "scan", lambda c: ([], ["Reddit"]))
     monkeypatch.setattr(cli.leads_mod, "check", lambda c, items=None: [])
     assert cli.run(cfg, "trends") is False
-
-
-def test_demo_progress_bar_is_animated(tmp_path):
-    from goldbot import demo as demo_mod
-    graph, _ = demo_mod.filtergraph(demo_mod.DEMOS[0], tmp_path)
-    assert "drawbox" not in graph  # drawbox kann nicht animieren – Balken kommt per overlay
