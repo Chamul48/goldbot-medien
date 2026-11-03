@@ -91,7 +91,7 @@ DEMOS: list[dict[str, Any]] = [
                   "Wer einen Block ändert, müsste alle folgenden mit ändern."],
         "cta": "Folge für mehr Krypto-Grundlagen",
         "footer": "Beispiel-Edit · keine Anlageberatung",
-        "clips": ["blockchain", "network technology", "fingerprint", "metal chain", "bitcoin coin"],
+        "clips": ["blockchain", "network technology", "fingerprint", "dominoes falling", "bitcoin coin"],
     },
     {
         "name": "crypto_en", "lang": "en", "colors": ("0x120a1f", "0x3b1e6b"), "accent": "0xf7931a",
@@ -102,7 +102,7 @@ DEMOS: list[dict[str, Any]] = [
                   "Changing one block means changing every block after it."],
         "cta": "Follow for more crypto basics",
         "footer": "Sample edit · not financial advice",
-        "clips": ["blockchain", "network technology", "fingerprint", "metal chain", "bitcoin coin"],
+        "clips": ["blockchain", "network technology", "fingerprint", "dominoes falling", "bitcoin coin"],
     },
 ]
 
