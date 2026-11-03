@@ -1,4 +1,4 @@
 requests>=2.31
 PyYAML>=6.0
-anthropic>=2.3.0  # output_config, fallbacks (llm.py)
+anthropic>=2.3.0  # output_config, fallbacks (llm.py, shopify_agent)
 edge-tts>=7.0

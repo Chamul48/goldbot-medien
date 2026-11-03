@@ -1,0 +1,583 @@
+{
+ "date": "2026-11-03",
+ "shop": "chuchcapone.myshopify.com",
+ "products": [
+  {
+   "id": "gid://shopify/Product/15939188457812",
+   "title": "Gift Card",
+   "handle": "gift-card",
+   "descriptionHtml": "This is a gift card for the store",
+   "productType": "giftcard",
+   "tags": [],
+   "seo": {
+    "title": null,
+    "description": null
+   },
+   "media": [
+    {
+     "id": "gid://shopify/MediaImage/74755245211988",
+     "alt": "Gift card that shows text: Generated data gift card"
+    }
+   ],
+   "prices": [
+    {
+     "id": "gid://shopify/ProductVariant/58101016887636",
+     "price": "10.00",
+     "compareAtPrice": null
+    },
+    {
+     "id": "gid://shopify/ProductVariant/58101016920404",
+     "price": "25.00",
+     "compareAtPrice": null
+    },
+    {
+     "id": "gid://shopify/ProductVariant/58101016953172",
+     "price": "50.00",
+     "compareAtPrice": null
+    },
+    {
+     "id": "gid://shopify/ProductVariant/58101016985940",
+     "price": "100.00",
+     "compareAtPrice": null
+    }
+   ]
+  },
+  {
+   "id": "gid://shopify/Product/15939188490580",
+   "title": "The Inventory Not Tracked Snowboard",
+   "handle": "the-inventory-not-tracked-snowboard",
+   "descriptionHtml": "",
+   "productType": "snowboard",
+   "tags": [
+    "Accessory",
+    "Sport",
+    "Winter"
+   ],
+   "seo": {
+    "title": null,
+    "description": null
+   },
+   "media": [
+    {
+     "id": "gid://shopify/MediaImage/74755245277524",
+     "alt": "Top and bottom view of a snowboard. The top view shows a centred hexagonal logo for Hydrogen that\n          appears to radiate outwards, as well as some overlapping hexagons at the bottom. The bottom view shows an\n          abstract angular grid in purples."
+    }
+   ],
+   "prices": [
+    {
+     "id": "gid://shopify/ProductVariant/58101017510228",
+     "price": "949.95",
+     "compareAtPrice": null
+    }
+   ]
+  },
+  {
+   "id": "gid://shopify/Product/15939188523348",
+   "title": "The Archived Snowboard",
+   "handle": "the-archived-snowboard",
+   "descriptionHtml": "",
+   "productType": "snowboard",
+   "tags": [
+    "Archived",
+    "Premium",
+    "Snow",
+    "Snowboard",
+    "Sport",
+    "Winter"
+   ],
+   "seo": {
+    "title": null,
+    "description": null
+   },
+   "media": [
+    {
+     "id": "gid://shopify/MediaImage/74755245506900",
+     "alt": "The top and bottom view of a snowboard.The top view is a gradient light purple and dark purple\n        with a cube geometric pattern. The bottom view blue with light blue octagon geometric pattern."
+    }
+   ],
+   "prices": [
+    {
+     "id": "gid://shopify/ProductVariant/58101017248084",
+     "price": "629.95",
+     "compareAtPrice": null
+    }
+   ]
+  },
+  {
+   "id": "gid://shopify/Product/15939188556116",
+   "title": "The Minimal Snowboard",
+   "handle": "the-minimal-snowboard",
+   "descriptionHtml": "",
+   "productType": "",
+   "tags": [],
+   "seo": {
+    "title": null,
+    "description": null
+   },
+   "media": [],
+   "prices": [
+    {
+     "id": "gid://shopify/ProductVariant/58101016854868",
+     "price": "885.95",
+     "compareAtPrice": null
+    }
+   ]
+  },
+  {
+   "id": "gid://shopify/Product/15939188588884",
+   "title": "The Draft Snowboard",
+   "handle": "the-draft-snowboard",
+   "descriptionHtml": "",
+   "productType": "snowboard",
+   "tags": [],
+   "seo": {
+    "title": null,
+    "description": null
+   },
+   "media": [
+    {
+     "id": "gid://shopify/MediaImage/74755245474132",
+     "alt": "Top and bottom view of a snowboard.The top view shows the text “hydrogen” in overlapping blue,\n          pink and black font. The bottom view is a purple to blue gradient with white geometric pattern overlay."
+    }
+   ],
+   "prices": [
+    {
+     "id": "gid://shopify/ProductVariant/58101017444692",
+     "price": "2629.95",
+     "compareAtPrice": null
+    }
+   ]
+  },
+  {
+   "id": "gid://shopify/Product/15939188621652",
+   "title": "Selling Plans Ski Wax",
+   "handle": "selling-plans-ski-wax",
+   "descriptionHtml": "",
+   "productType": "accessories",
+   "tags": [
+    "Accessory",
+    "Sport",
+    "Winter"
+   ],
+   "seo": {
+    "title": null,
+    "description": null
+   },
+   "media": [
+    {
+     "id": "gid://shopify/MediaImage/74755245539668",
+     "alt": "A bar of golden yellow wax"
+    },
+    {
+     "id": "gid://shopify/MediaImage/74755245572436",
+     "alt": "A bar of purple wax"
+    },
+    {
+     "id": "gid://shopify/MediaImage/74755245605204",
+     "alt": "a small cube of wax"
+    }
+   ],
+   "prices": [
+    {
+     "id": "gid://shopify/ProductVariant/58101017051476",
+     "price": "24.95",
+     "compareAtPrice": null
+    },
+    {
+     "id": "gid://shopify/ProductVariant/58101017084244",
+     "price": "49.95",
+     "compareAtPrice": null
+    },
+    {
+     "id": "gid://shopify/ProductVariant/58101017117012",
+     "price": "9.95",
+     "compareAtPrice": null
+    }
+   ]
+  },
+  {
+   "id": "gid://shopify/Product/15939188654420",
+   "title": "The Compare at Price Snowboard",
+   "handle": "the-compare-at-price-snowboard",
+   "descriptionHtml": "",
+   "productType": "snowboard",
+   "tags": [
+    "Accessory",
+    "Sport",
+    "Winter"
+   ],
+   "seo": {
+    "title": null,
+    "description": null
+   },
+   "media": [
+    {
+     "id": "gid://shopify/MediaImage/74755245670740",
+     "alt": "Top and bottom view of a snowboard. The top view shows pixelated clouds, with the top-most one being\n        the shape of the Shopify bag logo. The bottom view has a pixelated cloudy sky with blue, pink and purple\n        colours."
+    }
+   ],
+   "prices": [
+    {
+     "id": "gid://shopify/ProductVariant/58101017182548",
+     "price": "785.95",
+     "compareAtPrice": "885.95"
+    }
+   ]
+  },
+  {
+   "id": "gid://shopify/Product/15939188687188",
+   "title": "The Out of Stock Snowboard",
+   "handle": "the-out-of-stock-snowboard",
+   "descriptionHtml": "",
+   "productType": "snowboard",
+   "tags": [
+    "Accessory",
+    "Sport",
+    "Winter"
+   ],
+   "seo": {
+    "title": null,
+    "description": null
+   },
+   "media": [
+    {
+     "id": "gid://shopify/MediaImage/74755245637972",
+     "alt": "Top and bottom view of a snowboard. The top view shows a toggle at the top in shades of blue and\n        yellow. The bottom view shows an abstract illustration of toggles in blues and yellows."
+    }
+   ],
+   "prices": [
+    {
+     "id": "gid://shopify/ProductVariant/58101017018708",
+     "price": "885.95",
+     "compareAtPrice": null
+    }
+   ]
+  },
+  {
+   "id": "gid://shopify/Product/15939188719956",
+   "title": "The Complete Snowboard",
+   "handle": "the-complete-snowboard",
+   "descriptionHtml": "This <b>PREMIUM</b> <i>snowboard</i> is so <b>SUPER</b><i>DUPER</i> awesome!",
+   "productType": "snowboard",
+   "tags": [
+    "Premium",
+    "Snow",
+    "Snowboard",
+    "Sport",
+    "Winter"
+   ],
+   "seo": {
+    "title": "Complete Snowboard",
+    "description": "snowboard winter sport snowboarding"
+   },
+   "media": [
+    {
+     "id": "gid://shopify/MediaImage/74755245900116",
+     "alt": "Top and bottom view of a snowboard. The top view shows abstract circles and lines in shades of\n          teal. The bottom view shows abstract circles and lines in shades of purple and blue with the text “SHOPIFY”\n          in a sans serif typeface on top."
+    }
+   ],
+   "prices": [
+    {
+     "id": "gid://shopify/ProductVariant/58101017280852",
+     "price": "699.95",
+     "compareAtPrice": null
+    },
+    {
+     "id": "gid://shopify/ProductVariant/58101017313620",
+     "price": "699.95",
+     "compareAtPrice": null
+    },
+    {
+     "id": "gid://shopify/ProductVariant/58101017346388",
+     "price": "699.95",
+     "compareAtPrice": null
+    },
+    {
+     "id": "gid://shopify/ProductVariant/58101017379156",
+     "price": "699.95",
+     "compareAtPrice": null
+    },
+    {
+     "id": "gid://shopify/ProductVariant/58101017411924",
+     "price": "699.95",
+     "compareAtPrice": null
+    }
+   ]
+  },
+  {
+   "id": "gid://shopify/Product/15939188752724",
+   "title": "The Videographer Snowboard",
+   "handle": "the-videographer-snowboard",
+   "descriptionHtml": "",
+   "productType": "snowboard",
+   "tags": [],
+   "seo": {
+    "title": null,
+    "description": null
+   },
+   "media": [
+    {
+     "id": "gid://shopify/MediaImage/74755245703508",
+     "alt": "The top and bottom view of a snowboard. The top has view is turquoise and black with graphics of\n        trees. The bottom view is turquoise with the word hydrogen written in cursive."
+    },
+    {
+     "id": "gid://shopify/ExternalVideo/74755245867348",
+     "alt": "Video of the Snowboard."
+    }
+   ],
+   "prices": [
+    {
+     "id": "gid://shopify/ProductVariant/58101017477460",
+     "price": "885.95",
+     "compareAtPrice": null
+    }
+   ]
+  },
+  {
+   "id": "gid://shopify/Product/15939188785492",
+   "title": "The Collection Snowboard: Hydrogen",
+   "handle": "the-collection-snowboard-hydrogen",
+   "descriptionHtml": "",
+   "productType": "snowboard",
+   "tags": [
+    "Accessory",
+    "Sport",
+    "Winter"
+   ],
+   "seo": {
+    "title": null,
+    "description": null
+   },
+   "media": [
+    {
+     "id": "gid://shopify/MediaImage/74755245736276",
+     "alt": "Top and bottom view of a snowboard. The top view shows stylized hydrogen bonds and the bottom view shows \"H2\" in a brush script typeface."
+    }
+   ],
+   "prices": [
+    {
+     "id": "gid://shopify/ProductVariant/58101017149780",
+     "price": "600.00",
+     "compareAtPrice": null
+    }
+   ]
+  },
+  {
+   "id": "gid://shopify/Product/15939188818260",
+   "title": "The Hidden Snowboard",
+   "handle": "the-hidden-snowboard",
+   "descriptionHtml": "",
+   "productType": "snowboard",
+   "tags": [
+    "Premium",
+    "Snow",
+    "Snowboard",
+    "Sport",
+    "Winter"
+   ],
+   "seo": {
+    "title": "Hidden Snowboard",
+    "description": "hidden snowboard winter sport snowboarding"
+   },
+   "media": [
+    {
+     "id": "gid://shopify/MediaImage/74755245932884",
+     "alt": "The top view and bottom view of a snowboard. The top view is black with a singular peach cube.\n        The bottom view has a graphic of a stack of blocks in a gradient from light blue, to pink to peach."
+    }
+   ],
+   "prices": [
+    {
+     "id": "gid://shopify/ProductVariant/58101017215316",
+     "price": "749.95",
+     "compareAtPrice": null
+    }
+   ]
+  },
+  {
+   "id": "gid://shopify/Product/15939188851028",
+   "title": "The Collection Snowboard: Oxygen",
+   "handle": "the-collection-snowboard-oxygen",
+   "descriptionHtml": "",
+   "productType": "snowboard",
+   "tags": [
+    "Accessory",
+    "Sport",
+    "Winter"
+   ],
+   "seo": {
+    "title": null,
+    "description": null
+   },
+   "media": [
+    {
+     "id": "gid://shopify/MediaImage/74755246489940",
+     "alt": "Top and bottom view of a snowboard. The top view shows a stylized scene of trees, mountains, sky and a sun in red colours. The bottom view has blue wavy lines in the background with the text \"Oxygen\" in a stylized script typeface."
+    }
+   ],
+   "prices": [
+    {
+     "id": "gid://shopify/ProductVariant/58101017706836",
+     "price": "1025.00",
+     "compareAtPrice": null
+    }
+   ]
+  },
+  {
+   "id": "gid://shopify/Product/15939188883796",
+   "title": "The Multi-location Snowboard",
+   "handle": "the-multi-location-snowboard",
+   "descriptionHtml": "",
+   "productType": "snowboard",
+   "tags": [
+    "Premium",
+    "Snow",
+    "Snowboard",
+    "Sport",
+    "Winter"
+   ],
+   "seo": {
+    "title": null,
+    "description": null
+   },
+   "media": [
+    {
+     "id": "gid://shopify/MediaImage/74755246522708",
+     "alt": "Top and bottom view of a snowboard. The top view shows a pixelated Shopify bag logo and a\n        pixelated character reviewing a clipboard with a questioning expression with a bright green-blue background.\n        The bottom view is a pattern of many pixel characters with a bright green-blue background."
+    }
+   ],
+   "prices": [
+    {
+     "id": "gid://shopify/ProductVariant/58101017805140",
+     "price": "729.95",
+     "compareAtPrice": null
+    }
+   ]
+  },
+  {
+   "id": "gid://shopify/Product/15939188949332",
+   "title": "The 3p Fulfilled Snowboard",
+   "handle": "the-3p-fulfilled-snowboard",
+   "descriptionHtml": "",
+   "productType": "snowboard",
+   "tags": [
+    "Accessory",
+    "Sport",
+    "Winter"
+   ],
+   "seo": {
+    "title": null,
+    "description": null
+   },
+   "media": [
+    {
+     "id": "gid://shopify/MediaImage/74755246555476",
+     "alt": "Top and bottom view of a snowboard. The top view shows 7 stacked hexagons and the bottom view\n          shows a small, centred hexagonal logo for Hydrogen."
+    }
+   ],
+   "prices": [
+    {
+     "id": "gid://shopify/ProductVariant/58101017772372",
+     "price": "2629.95",
+     "compareAtPrice": null
+    }
+   ]
+  },
+  {
+   "id": "gid://shopify/Product/15939188982100",
+   "title": "The Multi-managed Snowboard",
+   "handle": "the-multi-managed-snowboard",
+   "descriptionHtml": "",
+   "productType": "snowboard",
+   "tags": [
+    "Premium",
+    "Snow",
+    "Snowboard",
+    "Sport",
+    "Winter"
+   ],
+   "seo": {
+    "title": null,
+    "description": null
+   },
+   "media": [
+    {
+     "id": "gid://shopify/MediaImage/74755246588244",
+     "alt": "Top and bottom view of a snowboard. The top view shows an illustration with varied outlined shapes\n        in black. The bottom view shows a black box character with an H pointing, and surrounded by black outlined\n        illustrative elements."
+    }
+   ],
+   "prices": [
+    {
+     "id": "gid://shopify/ProductVariant/58101017837908",
+     "price": "629.95",
+     "compareAtPrice": null
+    }
+   ]
+  },
+  {
+   "id": "gid://shopify/Product/15939189014868",
+   "title": "The Collection Snowboard: Liquid",
+   "handle": "the-collection-snowboard-liquid",
+   "descriptionHtml": "",
+   "productType": "snowboard",
+   "tags": [
+    "Accessory",
+    "Sport",
+    "Winter"
+   ],
+   "seo": {
+    "title": null,
+    "description": null
+   },
+   "media": [
+    {
+     "id": "gid://shopify/MediaImage/74755247145300",
+     "alt": "Top and bottom view of a snowboard. The top view shows a stylized scene of water, trees, mountains, sky and a moon in blue colours. The bottom view has a blue liquid, drippy background with the text \"liquid\" in a stylized script typeface."
+    }
+   ],
+   "prices": [
+    {
+     "id": "gid://shopify/ProductVariant/58101017903444",
+     "price": "749.95",
+     "compareAtPrice": null
+    }
+   ]
+  }
+ ],
+ "collections": [
+  {
+   "id": "gid://shopify/Collection/734411161940",
+   "title": "Home page",
+   "descriptionHtml": "",
+   "seo": {
+    "title": null,
+    "description": null
+   }
+  },
+  {
+   "id": "gid://shopify/Collection/734411194708",
+   "title": "Automated Collection",
+   "descriptionHtml": "",
+   "seo": {
+    "title": null,
+    "description": null
+   }
+  },
+  {
+   "id": "gid://shopify/Collection/734411227476",
+   "title": "Hydrogen",
+   "descriptionHtml": "",
+   "seo": {
+    "title": null,
+    "description": null
+   }
+  }
+ ],
+ "pages": [
+  {
+   "id": "gid://shopify/Page/716931268948",
+   "title": "Contact",
+   "handle": "contact",
+   "body": ""
+  }
+ ]
+}
