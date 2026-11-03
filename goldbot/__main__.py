@@ -142,7 +142,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.befehl == "einfuegen":
         pack, source, _ = profile_mod.build_profile(cfg)
         languages = pack.get("languages") or cfg.get("profile", {}).get("languages")
-        page = helper.write(output_dir(cfg) / "einfuegen.html", pack, languages)
+        page = helper.write(output_dir(cfg) / "einfuegen.html", pack, languages, output_dir(cfg) / "muster")
         print(f"Einfüge-Hilfe ({source}): {page}")
         import webbrowser
         webbrowser.open(page.as_uri())

@@ -769,3 +769,14 @@ def test_pixabay_relevance_needs_all_query_words():
     assert ok and bonus == 3
     assert demo_mod.relevance({"tags": "gold bar, finance"}, "gold bars")[0]
     assert demo_mod.relevance({"tags": "fingerprint, green screen, scan"}, "fingerprint")[0] is False
+
+
+def test_helper_next_button_progress_and_videos(cfg, tmp_path):
+    from goldbot import helper
+    cfg["llm"]["provider"] = "aus"
+    pack, _, _ = profile.build_profile(cfg)
+    (tmp_path / "gold_de.mp4").write_bytes(b"x")
+    page = helper.build_page(pack, None, tmp_path)
+    assert 'id="next"' in page and "localStorage" in page and 'data-key="Einzeiler"' in page
+    assert "gold_de.mp4" in page and "finance_en.mp4" not in page  # nur vorhandene Videos
+    assert 'f.dataset.key=i+"·"+f.dataset.key' in page  # Gig-Felder gleichen Namens getrennt abhaken
