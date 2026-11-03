@@ -81,6 +81,7 @@ def _ideas_md(ideas: dict[str, Any], source: str) -> str:
         out += [
             f"## {i}. {idea['title']}",
             f"- **Warum jetzt:** {idea['why_now']}",
+            *([f"- **Link:** {idea['url']}"] if idea.get("url") else []),
             f"- **Kanal:** {idea['channel']} · **Aufwand:** {idea['effort']} · "
             f"**Umsatzpotenzial:** {idea['revenue_potential']}",
             "- **Schritte:**",
