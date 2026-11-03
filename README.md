@@ -5,11 +5,22 @@ Gold-Agent Videos und Reels – plus **Goldbot**, ein Assistent für dein Fiverr
 
 | Befehl | Ergebnis |
 |---|---|
-| `python -m goldbot profil` | Fertige Profiltexte zum Einfügen: Einzeiler, „Über mich“ (150–600 Zeichen), Fähigkeiten, 3 Gigs mit Titel, Tags, Beschreibung, Basic/Standard/Premium-Paketen und FAQ. Die Fiverr-Grenzen werden automatisch geprüft und eingehalten. |
-| `python -m goldbot trends` | Scannt Google Trends (AT/DE), Reddit (z. B. r/forhire mit **[Hiring]**-Aufträgen), Hacker News und eigene RSS-Feeds, und bewertet alles nach Relevanz für deine Nische. |
-| `python -m goldbot ideen` | Trends + 8 konkrete Vertriebsideen für die nächsten 7 Tage (mit Schritten, Kanal, Aufwand, Umsatzpotenzial). |
+| `python -m goldbot auftraege` | Sucht **neue** passende Aufträge (u. a. r/forhire, r/HireAnEditor), schreibt zu jedem einen Antwort-Entwurf und meldet sie per Windows-Hinweis. Bereits gemeldete Aufträge kommen nicht noch einmal. |
+| `python -m goldbot profil` | Fertige Profiltexte: Einzeiler, „Über mich“, Fähigkeiten, 3 Gigs mit Paketen und FAQ – Fiverr-Grenzen werden eingehalten. |
+| `python -m goldbot einfuegen` | Öffnet die **Einfüge-Hilfe**: eine Seite mit „Kopieren“-Knopf für jedes Fiverr-Feld. |
+| `python -m goldbot muster` | Erstellt 6 **Muster-Videos** (9:16, Gold/Finanzen/Krypto, Deutsch + Englisch) für dein Portfolio. Braucht ffmpeg. |
+| `python -m goldbot trends` | Trends und Konkurrenz-Preise aus Google Trends, Reddit, Hacker News und eigenen RSS-Feeds. |
+| `python -m goldbot ideen` | Trends + Vertriebsideen für die nächsten 7 Tage – echte Aufträge immer zuerst. |
 | `python -m goldbot alles` | Alles zusammen (Standard). |
-| `python -m goldbot dauer --alle 24` | Läuft dauerhaft und erstellt alle 24 Stunden einen neuen Bericht. |
+| `python -m goldbot dauer` | Dauerbetrieb: Aufträge jede Stunde, alles andere alle 24 Stunden. Läuft nur einmal gleichzeitig. |
+
+**KI:** Mit `provider: auto` nimmt Goldbot Claude, wenn ein API-Key gesetzt ist, sonst die lokale KI über
+[Ollama](https://ollama.com) (kostenlos, z. B. `qwen3:14b`). Ohne KI arbeitet er mit dem recherchierten Profil
+(`docs/profil-paket.json`) und Vorlagen. Antwort-Entwürfe werden geprüft: keine erfundene Erfahrung, keine Links.
+
+**Windows:** `windows\autostart-einrichten.ps1` legt Goldbot in den Autostart und erstellt die
+Desktop-Verknüpfungen (Goldbot, Aufträge, Berichte, Muster-Videos, Fiverr-Hilfe, Aktualisieren, KI-Key).
+Updates per Doppelklick auf „Goldbot aktualisieren“ – deine `config.yaml` und Berichte bleiben erhalten.
 
 Die Ergebnisse landen in `reports/<Datum_Uhrzeit>/`:
 `bericht.md` (alles), `profil.md`, `trends.md`, `ideen.md`, `daten.json`.

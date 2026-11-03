@@ -517,3 +517,33 @@ def test_insert_helper_page(cfg, tmp_path):
     import html as _h, json as _j, re as _re
     first = _re.search(r'data-copy="([^"]*)"', text).group(1)
     assert _j.loads(_h.unescape(first)) == pack["one_liner"]
+
+
+# --------------------------------------------------------------------------- #
+# Muster-Videos
+# --------------------------------------------------------------------------- #
+
+from goldbot import demo as demo_mod
+
+
+def test_demo_filtergraph_has_all_lines_and_no_percent_expansion(tmp_path):
+    d = next(x for x in demo_mod.DEMOS if x["name"] == "finanzen_de")
+    graph, total = demo_mod.filtergraph(d, tmp_path)
+    assert total == demo_mod.HOOK + 3 * demo_mod.LINE + demo_mod.CTA
+    texts = " ".join(p.read_text(encoding="utf-8") for p in sorted(tmp_path.glob("*.txt")))
+    assert "50 % deines" in texts and "Rücklagen" in texts
+    assert graph.count("expansion=none") == len(list(tmp_path.glob("*.txt")))
+    # Kommas nur in Anführungszeichen (sonst trennt ffmpeg dort die Filter)
+    import re as _re
+    assert "min(t/" in graph and _re.search(r"y='[^']*min\(t/[^']*'", graph)
+
+
+def test_demo_contents_are_marked_as_demo():
+    for d in demo_mod.DEMOS:
+        assert "DEMO" in d["footer"] and ("beratung" in d["footer"].lower() or "advice" in d["footer"])
+
+
+@pytest.mark.skipif(not demo_mod.find_ffmpeg() or not demo_mod.find_font(), reason="ffmpeg/Schrift fehlt")
+def test_demo_render_real_video(tmp_path):
+    out = demo_mod.render_all(tmp_path, ["krypto_de"])
+    assert out and out[0].stat().st_size > 50_000

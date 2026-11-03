@@ -6,6 +6,7 @@ Befehle:
   ideen    Trends scannen und Vertriebsideen erzeugen
   auftraege  Nur neue passende Aufträge suchen (mit Antwort-Entwurf + Hinweis)
   einfuegen  Einfüge-Hilfe für Fiverr öffnen (Kopieren-Knöpfe für jedes Feld)
+  muster   Muster-Videos (9:16) für dein Portfolio erstellen – braucht ffmpeg
   alles    Alles zusammen (Standard)
   dauer    Dauerbetrieb: Aufträge jede Stunde (--auftraege-alle),
            alles andere alle 24 Stunden (--alle)
@@ -64,7 +65,7 @@ def run(cfg: dict, command: str) -> None:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="goldbot", description="Profil-, Trend- und Vertriebsassistent")
     parser.add_argument("befehl", nargs="?", default="alles",
-                        choices=["profil", "trends", "ideen", "auftraege", "einfuegen", "alles", "dauer"])
+                        choices=["profil", "trends", "ideen", "auftraege", "einfuegen", "muster", "alles", "dauer"])
     parser.add_argument("-c", "--config", help="Pfad zur config.yaml")
     parser.add_argument("--alle", type=float, default=24.0,
                         help="Stunden zwischen zwei Komplett-Läufen im Modus 'dauer' (Standard 24)")
@@ -77,6 +78,16 @@ def main(argv: list[str] | None = None) -> int:
                         format="%(asctime)s %(levelname)s %(message)s", datefmt="%H:%M:%S")
     cfg = load_config(args.config)
 
+    if args.befehl == "muster":
+        from . import demo
+        target = output_dir(cfg) / "muster"
+        try:
+            made = demo.render_all(target)
+        except RuntimeError as exc:
+            log.error("%s", exc)
+            return 1
+        print(f"{len(made)} Muster-Videos erstellt in: {target}")
+        return 0 if made else 1
     if args.befehl == "einfuegen":
         pack, source, _ = profile_mod.build_profile(cfg)
         languages = pack.get("languages") or cfg.get("profile", {}).get("languages")

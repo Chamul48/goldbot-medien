@@ -1,4 +1,4 @@
-﻿# Goldbot aktualisieren: laedt die neueste Version von GitHub und behaelt
+﻿# Goldbot aktualisieren: lädt die neueste Version von GitHub und behält
 # deine config.yaml, deine Berichte und die Python-Umgebung.
 param([string]$Branch = "main")
 $ErrorActionPreference = "Stop"
@@ -36,9 +36,9 @@ try {
         Write-Host "Auf '$Branch' noch nicht vorhanden - nehme den Entwicklungs-Branch."
         $src = Get-Source "claude/automated-profile-sales-bot-8lab1g"
     }
-    if (-not $src) { throw "Download fehlgeschlagen oder unvollstaendig." }
+    if (-not $src) { throw "Download fehlgeschlagen oder unvollständig." }
 
-    # Vergleich VOR dem Kopieren: wurde config.yaml selbst geaendert?
+    # Vergleich VOR dem Kopieren: wurde config.yaml selbst geändert?
     $userCfg = Join-Path $root "config.yaml"
     $oldExample = Join-Path $root "config.example.yaml"
     $cfgUntouched = (Test-Path $userCfg) -and (Test-Path $oldExample) -and `
@@ -64,11 +64,11 @@ try {
         Copy-Item $oldExample $userCfg -Force
         Write-Host "config.yaml aktualisiert."
     } else {
-        Write-Host "config.yaml hast du geaendert - bleibt wie sie ist. Neue Optionen stehen in config.example.yaml." -ForegroundColor Yellow
+        Write-Host "config.yaml hast du geändert - bleibt wie sie ist. Neue Optionen stehen in config.example.yaml." -ForegroundColor Yellow
     }
 
-    Write-Host "Pruefe Python-Pakete ..."
-    & (Join-Path $root ".venv\Scripts\python.exe") -m pip install -q -r (Join-Path $root "requirements.txt")
+    Write-Host "Prüfe Python-Pakete ..."
+    & (Join-Path $root ".venv\Scripts\python.exe") -m pip install -q --disable-pip-version-check -r (Join-Path $root "requirements.txt")
     if ($LASTEXITCODE -ne 0) { throw "pip install ist fehlgeschlagen." }
 
     Write-Host "Starte Goldbot ..."
@@ -78,8 +78,8 @@ try {
 } catch {
     Write-Host ""
     Write-Host "Update fehlgeschlagen: $_" -ForegroundColor Red
-    Write-Host "Goldbot wurde nicht veraendert oder laeuft mit der alten Version weiter."
-    Read-Host "Enter zum Schliessen"
+    Write-Host "Goldbot wurde nicht verändert oder läuft mit der alten Version weiter."
+    Read-Host "Enter zum Schließen"
     exit 1
 } finally {
     Remove-Item $tmp -Recurse -Force -ErrorAction SilentlyContinue
