@@ -24,7 +24,11 @@ ist Deutsch mit echten Umlauten. Fiverr-Texte und Reddit-Antworten bleiben Engli
 - **Windows PowerShell 5.1** liest `.ps1` ohne BOM als ANSI → Umlaute kaputt. `.ps1` mit UTF-8-BOM
   speichern; `$args` ist reserviert; `Copy-Item ordner ziel -Recurse` legt `ziel\ordner` an, wenn
   `ziel` existiert → `ordner\*` kopieren.
+- **`.bat` braucht CRLF.** Mit reinen LF-Zeilenenden (plus UTF-8/`chcp 65001`) führt cmd.exe Bruchstücke
+  aus („Der Befehl "d" …“) und beendet sich mit Code 0. `.gitattributes` hält `*.bat`/`*.ps1` auf CRLF.
 - **ffmpeg drawtext:** `%` ist Platzhalter → `expansion=none`; Ausdrücke mit Kommas in `'…'`.
 - **Doppelstart:** Dauerbetrieb hält eine Datei-Sperre (`reports\.dauer.lock`); zweiter Start endet mit Code 2.
+- **Prozess-Filter:** Beim Beenden per Befehlszeile (`-like '*xyz*'`) den eigenen Prozess (`$PID`)
+  ausnehmen – sonst beendet sich der Befehl selbst.
 - **Fehlersuche:** Protokoll in `reports\goldbot.log` (rotiert, 3 × 1 MB).
 - `reports\` und `config.yaml` sind nicht im Repo – nichts Persönliches committen.

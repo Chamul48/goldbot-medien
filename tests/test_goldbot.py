@@ -564,3 +564,10 @@ def test_file_log_written(tmp_path):
         for h in root.handlers[len(before):]:
             h.close()
         root.handlers[:] = before
+
+
+def test_windows_scripts_use_crlf():
+    root = Path(__file__).parent.parent / "windows"
+    for f in list(root.glob("*.bat")) + list(root.glob("*.ps1")):
+        data = f.read_bytes()
+        assert b"\n" in data and data.count(b"\r\n") == data.count(b"\n"), f"{f.name} braucht CRLF"

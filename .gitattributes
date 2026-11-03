@@ -1,0 +1,4 @@
+# Windows-Skripte mit CRLF speichern und nie umwandeln: cmd.exe liest .bat mit
+# reinen LF-Zeilenenden (zusammen mit UTF-8) falsch und führt Bruchstücke aus.
+*.bat -text
+*.ps1 -text
