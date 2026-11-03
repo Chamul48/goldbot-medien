@@ -557,14 +557,14 @@ class Toolbox:
         self._approve("content", f"Update collection {collection_id}:\n{json.dumps(fields, ensure_ascii=False, indent=1)}")
         data = self.shop.graphql(
             """
-            mutation($input: CollectionInput!) {
-              collectionUpdate(input: $input) {
+            mutation($collection: CollectionUpdateInput!) {
+              collectionUpdate(collection: $collection) {
                 collection { id title }
                 userErrors { field message }
               }
             }
             """,
-            {"input": {"id": collection_id, **fields}},
+            {"collection": {"id": collection_id, **fields}},
         )["collectionUpdate"]
         if data["userErrors"]:
             raise ShopifyError(str(data["userErrors"]))
@@ -579,26 +579,31 @@ class Toolbox:
     ) -> Any:
         if bool(product_ids) == bool(tag_rule):
             raise ValueError("Give either product_ids (manual) or tag_rule (smart), not both or neither.")
-        col: dict[str, Any] = {"title": title, "descriptionHtml": description_html}
+        # Admin API 2026-10: membership is defined with `sources` (ruleSet/input are deprecated).
         if tag_rule:
-            col["ruleSet"] = {
-                "appliedDisjunctively": False,
-                "rules": [{"column": "TAG", "relation": "EQUALS", "condition": tag_rule}],
+            inclusion: dict[str, Any] = {
+                "matchType": "ALL",
+                "conditions": [{"productTag": {"matchType": "ANY", "relation": "TAGGED_WITH", "values": [tag_rule]}}],
             }
         else:
-            col["products"] = product_ids
+            inclusion = {"selections": [{"productId": pid} for pid in product_ids or []]}
+        col: dict[str, Any] = {
+            "title": title,
+            "descriptionHtml": description_html,
+            "sources": [{"source": {"title": title, "targetType": "PRODUCTS", "inclusion": inclusion}}],
+        }
         what = f"tag = {tag_rule}" if tag_rule else f"{len(product_ids or [])} products"
         self._approve("content", f"Create unpublished collection '{title}' ({what})")
         data = self.shop.graphql(
             """
-            mutation($input: CollectionInput!) {
-              collectionCreate(input: $input) {
+            mutation($collection: CollectionCreateInput!) {
+              collectionCreate(collection: $collection) {
                 collection { id title handle }
                 userErrors { field message }
               }
             }
             """,
-            {"input": col},
+            {"collection": col},
         )["collectionCreate"]
         if data["userErrors"]:
             raise ShopifyError(str(data["userErrors"]))

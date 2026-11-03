@@ -52,7 +52,6 @@ query($n: Int!, $after: String) {
       seo { title description }
       image { altText url }
       productsCount { count }
-      ruleSet { appliedDisjunctively }
     } }
   }
 }
@@ -238,11 +237,11 @@ def restore(shop: Any, backup_file: Path, confirm: Callable[[str, str], bool]) -
         if fields and confirm("content", f"Kollektion zurücksetzen {b['title']}: {', '.join(fields)}"):
             res = shop.graphql(
                 """
-                mutation($input: CollectionInput!) {
-                  collectionUpdate(input: $input) { collection { id } userErrors { field message } }
+                mutation($collection: CollectionUpdateInput!) {
+                  collectionUpdate(collection: $collection) { collection { id } userErrors { field message } }
                 }
                 """,
-                {"input": {"id": b["id"], **fields}},
+                {"collection": {"id": b["id"], **fields}},
             )["collectionUpdate"]
             log.append(f"Kollektion {b['title']}: {', '.join(fields)}" + (f" FEHLER {res['userErrors']}" if res["userErrors"] else ""))
     return log

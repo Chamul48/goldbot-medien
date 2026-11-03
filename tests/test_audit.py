@@ -54,7 +54,7 @@ class AuditShop:
             if "fileUpdate" in query:
                 return {"fileUpdate": {"files": variables["files"], "userErrors": []}}
             if "collectionUpdate" in query:
-                return {"collectionUpdate": {"collection": {"id": variables["input"]["id"], "title": "c"}, "userErrors": []}}
+                return {"collectionUpdate": {"collection": {"id": variables["collection"]["id"], "title": "c"}, "userErrors": []}}
             if "collectionCreate" in query:
                 return {"collectionCreate": {"collection": {"id": "gid://shopify/Collection/77", "title": "n", "handle": "n"},
                                              "userErrors": []}}
@@ -143,7 +143,7 @@ def test_run_audit_writes_report_without_changing_shop(tmp_path):
 def test_restore_writes_back_only_changed_content(tmp_path):
     shop = AuditShop(collections=[{"id": "gid://shopify/Collection/3", "title": "Barren", "handle": "barren",
                                    "descriptionHtml": "", "sortOrder": "MANUAL", "seo": {"title": None, "description": None},
-                                   "image": None, "productsCount": {"count": 2}, "ruleSet": None}])
+                                   "image": None, "productsCount": {"count": 2}}])
     backup = audit.write_backup(audit.snapshot(shop), tmp_path)
     # the agent improves product 1 and the collection
     shop.products[0]["descriptionHtml"] = "<p>Neu und lang.</p>"
@@ -158,7 +158,7 @@ def test_restore_writes_back_only_changed_content(tmp_path):
                     "seo": {"title": "", "description": ""}}
     files = [v for q, v in shop.mutations if "fileUpdate" in q][0]["files"]
     assert files == [{"id": "gid://shopify/MediaImage/5", "alt": ""}]
-    col = [v for q, v in shop.mutations if "collectionUpdate" in q][0]["input"]
+    col = [v for q, v in shop.mutations if "collectionUpdate" in q][0]["collection"]
     assert col == {"id": "gid://shopify/Collection/3", "descriptionHtml": ""}
     assert not any("price" in json.dumps(v).lower() for _, v in shop.mutations)
 
@@ -215,8 +215,17 @@ def test_create_collection_smart_rule_and_validation(tmp_path):
     out, err = tb.run("create_collection", {"title": "Barren", "description_html": "<p>x</p>",
                                             "product_ids": None, "tag_rule": "barren"})
     assert not err
-    rules = shop.mutations[0][1]["input"]["ruleSet"]["rules"]
-    assert rules == [{"column": "TAG", "relation": "EQUALS", "condition": "barren"}]
+    sent = shop.mutations[0][1]["collection"]
+    assert "ruleSet" not in sent and "collectionCreate(collection:" in shop.mutations[0][0]
+    src = sent["sources"][0]["source"]
+    assert src["targetType"] == "PRODUCTS"
+    assert src["inclusion"]["conditions"] == [
+        {"productTag": {"matchType": "ANY", "relation": "TAGGED_WITH", "values": ["barren"]}}]
+    out, err = tb.run("create_collection", {"title": "Auswahl", "description_html": "<p>x</p>",
+                                            "product_ids": ["gid://shopify/Product/1"], "tag_rule": None})
+    assert not err
+    assert shop.mutations[1][1]["collection"]["sources"][0]["source"]["inclusion"] == {
+        "selections": [{"productId": "gid://shopify/Product/1"}]}
 
 
 def test_list_collections(tmp_path):
