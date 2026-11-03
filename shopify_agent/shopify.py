@@ -30,6 +30,14 @@ def load_dotenv(path: str | Path = ".env") -> None:
             os.environ[key] = value
 
 
+def _env(key: str) -> str | None:
+    """Environment value, treating template placeholders ('shpat_...', 'dein-shop…') as unset."""
+    value = (os.environ.get(key) or "").strip()
+    if not value or value.endswith(("...", "_")) or value.startswith("dein-shop"):
+        return None
+    return value
+
+
 def fetch_client_credentials_token(
     store: str, client_id: str, client_secret: str, timeout: float = 30.0
 ) -> str:
@@ -60,10 +68,10 @@ class ShopifyClient:
         timeout: float = 60.0,
     ) -> None:
         load_dotenv()
-        store = store or os.environ.get("SHOPIFY_STORE")
-        token = token or os.environ.get("SHOPIFY_ACCESS_TOKEN")
-        client_id = os.environ.get("SHOPIFY_CLIENT_ID")
-        client_secret = os.environ.get("SHOPIFY_CLIENT_SECRET")
+        store = store or _env("SHOPIFY_STORE")
+        token = token or _env("SHOPIFY_ACCESS_TOKEN")
+        client_id = _env("SHOPIFY_CLIENT_ID")
+        client_secret = _env("SHOPIFY_CLIENT_SECRET")
         if not store or not (token or (client_id and client_secret)):
             raise ShopifyError(
                 "Set SHOPIFY_STORE (e.g. mein-shop.myshopify.com) and either SHOPIFY_ACCESS_TOKEN "

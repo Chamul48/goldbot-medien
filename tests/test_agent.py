@@ -262,3 +262,23 @@ def test_failed_attach_does_not_cause_second_upload(tmp_path):
     out, err = tb.run("upload_media", {"path": "v.mp4", "alt": "a", "product_id": None})
     assert err and "already uploaded" in out
     assert sum("fileCreate" in q for q in shop.calls) == 1
+
+
+def test_template_placeholders_count_as_missing(tmp_path, monkeypatch):
+    import pytest
+    import shopify_agent.shopify as sh
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("SHOPIFY_STORE", "dein-shop.myshopify.com")
+    monkeypatch.setenv("SHOPIFY_ACCESS_TOKEN", "shpat_...")
+    for k in ("SHOPIFY_CLIENT_ID", "SHOPIFY_CLIENT_SECRET"):
+        monkeypatch.delenv(k, raising=False)
+    with pytest.raises(sh.ShopifyError, match="SHOPIFY_STORE"):
+        sh.ShopifyClient()
+    # real store + client credentials win over a leftover placeholder token
+    monkeypatch.setenv("SHOPIFY_STORE", "echt.myshopify.com")
+    monkeypatch.setenv("SHOPIFY_CLIENT_ID", "cid")
+    monkeypatch.setenv("SHOPIFY_CLIENT_SECRET", "sec")
+    monkeypatch.setattr(sh.requests, "post", lambda url, data, timeout: NS(
+        status_code=200, json=lambda: {"access_token": "tok"}))
+    assert sh.ShopifyClient().session.headers["X-Shopify-Access-Token"] == "tok"
