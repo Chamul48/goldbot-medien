@@ -138,6 +138,10 @@ def main(argv: list[str] | None = None) -> int:
             log.error("%s", exc)
             return 1
         print(f"{len(made)} Muster-Videos erstellt in: {target}")
+        pack, _, _ = profile_mod.build_profile(cfg)
+        covers = demo.render_covers(target, pack.get("gigs", []), helper.GIG_VIDEOS)
+        if covers:
+            print(f"{len(covers)} Gig-Titelbilder (1280×769) für die Fiverr-Galerie erstellt.")
         return 0 if made else 1
     if args.befehl == "einfuegen":
         pack, source, _ = profile_mod.build_profile(cfg)

@@ -39,9 +39,14 @@ def _videos(folder: Path | None, names: list[str]) -> str:
     found = [folder / f"{n}.mp4" for n in names if (folder / f"{n}.mp4").exists()]
     if not found:
         return ""
-    links = " · ".join(f'<a href="{f.as_uri()}">{html.escape(f.name)}</a>' for f in found)
-    return ('<section class="field info"><div class="head"><h3>Galerie: Videos hochladen</h3></div>'
-            f'<p class="hint">In Fiverr bei „Galerie“ → „Video“ hochladen. Datei aus: '
+    gig = GIG_VIDEOS.index(names) + 1 if names in GIG_VIDEOS else 0
+    cover = folder / f"gig{gig}_titelbild.jpg"
+    img = (f'<p><img src="{cover.as_uri()}" alt="Titelbild Gig {gig}" style="width:100%;border-radius:8px"></p>'
+           if cover.exists() else "")
+    links = " · ".join(f'<a href="{f.as_uri()}">{html.escape(f.name)}</a>' for f in found + ([cover] if img else []))
+    return ('<section class="field info"><div class="head"><h3>Galerie: Titelbild + Videos hochladen</h3></div>'
+            + img +
+            f'<p class="hint">In Fiverr bei „Galerie“: Bild = Titelbild, Video = ein Muster-Video. Datei aus: '
             f'<a href="{folder.as_uri()}">{html.escape(str(folder))}</a></p><p>{links}</p></section>')
 
 

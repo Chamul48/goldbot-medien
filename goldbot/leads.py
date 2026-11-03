@@ -25,6 +25,7 @@ from .trends import TrendItem
 log = logging.getLogger(__name__)
 
 KEEP_DAYS = 30
+MAX_AGE_HOURS = 48  # ältere Posts sind meist schon vergeben
 
 # Ein Auftrag muss mindestens einen dieser Begriffe enthalten (Video-Bezug).
 # Sonst würde z. B. "[Hiring] AI chatbot developer" wegen "ai" gemeldet.
@@ -133,12 +134,36 @@ def _video_related(item: TrendItem, terms: list[str]) -> bool:
     return any(re.search(rf"\b{re.escape(t.lower())}" + ("" if len(t) >= 4 else r"\b"), text) for t in terms)
 
 
-def find_new(items: list[TrendItem], state: dict[str, str], terms: list[str] | None = None) -> list[TrendItem]:
-    """Passende Aufträge mit Video-Bezug, die noch nicht gemeldet wurden."""
+def _age_hours(item: TrendItem, now: datetime) -> float | None:
+    """Alter des Posts in Stunden (Atom-ISO oder RSS-Datum); None, wenn unbekannt."""
+    raw = (item.published or "").strip()
+    if not raw:
+        return None
+    try:
+        when = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+    except ValueError:
+        from email.utils import parsedate_to_datetime
+        try:
+            when = parsedate_to_datetime(raw)
+        except (TypeError, ValueError):
+            return None
+    ref = now if now.tzinfo else now.astimezone()
+    if when.tzinfo is None:
+        when = when.replace(tzinfo=ref.tzinfo)
+    return (ref - when).total_seconds() / 3600
+
+
+def find_new(items: list[TrendItem], state: dict[str, str], terms: list[str] | None = None,
+             now: datetime | None = None, max_age_hours: float = MAX_AGE_HOURS) -> list[TrendItem]:
+    """Passende, frische Aufträge mit Video-Bezug, die noch nicht gemeldet wurden."""
     terms = terms or DEFAULT_LEAD_TERMS
+    now = now or datetime.now()
     out, seen = [], set()
     for item in items:
         key = _key(item)
+        age = _age_hours(item, now)
+        if age is not None and age > max_age_hours:
+            continue
         if (item.kind == "auftrag" and item.matched and _video_related(item, terms)
                 and key not in state and key not in seen):
             seen.add(key)
@@ -208,7 +233,9 @@ def write_leads(out_dir: str | Path, items: list[TrendItem], drafts: dict[str, s
             fh.write(f"- **Link:** {item.url}\n- **Quelle:** {item.source} · **Treffer:** {', '.join(item.matched)}\n")
             if item.summary:
                 fh.write(f"- **Auszug:** {item.summary[:300]}\n")
-            fh.write(f"\n**Antwort-Entwurf:**\n```\n{drafts.get(_key(item), '')}\n```\n\n")
+            draft = drafts.get(_key(item), "")
+            fence = "~~~" if "```" in draft else "```"  # Entwurf mit ``` darf den Block nicht sprengen
+            fh.write(f"\n**Antwort-Entwurf:**\n{fence}\n{draft}\n{fence}\n\n")
     return path
 
 
@@ -227,7 +254,8 @@ def check(
             log.warning("Auftrags-Quellen nicht erreichbar: %s", ", ".join(errors))
     path = state_path(cfg)
     state = load_state(path)
-    new = find_new(items, state, (cfg.get("leads") or {}).get("require_any"))
+    lcfg = cfg.get("leads") or {}
+    new = find_new(items, state, lcfg.get("require_any"), now, float(lcfg.get("max_age_hours", MAX_AGE_HOURS)))
     if not new:
         log.info("Keine neuen passenden Aufträge.")
         return []
@@ -238,7 +266,7 @@ def check(
     title = "Goldbot: 1 neuer Auftrag" if len(new) == 1 else f"Goldbot: {len(new)} neue Aufträge"
     body = new[0].title if len(new) == 1 else "; ".join(i.title[:60] for i in new[:3])
     details = "\n\n".join(f"{i.title}\n{i.url}" for i in new)
-    used = notify.send(cfg, title, body, details)
+    used = notify.send(cfg, title, body, details, open_path=file)
     log.info("Gespeichert in %s%s", file, f" · gemeldet über {', '.join(used)}" if used else "")
 
     for item in new:

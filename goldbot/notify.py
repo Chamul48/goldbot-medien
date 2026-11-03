@@ -27,15 +27,23 @@ $t = [Windows.UI.Notifications.ToastNotificationManager]::GetTemplateContent([Wi
 $x = $t.GetElementsByTagName('text')
 $x.Item(0).AppendChild($t.CreateTextNode($env:GOLDBOT_TOAST_TITLE)) | Out-Null
 $x.Item(1).AppendChild($t.CreateTextNode($env:GOLDBOT_TOAST_BODY)) | Out-Null
+if ($env:GOLDBOT_TOAST_LAUNCH) {
+  # Klick auf den Hinweis öffnet die Auftragsliste
+  $t.DocumentElement.SetAttribute('activationType', 'protocol')
+  $t.DocumentElement.SetAttribute('launch', $env:GOLDBOT_TOAST_LAUNCH)
+}
 [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier('%s').Show([Windows.UI.Notifications.ToastNotification]::new($t))
 """ % _PS_APP_ID
 
 
-def windows_toast(title: str, body: str) -> bool:
+def windows_toast(title: str, body: str, open_path: str | os.PathLike | None = None) -> bool:
     if sys.platform != "win32":
         return False
     encoded = base64.b64encode(_TOAST_SCRIPT.encode("utf-16-le")).decode()
     env = {**os.environ, "GOLDBOT_TOAST_TITLE": title[:120], "GOLDBOT_TOAST_BODY": body[:250]}
+    if open_path:
+        from pathlib import Path
+        env["GOLDBOT_TOAST_LAUNCH"] = Path(open_path).resolve().as_uri()
     try:
         subprocess.run(
             ["powershell.exe", "-NoProfile", "-NonInteractive", "-EncodedCommand", encoded],
@@ -65,11 +73,15 @@ def telegram(text: str, chat_id: str, token: str | None = None) -> bool:
         return False
 
 
-def send(cfg: dict[str, Any], title: str, body: str, details: str = "") -> list[str]:
-    """Schickt eine Nachricht über alle eingeschalteten Kanäle. Gibt die genutzten Kanäle zurück."""
+def send(cfg: dict[str, Any], title: str, body: str, details: str = "",
+         open_path: str | os.PathLike | None = None) -> list[str]:
+    """Schickt eine Nachricht über alle eingeschalteten Kanäle. Gibt die genutzten Kanäle zurück.
+
+    open_path: Datei, die ein Klick auf den Windows-Hinweis öffnet.
+    """
     ncfg = cfg.get("notify", {}) or {}
     used = []
-    if ncfg.get("windows", True) and windows_toast(title, body):
+    if ncfg.get("windows", True) and windows_toast(title, body, open_path):
         used.append("windows")
     chat_id = str(ncfg.get("telegram_chat_id") or "")
     if chat_id and telegram(f"{title}\n\n{details or body}", chat_id):
