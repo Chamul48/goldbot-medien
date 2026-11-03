@@ -569,8 +569,10 @@ def test_demo_ass_has_karaoke_hook_cta_and_footer():
     ass = demo_mod.build_ass(d, scenes, "DejaVu Sans", start)
     assert "50/30/20-Regel" in ass and "Rücklagen." in ass and d["footer"] in ass
     assert ass.count("Style: Cap,") == 1 and "\\1c&H0073BF1D" in ass  # Akzent 0x1dbf73 als BGR
-    assert d["cta"] in ass and "1/3" in ass and "3/3" in ass
-    assert ass.count(",Cap,,") >= 9  # Untertitel in Gruppen, nicht als ein Block
+    assert d["cta"] in ass and "1/3" not in ass and d["chip"] not in ass  # wenig Text
+    assert ass.count(",Cap,,") >= 12  # höchstens 2 Wörter auf einmal
+    foot = next(l for l in ass.splitlines() if ",Foot," in l)
+    assert foot.startswith("Dialogue: 1,0:00:12.00")  # Hinweis erst in der letzten Szene
 
 
 def test_pixabay_prefers_vertical_full_hd():

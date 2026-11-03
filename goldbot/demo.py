@@ -418,19 +418,19 @@ ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Cap,{family},92,{white},{white},{black},&H96000000,1,0,0,0,100,100,0,0,1,7,4,5,70,70,0,1
-Style: Hook,{family},112,{white},{white},{black},&H96000000,1,0,0,0,100,100,0,0,1,8,5,8,80,80,360,1
+Style: Cap,{family},84,{white},{white},{black},&H96000000,1,0,0,0,100,100,0,0,1,7,4,5,70,70,0,1
+Style: Hook,{family},104,{white},{white},{black},&H96000000,1,0,0,0,100,100,0,0,1,8,5,8,80,80,360,1
 Style: Chip,{family},40,{_ass_color('111111')},{white},{accent},{accent},1,0,0,0,100,100,3,0,3,14,0,7,64,64,70,1
 Style: Count,{family},60,{accent},{white},{black},&H96000000,1,0,0,0,100,100,2,0,1,5,2,8,70,70,1010,1
-Style: Cta,{family},76,{_ass_color('111111')},{white},{accent},{accent},1,0,0,0,100,100,0,0,3,30,0,5,90,90,0,1
+Style: Cta,{family},66,{_ass_color('111111')},{white},{accent},{accent},1,0,0,0,100,100,0,0,3,30,0,5,90,90,0,1
 Style: Foot,{family},30,&H40FFFFFF,{white},{black},&H96000000,1,0,0,0,100,100,1,0,1,2,0,2,60,60,64,1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 """
-    ev = [f"Dialogue: 2,{_ts(0)},{_ts(total)},Chip,,0,0,0,,{{\\fad(300,0)}}{_esc(demo['chip'])}",
-          f"Dialogue: 1,{_ts(0)},{_ts(total)},Foot,,0,0,0,,{_esc(demo['footer'])}"]
-    n_lines = len(demo["lines"])
+    # Wenig Text: kein Etikett, kein Zähler; der Hinweis nur in der letzten Szene
+    cta_start = next((sc["start"] for sc in scenes if sc["kind"] == "cta"), max(total - 3, 0))
+    ev = [f"Dialogue: 1,{_ts(cta_start)},{_ts(total)},Foot,,0,0,0,,{{\\fad(200,0)}}{_esc(demo['footer'])}"]
     for sc in scenes:
         start, end = sc["start"], sc["start"] + sc["dur"]
         if sc["kind"] == "hook":
@@ -451,12 +451,9 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
                       f"{{\\pos({W // 2},{int(H * 0.62)})\\fscx60\\fscy60\\t(0,260,\\fscx100\\fscy100){pulse}}}"
                       f"{_esc(demo['cta'])}")
             continue  # der Knopf zeigt den Text schon – keine doppelten Untertitel
-        else:
-            ev.append(f"Dialogue: 2,{_ts(start)},{_ts(end - 0.05)},Count,,0,0,0,,"
-                      f"{{\\fad(120,120)}}{sc['index']}/{n_lines}")
         # Untertitel Wort für Wort im Takt der Stimme
         y = int(H * 0.66)
-        groups = chunks(sc["words"])
+        groups = chunks(sc["words"], max_words=2, max_chars=14)
         for g, group in enumerate(groups):
             g_start = start + group[0][0]
             g_end = start + (groups[g + 1][0][0] if g + 1 < len(groups) else sc["dur"] - 0.08)
@@ -483,11 +480,15 @@ def scene_video(src: Path | None, dur: float, demo: dict[str, Any], target: Path
                 src_len: float = 0.0) -> None:
     """Eine Szene: Clip auf 9:16, Zoom-Punch am Schnitt, langsamer Push-in, Farbkorrektur."""
     frames = int(round(dur * FPS))
-    zoom = "if(lt(on,7),1.12-0.017*on,1.0+0.0005*(on-7))"
-    look = (f"fps={FPS},scale={int(W * 1.2)}:{int(H * 1.2)}:force_original_aspect_ratio=increase,"
-            f"crop={int(W * 1.2)}:{int(H * 1.2)},"
-            f"zoompan=z='{zoom}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s={W}x{H}:fps={FPS},"
-            "eq=contrast=1.06:saturation=1.12:brightness=-0.03,vignette=PI/5,format=yuv420p")
+    # Zoom per Skalierung je Bild (weich, ohne das Ruckeln von zoompan): kurzer Punch am Schnitt
+    # (1,10 → 1,0 in 0,25 s), danach langsamer Push-in.
+    z = "(if(lt(t,0.25),1.10-0.4*t,1.0+0.012*(t-0.25)))"
+    look = (f"fps={FPS},crop='min(iw,ih*9/16)':'min(ih,iw*16/9)',"
+            f"scale={W}:{H}:flags=lanczos,"
+            f"scale=w='trunc({W}*{z}/2)*2':h='trunc({H}*{z}/2)*2':eval=frame:flags=lanczos,"
+            f"crop={W}:{H},"
+            "eq=contrast=1.04:saturation=1.10,unsharp=5:5:0.5:5:5:0.0,"
+            "vignette=angle=PI/6,format=yuv420p")
     if src is not None:
         # Etwas nach dem Anfang einsteigen (Pixabay-Clips beginnen oft mit Einblendung)
         offset = min(0.8, max(src_len - dur, 0.0) / 2) if src_len else 0.0
@@ -497,7 +498,7 @@ def scene_video(src: Path | None, dur: float, demo: dict[str, Any], target: Path
         inp = ["-f", "lavfi", "-i", f"gradients=s={W}x{H}:c0={c0}:c1={c1}:x0=0:y0=0:x1={W}:y1={H}:"
                                     f"speed=0.01:d={dur + 1}:r={FPS}"]
     _run([ffmpeg, "-y", "-hide_banner", "-loglevel", "error", *inp, "-vf", look, "-frames:v", str(frames),
-          "-an", "-c:v", "libx264", "-preset", "veryfast", "-crf", "16", "-r", str(FPS), str(target)], work)
+          "-an", "-c:v", "libx264", "-preset", "fast", "-crf", "14", "-r", str(FPS), str(target)], work)
 
 
 def _music_expr(total: float) -> str:
@@ -558,8 +559,8 @@ def render(demo: dict[str, Any], out: Path, ffmpeg: str, font: tuple[str, str], 
 
         # 3) Schatten oben/unten für lesbare Schrift, Untertitel
         _run([ffmpeg, "-y", "-hide_banner", "-loglevel", "error", "-f", "lavfi", "-i", f"color=black:s={W}x{H}",
-              "-vf", "format=rgba,geq=r=0:g=0:b=0:a='if(lt(Y,380),170*(1-Y/380),"
-                     "if(gt(Y,1000),min(190,190*(Y-1000)/650),0))'",
+              "-vf", "format=rgba,geq=r=0:g=0:b=0:a='if(lt(Y,300),90*(1-Y/300),"
+                     "if(gt(Y,1050),min(140,140*(Y-1050)/600),0))'",
               "-frames:v", "1", "shade.png"], work)
         (work / "subs.ass").write_text(build_ass(demo, scenes, family, total), encoding="utf-8")
 
@@ -597,7 +598,7 @@ def render(demo: dict[str, Any], out: Path, ffmpeg: str, font: tuple[str, str], 
         fg.append(f"{''.join(mix)}amix=inputs={len(mix)}:normalize=0:duration=longest,"
                   f"atrim=0:{total},alimiter=limit=0.9[aout]")
         cmd += ["-filter_complex", ";".join(fg), "-map", "[v]", "-map", "[aout]",
-                "-c:v", "libx264", "-preset", "medium", "-crf", "18", "-profile:v", "high", "-pix_fmt", "yuv420p",
+                "-c:v", "libx264", "-preset", "slow", "-crf", "17", "-profile:v", "high", "-pix_fmt", "yuv420p",
                 "-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-movflags", "+faststart",
                 "-t", str(total), str(target.resolve())]
         say(f"{demo['name']}: Endschnitt ({total:.1f} s) …")
