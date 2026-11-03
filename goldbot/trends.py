@@ -250,7 +250,10 @@ def collect(
             errors.append(name)
             continue
         cap = limit * max(len(subs), 1) if name.startswith("Reddit") else limit
-        items.extend(parsed[:cap])
+        for item in parsed[:cap]:
+            if name.startswith("Reddit") and item.category:
+                item.source = f"Reddit r/{item.category}"
+            items.append(item)
     return items, errors
 
 

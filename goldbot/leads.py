@@ -50,11 +50,21 @@ REPLY_SCHEMA = {
 }
 
 REPLY_SYSTEM = (
-    "Du schreibst kurze Antworten auf Auftrags-Posts für einen Freelance-Video-Editor. "
-    "Regeln: Englisch (außer der Post ist deutsch), höchstens 80 Wörter, freundlich, konkret auf den Post "
-    "bezogen. Erfinde KEINE Erfahrung, Kunden, Zahlen oder Ergebnisse. Setze für Arbeitsproben genau den "
-    "Platzhalter [PORTFOLIO-LINK] ein. Keine E-Mail-Adressen oder Telefonnummern. Ende mit einer kurzen "
-    "Frage nach Umfang, Deadline oder Budget."
+    "Du schreibst kurze Antworten auf Auftrags-Posts für einen NEUEN Freelance-Video-Editor ohne "
+    "Referenzen. Regeln: Englisch (außer der Post ist deutsch), höchstens 70 Wörter, freundlich, konkret "
+    "auf den Post bezogen. Beschreibe, was du für DIESEN Post tun WÜRDEST ('I'd cut …', 'I can …'). "
+    "VERBOTEN: Behauptungen über Erfahrung oder Spezialisierung ('I specialize', 'I have experience', "
+    "'I work with', 'for various industries', 'my clients', Jahreszahlen, Ergebnisse). Setze für "
+    "Arbeitsproben genau den Platzhalter [PORTFOLIO-LINK] ein. Keine E-Mail-Adressen, Telefonnummern "
+    "oder Links. Ende mit einer kurzen Frage nach Umfang, Deadline oder Budget."
+)
+
+# Entwürfe mit erfundener Erfahrung werden verworfen (Vorlage statt KI-Text)
+CLAIM_RE = re.compile(
+    r"\b(i specialize|i specialise|specializ\w* in|i have (been|worked|experience|edited|helped)|"
+    r"years? of|experienced|my clients|for various|i work with|i('ve| have) (worked|edited|created)|"
+    r"proven|track record|many clients|top[- ]rated)\b|https?://|www\.|@\w+\.\w+",
+    re.I,
 )
 
 
@@ -112,10 +122,9 @@ def find_new(items: list[TrendItem], state: dict[str, str], terms: list[str] | N
 # --------------------------------------------------------------------------- #
 
 def template_reply(item: TrendItem, cfg: dict[str, Any]) -> str:
-    services = "short-form videos (Reels, TikTok, YouTube Shorts)"
     return (
-        f"Hi! I edit {services} in English and German and would be glad to help with this. "
-        "You can see my work here: [PORTFOLIO-LINK]. "
+        "Hi! I'm a video editor (English and German) and would be glad to help with this. "
+        "Here are some samples: [PORTFOLIO-LINK]. "
         "Could you share the number of videos, the deadline and your budget? "
         "Then I'll send you a concrete offer."
     )
@@ -138,7 +147,10 @@ def draft_replies(cfg: dict[str, Any], items: list[TrendItem]) -> dict[str, str]
     result = llm.ask_json(REPLY_SYSTEM, "\n".join(lines), REPLY_SCHEMA, cfg.get("llm", {}))
     for entry in (result or {}).get("replies", []):
         url, reply = entry.get("url"), (entry.get("reply") or "").strip()
-        if url in drafts and 20 <= len(reply) <= 900:
+        if url in drafts and 20 <= len(reply) <= 900 and "[PORTFOLIO-LINK]" in reply:
+            if CLAIM_RE.search(reply):
+                log.info("KI-Entwurf mit Erfahrungs-Behauptung verworfen – nutze Vorlage.")
+                continue
             drafts[url] = reply
     return drafts
 

@@ -365,9 +365,9 @@ def test_old_state_entries_are_pruned(tmp_path):
 def test_ai_reply_drafts_used_when_valid(fake_ollama, lead_cfg):
     items = trends.score([_lead(7)], lead_cfg["trends"]["keywords"])
     fake_ollama["answer"] = {"replies": [{"url": "https://reddit.com/p/7",
-                                          "reply": "Hi! I'd love to edit your reels. Samples: [PORTFOLIO-LINK]. Deadline?"}]}
+                                          "reply": "Hi! I'd cut your reels with tight hooks. Samples: [PORTFOLIO-LINK]. Deadline?"}]}
     drafts = leads.draft_replies(lead_cfg, items)
-    assert drafts["https://reddit.com/p/7"].startswith("Hi! I'd love")
+    assert drafts["https://reddit.com/p/7"].startswith("Hi! I'd cut")
 
 
 def test_lead_check_only_fetches_reddit(lead_cfg):
@@ -468,3 +468,30 @@ def test_lead_check_failure_keeps_report(cfg, tmp_path, monkeypatch):
     monkeypatch.setattr(cli.leads_mod, "check", boom)
     cli.run(cfg, "trends")
     assert list(tmp_path.glob("*/bericht.md"))
+
+
+
+@pytest.mark.parametrize("reply", [
+    "I specialize in AI-assisted editing for viral Shorts. See [PORTFOLIO-LINK]. Deadline?",
+    "I create high-quality Reels for various industries. Portfolio: [PORTFOLIO-LINK]. Timeline?",
+    "I work with creators on UGC content. [PORTFOLIO-LINK]. What do you need?",
+    "I can help! Samples: https://example.com Deadline?",
+    "I can help with this. What is your budget?",  # ohne Platzhalter
+])
+def test_ai_drafts_with_claims_fall_back_to_template(fake_ollama, lead_cfg, reply):
+    items = trends.score([_lead(5)], lead_cfg["trends"]["keywords"])
+    fake_ollama["answer"] = {"replies": [{"url": "https://reddit.com/p/5", "reply": reply}]}
+    draft = leads.draft_replies(lead_cfg, items)["https://reddit.com/p/5"]
+    assert draft == leads.template_reply(items[0], lead_cfg)
+
+
+def test_reddit_source_shows_real_subreddit(cfg):
+    xml = ('<feed xmlns="http://www.w3.org/2005/Atom"><entry><title>[Hiring] reels editor</title>'
+           '<category term="HireAnEditor"/><link href="https://r/1"/></entry></feed>')
+    class R:
+        text = xml
+    class F:
+        def get(self, url):
+            return R() if "reddit" in url else None
+    items, _ = trends.scan(cfg, F(), only=("reddit",))
+    assert items[0].source == "Reddit r/HireAnEditor" and items[0].kind == "auftrag"
