@@ -26,7 +26,13 @@ log = logging.getLogger(__name__)
 USER_AGENT = "goldbot-trendscanner/0.1 (personal research tool)"
 TIMEOUT = 20
 
-HIRING_RE = re.compile(r"\[(hiring|task)\]", re.I)
+HIRING_RE = re.compile(r"\[(hiring|task|paid)\]", re.I)
+# Aufträge ohne Tag, z. B. "Looking for a video editor for TikTok"
+HIRING_PHRASE_RE = re.compile(
+    r"\b(looking for|need(ed|ing)?|seeking|searching for|hiring|suche)\b[^.?!]{0,40}?"
+    r"\b(video ?editors?|editors?|cutter|reels?|shorts|tiktok|youtube)\b",
+    re.I,
+)
 FORHIRE_RE = re.compile(r"\[for ?hire\]", re.I)
 PRICE_RE = re.compile(r"(?:\$|€|usd|eur)\s?\d[\d.,]*|\d[\d.,]*\s?(?:\$|€|usd|eur)\b", re.I)
 
@@ -174,7 +180,9 @@ class Fetcher:
         return None
 
 
-def collect(cfg: dict[str, Any], fetcher: Fetcher | None = None) -> tuple[list[TrendItem], list[str]]:
+def collect(
+    cfg: dict[str, Any], fetcher: Fetcher | None = None, only: tuple[str, ...] | None = None
+) -> tuple[list[TrendItem], list[str]]:
     """Sammelt Einträge aus allen konfigurierten Quellen.
 
     Gibt (Einträge, Fehlerliste) zurück. Eine ausgefallene Quelle stoppt nicht den Lauf.
@@ -187,19 +195,21 @@ def collect(cfg: dict[str, Any], fetcher: Fetcher | None = None) -> tuple[list[T
     feed = lambda r, s: parse_feed(r.text, s)  # noqa: E731
     hn = lambda r, s: parse_hackernews(r.json(), s)  # noqa: E731
 
-    for geo in tcfg.get("google_trends_geo", []):
+    use = lambda kind: only is None or kind in only  # noqa: E731
+
+    for geo in (tcfg.get("google_trends_geo", []) if use("google") else []):
         jobs.append((f"Google Trends {geo}", f"https://trends.google.com/trending/rss?geo={geo}", feed))
-    subs = tcfg.get("reddit_subreddits", [])
+    subs = tcfg.get("reddit_subreddits", []) if use("reddit") else []
     if subs:
         # Ein einziger Sammel-Feed statt einer Anfrage pro Subreddit –
         # Reddit drosselt anonyme Abrufe sonst sofort (HTTP 429).
         joined = "+".join(subs)
         jobs.append((f"Reddit r/{joined}", f"https://www.reddit.com/r/{joined}/new/.rss?limit=100", feed))
-    for query in tcfg.get("hackernews_queries", []):
+    for query in (tcfg.get("hackernews_queries", []) if use("hackernews") else []):
         url = ("https://hn.algolia.com/api/v1/search_by_date?tags=story&hitsPerPage="
                f"{limit}&query={quote_plus(query)}")
         jobs.append((f"Hacker News '{query}'", url, hn))
-    for url in tcfg.get("rss_feeds", []):
+    for url in (tcfg.get("rss_feeds", []) if use("rss") else []):
         jobs.append((f"RSS {url}", url, feed))
 
     items: list[TrendItem] = []
@@ -237,13 +247,14 @@ def score(items: Iterable[TrendItem], keywords: list[str]) -> list[TrendItem]:
         text = f"{item.title} {item.summary}".lower()
         item.matched = [kw for kw, pat in patterns.items() if pat.search(text)]
         s = 2.0 * len(item.matched)
-        if item.source.startswith("Reddit") and HIRING_RE.search(item.title):
-            item.kind = "auftrag"
-        elif item.source.startswith("Reddit") and FORHIRE_RE.search(item.title):
+        is_reddit = item.source.startswith("Reddit")
+        if is_reddit and FORHIRE_RE.search(item.title):
             # Andere Anbieter: kein Trend, aber nützlich für den Preisvergleich
             item.kind = "konkurrenz"
             price = PRICE_RE.search(f"{item.title} {item.summary}")
             item.price = price.group(0) if price else ""
+        elif is_reddit and (HIRING_RE.search(item.title) or HIRING_PHRASE_RE.search(item.title)):
+            item.kind = "auftrag"
             s += 3.0 if item.matched else 0.5
         if item.traffic:
             # Logarithmisch, damit riesige Zahlen nicht alles dominieren
@@ -266,7 +277,10 @@ def dedupe(items: Iterable[TrendItem]) -> list[TrendItem]:
     return out
 
 
-def scan(cfg: dict[str, Any], fetcher: Fetcher | None = None) -> tuple[list[TrendItem], list[str]]:
-    items, errors = collect(cfg, fetcher)
+def scan(
+    cfg: dict[str, Any], fetcher: Fetcher | None = None, only: tuple[str, ...] | None = None
+) -> tuple[list[TrendItem], list[str]]:
+    """only: z. B. ("reddit",) für den schnellen Auftrags-Check."""
+    items, errors = collect(cfg, fetcher, only)
     keywords = cfg.get("trends", {}).get("keywords", [])
     return score(dedupe(items), keywords), errors

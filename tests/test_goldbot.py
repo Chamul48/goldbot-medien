@@ -75,7 +75,7 @@ def test_collect_survives_failing_sources(cfg):
     assert items and errors
     assert all(e.startswith("Hacker News") for e in errors)
     reddit = [u for u in fetched if "reddit" in u]
-    assert len(reddit) == 1 and "forhire+freelance" in reddit[0]
+    assert len(reddit) == 1 and "forhire+HireAnEditor" in reddit[0]
 
 
 def test_template_profile_respects_fiverr_limits(cfg):
@@ -302,3 +302,89 @@ def test_real_leads_always_first_with_ai(fake_ollama, cfg):
         "effort": "niedrig", "revenue_potential": "hoch"} for n in range(8)]}
     result, _ = ideas.build_ideas(cfg, scored)
     assert result["ideas"][0]["title"].startswith("Auftrag prüfen") and len(result["ideas"]) == 8
+
+
+# --------------------------------------------------------------------------- #
+# Auftrags-Wächter
+# --------------------------------------------------------------------------- #
+
+from datetime import datetime as _dt
+
+from goldbot import leads, notify
+
+
+def _lead(n, title="[Hiring] Video editor for TikTok reels"):
+    return trends.TrendItem(source="Reddit r/forhire", title=title, url=f"https://reddit.com/p/{n}")
+
+
+@pytest.fixture
+def lead_cfg(cfg, tmp_path, monkeypatch):
+    cfg["output_dir"] = str(tmp_path / "reports")
+    cfg["leads"] = {"state_file": str(tmp_path / "state.json")}
+    sent = []
+    monkeypatch.setattr(notify, "send", lambda c, t, b, d="": sent.append((t, b)) or ["test"])
+    cfg["_sent"] = sent
+    return cfg
+
+
+def test_phrase_without_tag_is_a_lead(cfg):
+    item = trends.score([trends.TrendItem(source="Reddit r/HireAnEditor",
+                                          title="Looking for a video editor for YouTube Shorts")],
+                        cfg["trends"]["keywords"])[0]
+    assert item.kind == "auftrag"
+
+
+def test_for_hire_still_competitor_even_with_phrase(cfg):
+    item = trends.score([trends.TrendItem(source="Reddit", title="[For Hire] Need a video editor? I edit reels")],
+                        cfg["trends"]["keywords"])[0]
+    assert item.kind == "konkurrenz"
+
+
+def test_leads_reported_only_once(lead_cfg):
+    items = trends.score([_lead(1), _lead(2)], lead_cfg["trends"]["keywords"])
+    first = leads.check(lead_cfg, items, now=_dt(2026, 11, 3, 8, 0))
+    second = leads.check(lead_cfg, items, now=_dt(2026, 11, 3, 9, 0))
+    assert len(first) == 2 and second == []
+    assert len(lead_cfg["_sent"]) == 1 and "2 neue Aufträge" in lead_cfg["_sent"][0][0]
+    md = (Path(lead_cfg["output_dir"]) / "auftraege" / "2026-11-03.md").read_text()
+    assert md.count("**Antwort-Entwurf:**") == 2 and "[PORTFOLIO-LINK]" in md
+
+
+def test_unmatched_or_competitor_posts_are_not_leads(lead_cfg):
+    items = trends.score([_lead(1, "[Hiring] Bookkeeper"), _lead(2, "[For Hire] reels editor")],
+                         lead_cfg["trends"]["keywords"])
+    assert leads.check(lead_cfg, items, now=_dt(2026, 11, 3)) == []
+
+
+def test_old_state_entries_are_pruned(tmp_path):
+    path = tmp_path / "s.json"
+    leads.save_state(path, {"old": "2026-09-01T00:00:00", "new": "2026-11-02T00:00:00"}, _dt(2026, 11, 3))
+    assert set(leads.load_state(path)) == {"new"}
+
+
+def test_ai_reply_drafts_used_when_valid(fake_ollama, lead_cfg):
+    items = trends.score([_lead(7)], lead_cfg["trends"]["keywords"])
+    fake_ollama["answer"] = {"replies": [{"url": "https://reddit.com/p/7",
+                                          "reply": "Hi! I'd love to edit your reels. Samples: [PORTFOLIO-LINK]. Deadline?"}]}
+    drafts = leads.draft_replies(lead_cfg, items)
+    assert drafts["https://reddit.com/p/7"].startswith("Hi! I'd love")
+
+
+def test_lead_check_only_fetches_reddit(lead_cfg):
+    fetched = []
+    class F:
+        def get(self, url):
+            fetched.append(url)
+            return None
+    leads.check(lead_cfg, fetcher=F(), now=_dt(2026, 11, 3))
+    assert fetched and all("reddit.com" in u for u in fetched)
+
+
+def test_notify_without_channels_is_quiet(monkeypatch):
+    monkeypatch.setattr(notify.sys, "platform", "linux")
+    assert notify.send({"notify": {"windows": True, "telegram_chat_id": ""}}, "t", "b") == []
+
+
+def test_single_lead_title(lead_cfg):
+    leads.check(lead_cfg, trends.score([_lead(9)], lead_cfg["trends"]["keywords"]), now=_dt(2026, 11, 3))
+    assert lead_cfg["_sent"][0][0] == "Goldbot: 1 neuer Auftrag"

@@ -65,12 +65,24 @@ trends:
     - precious metals
     - silver
   google_trends_geo: [AT, DE]
-  reddit_subreddits: [forhire, freelance, Entrepreneur, NewTubers, socialmedia, VideoEditing]
+  reddit_subreddits: [forhire, HireAnEditor, freelance, Entrepreneur, NewTubers, socialmedia, VideoEditing]
   hackernews_queries: [ai video, automation, short form video]
   # Beliebige weitere RSS/Atom-Feeds (Blogs, News, Branchen-Seiten)
   rss_feeds: []
   max_items_per_source: 25
   request_delay_seconds: 2
+
+leads:
+  # Wie oft im Dauerbetrieb nach neuen Aufträgen gesucht wird (Stunden, min. 0.25)
+  check_every_hours: 1
+  # KI schreibt zu jedem neuen Auftrag einen Antwort-Entwurf (du schickst ihn selbst ab)
+  reply_drafts: true
+
+notify:
+  # Windows-Hinweis bei neuen Aufträgen
+  windows: true
+  # Optional Telegram: Token als Umgebungsvariable GOLDBOT_TELEGRAM_TOKEN, hier nur die Chat-ID
+  telegram_chat_id: ""
 
 llm:
   # auto = Claude, wenn ANTHROPIC_API_KEY gesetzt ist, sonst lokale KI über Ollama.
