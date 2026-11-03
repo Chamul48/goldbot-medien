@@ -64,13 +64,12 @@ def _prompt(profile: dict[str, Any], trends: list[TrendItem]) -> str:
     return "\n".join(lines)
 
 
-def template_ideas(profile: dict[str, Any], trends: list[TrendItem]) -> dict[str, Any]:
-    """Regelbasierte Ideen ohne KI."""
-    ideas: list[dict[str, Any]] = []
+def lead_ideas(trends: list[TrendItem]) -> list[dict[str, Any]]:
+    """Echte, passende Auftrags-Posts – immer zuerst, unabhängig von der KI."""
+    out = []
     # Nur Aufträge, die zu deinen Stichwörtern passen (kein "Grafik-Praktikum")
-    leads = [t for t in trends if t.kind == "auftrag" and t.matched][:3]
-    for lead in leads:
-        ideas.append({
+    for lead in [t for t in trends if t.kind == "auftrag" and t.matched][:3]:
+        out.append({
             "title": f"Auftrag prüfen: {lead.title[:80]}",
             "why_now": f"Frisch gepostete Anfrage in {lead.source}, passt zu: {', '.join(lead.matched)}.",
             "action_steps": [
@@ -81,7 +80,14 @@ def template_ideas(profile: dict[str, Any], trends: list[TrendItem]) -> dict[str
             "channel": lead.source,
             "effort": "niedrig",
             "revenue_potential": "mittel",
+            "url": lead.url,
         })
+    return out
+
+
+def template_ideas(profile: dict[str, Any], trends: list[TrendItem]) -> dict[str, Any]:
+    """Regelbasierte Ideen ohne KI."""
+    ideas: list[dict[str, Any]] = lead_ideas(trends)
 
     # Content-Ideen nur aus echten Suchtrends (Google Trends), nicht aus Tech-News
     hot = [t for t in trends if t.kind == "trend" and t.matched and t.source.startswith("Google")][:3]
@@ -161,5 +167,10 @@ def build_ideas(cfg: dict[str, Any], trends: list[TrendItem]) -> tuple[dict[str,
         llm_cfg,
     )
     if result:
+        # Echte Aufträge immer zuerst – die KI darf sie nicht weglassen
+        leads = lead_ideas(trends)
+        lead_urls = {l["url"] for l in leads}
+        rest = [i for i in result.get("ideas", []) if not any(u and u in i.get("why_now", "") for u in lead_urls)]
+        result["ideas"] = (leads + rest)[:8]
         return result, llm.describe(llm_cfg)
     return template_ideas(profile, trends), "vorlage"

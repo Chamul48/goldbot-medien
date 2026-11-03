@@ -291,3 +291,14 @@ def test_ideas_prompt_lists_only_matching_signals_with_links():
              trends.TrendItem(source="HN", title="Unrelated", url="https://x/2")]
     text = ideas._prompt({}, items)
     assert "https://x/1" in text and "Unrelated" not in text and "viele Anfragen" in text
+
+
+def test_real_leads_always_first_with_ai(fake_ollama, cfg):
+    lead = trends.TrendItem(source="Reddit r/forhire", title="[Hiring] Video editor for reels",
+                            url="https://reddit.com/lead1")
+    scored = trends.score([lead], cfg["trends"]["keywords"])
+    fake_ollama["answer"] = {"weekly_focus": "f", "ideas": [{
+        "title": f"KI-Idee {n}", "why_now": "w", "action_steps": ["a"], "channel": "c",
+        "effort": "niedrig", "revenue_potential": "hoch"} for n in range(8)]}
+    result, _ = ideas.build_ideas(cfg, scored)
+    assert result["ideas"][0]["title"].startswith("Auftrag prüfen") and len(result["ideas"]) == 8
