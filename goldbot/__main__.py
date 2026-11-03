@@ -106,7 +106,7 @@ def run(cfg: dict, command: str) -> bool:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="goldbot", description="Profil-, Trend- und Vertriebsassistent")
     parser.add_argument("befehl", nargs="?", default="alles",
-                        choices=["profil", "trends", "ideen", "auftraege", "einfuegen", "muster", "alles", "dauer"])
+                        choices=["profil", "trends", "ideen", "auftraege", "einfuegen", "muster", "simulation", "alles", "dauer"])
     parser.add_argument("-c", "--config", help="Pfad zur config.yaml")
     parser.add_argument("--alle", type=float, default=24.0,
                         help="Stunden zwischen zwei Komplett-Läufen im Modus 'dauer' (Standard 24)")
@@ -114,6 +114,8 @@ def main(argv: list[str] | None = None) -> int:
                         help="Stunden zwischen zwei Auftrags-Checks im Modus 'dauer' (Standard aus config, sonst 1)")
     parser.add_argument("--nur", nargs="+", metavar="NAME",
                         help="Nur diese Muster-Videos neu erstellen, z. B. --nur finanzen_de krypto_de")
+    parser.add_argument("--laeufe", type=int, default=None,
+                        help="Anzahl simulierter Monate für 'simulation' (Standard 2000)")
     parser.add_argument("-v", "--verbose", action="store_true")
     args = parser.parse_args(argv)
 
@@ -145,6 +147,20 @@ def main(argv: list[str] | None = None) -> int:
         if covers:
             print(f"{len(covers)} Gig-Titelbilder (1280×769) für die Fiverr-Galerie erstellt.")
         return 0 if made else 1
+    if args.befehl == "simulation":
+        from . import simulation
+        overrides = {"laeufe": max(100, args.laeufe)} if args.laeufe else None
+        try:
+            path, data = simulation.write(cfg, overrides)
+        except (OSError, ValueError) as exc:
+            log.error("Simulation fehlgeschlagen: %s", exc)
+            return 1
+        b = data["base"]
+        print(f"Simulation ({b['n']} Monate): typisch {b['p']['bestellungen'][1]:.0f} Aufträge, "
+              f"{simulation.money(b['p']['netto'][1])} netto "
+              f"(10–90 %: {simulation.money(b['p']['netto'][0])} – {simulation.money(b['p']['netto'][2])}).")
+        print(f"Bericht: {path}")
+        return 0
     if args.befehl == "einfuegen":
         pack, source, _ = profile_mod.build_profile(cfg)
         languages = pack.get("languages") or cfg.get("profile", {}).get("languages")
