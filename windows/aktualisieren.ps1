@@ -1,54 +1,86 @@
-# Goldbot aktualisieren: lädt die neueste Version von GitHub und behält
+﻿# Goldbot aktualisieren: laedt die neueste Version von GitHub und behaelt
 # deine config.yaml, deine Berichte und die Python-Umgebung.
 param([string]$Branch = "main")
 $ErrorActionPreference = "Stop"
 $Host.UI.RawUI.WindowTitle = "Goldbot aktualisieren"
 $root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 $tmp = Join-Path $env:TEMP "goldbot-update"
-Remove-Item $tmp -Recurse -Force -ErrorAction SilentlyContinue
-New-Item -ItemType Directory $tmp | Out-Null
 
-function Get-Branch($name) {
-    $zip = Join-Path $tmp "src.zip"
-    $url = "https://codeload.github.com/chamul48/goldbot-medien/zip/refs/heads/$name"
-    Invoke-WebRequest -UseBasicParsing $url -OutFile $zip
-    Expand-Archive $zip -DestinationPath (Join-Path $tmp $name.Replace('/', '_')) -Force
-    $dir = Get-ChildItem (Join-Path $tmp $name.Replace('/', '_')) -Directory | Select-Object -First 1
-    if (Test-Path (Join-Path $dir.FullName "goldbot\leads.py")) { return $dir.FullName }
+function Stop-Goldbot {
+    Get-CimInstance Win32_Process -Filter "Name='python.exe'" |
+        Where-Object { $_.CommandLine -like '*goldbot*dauer*' } |
+        ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
+    Get-CimInstance Win32_Process -Filter "Name='cmd.exe'" |
+        Where-Object { $_.CommandLine -like '*goldbot-starten*' } |
+        ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
+}
+
+function Get-Source($name) {
+    $folder = Join-Path $tmp ($name -replace '[/\\]', '_')
+    $zip = "$folder.zip"
+    Invoke-WebRequest -UseBasicParsing "https://codeload.github.com/chamul48/goldbot-medien/zip/refs/heads/$name" -OutFile $zip
+    Expand-Archive $zip -DestinationPath $folder -Force
+    $dir = Get-ChildItem $folder -Directory | Select-Object -First 1
+    if ($dir -and (Test-Path (Join-Path $dir.FullName "goldbot\leads.py"))) { return $dir.FullName }
     return $null
 }
 
-Write-Host "Lade neueste Version ($Branch) ..."
-$src = $null
-try { $src = Get-Branch $Branch } catch { }
-if (-not $src) {
-    Write-Host "Auf '$Branch' noch nicht vorhanden - nehme den Entwicklungs-Branch."
-    $src = Get-Branch "claude/automated-profile-sales-bot-8lab1g"
+try {
+    Remove-Item $tmp -Recurse -Force -ErrorAction SilentlyContinue
+    New-Item -ItemType Directory $tmp | Out-Null
+
+    Write-Host "Lade neueste Version ($Branch) ..."
+    $src = $null
+    try { $src = Get-Source $Branch } catch { }
+    if (-not $src) {
+        Write-Host "Auf '$Branch' noch nicht vorhanden - nehme den Entwicklungs-Branch."
+        $src = Get-Source "claude/automated-profile-sales-bot-8lab1g"
+    }
+    if (-not $src) { throw "Download fehlgeschlagen oder unvollstaendig." }
+
+    # Vergleich VOR dem Kopieren: wurde config.yaml selbst geaendert?
+    $userCfg = Join-Path $root "config.yaml"
+    $oldExample = Join-Path $root "config.example.yaml"
+    $cfgUntouched = (Test-Path $userCfg) -and (Test-Path $oldExample) -and `
+        ((Get-FileHash $userCfg).Hash -eq (Get-FileHash $oldExample).Hash)
+
+    Write-Host "Stoppe Goldbot ..."
+    Stop-Goldbot
+    Start-Sleep 1
+
+    foreach ($item in "goldbot", "docs", "tests", "windows") {
+        $from = Join-Path $src $item
+        if (Test-Path $from) {
+            # Inhalt kopieren (nicht den Ordner in den Ordner)
+            New-Item -ItemType Directory -Force (Join-Path $root $item) | Out-Null
+            Copy-Item (Join-Path $from "*") (Join-Path $root $item) -Recurse -Force
+        }
+    }
+    foreach ($file in "requirements.txt", "config.example.yaml", "README.md") {
+        $from = Join-Path $src $file
+        if (Test-Path $from) { Copy-Item $from (Join-Path $root $file) -Force }
+    }
+    if ($cfgUntouched -or -not (Test-Path $userCfg)) {
+        Copy-Item $oldExample $userCfg -Force
+        Write-Host "config.yaml aktualisiert."
+    } else {
+        Write-Host "config.yaml hast du geaendert - bleibt wie sie ist. Neue Optionen stehen in config.example.yaml." -ForegroundColor Yellow
+    }
+
+    Write-Host "Pruefe Python-Pakete ..."
+    & (Join-Path $root ".venv\Scripts\python.exe") -m pip install -q -r (Join-Path $root "requirements.txt")
+    if ($LASTEXITCODE -ne 0) { throw "pip install ist fehlgeschlagen." }
+
+    Write-Host "Starte Goldbot ..."
+    Start-Process -FilePath (Join-Path $root "windows\goldbot-starten.bat") -WorkingDirectory $root
+    Write-Host "Fertig." -ForegroundColor Green
+    Start-Sleep 3
+} catch {
+    Write-Host ""
+    Write-Host "Update fehlgeschlagen: $_" -ForegroundColor Red
+    Write-Host "Goldbot wurde nicht veraendert oder laeuft mit der alten Version weiter."
+    Read-Host "Enter zum Schliessen"
+    exit 1
+} finally {
+    Remove-Item $tmp -Recurse -Force -ErrorAction SilentlyContinue
 }
-
-$userCfg = Join-Path $root "config.yaml"
-$oldExample = Join-Path $root "config.example.yaml"
-$cfgUntouched = (Test-Path $userCfg) -and (Test-Path $oldExample) -and `
-    ((Get-FileHash $userCfg).Hash -eq (Get-FileHash $oldExample).Hash)
-
-foreach ($item in "goldbot", "docs", "tests", "windows", "requirements.txt", "config.example.yaml", "README.md") {
-    $from = Join-Path $src $item
-    if (Test-Path $from) { Copy-Item $from $root -Recurse -Force }
-}
-if ($cfgUntouched -or -not (Test-Path $userCfg)) {
-    Copy-Item $oldExample $userCfg -Force
-    Write-Host "config.yaml aktualisiert."
-} else {
-    Write-Host "config.yaml hast du geaendert - bleibt wie sie ist. Neue Optionen siehst du in config.example.yaml." -ForegroundColor Yellow
-}
-
-Write-Host "Pruefe Python-Pakete ..."
-& (Join-Path $root ".venv\Scripts\python.exe") -m pip install -q -r (Join-Path $root "requirements.txt")
-Remove-Item $tmp -Recurse -Force -ErrorAction SilentlyContinue
-
-Write-Host "Starte Goldbot neu ..."
-Get-CimInstance Win32_Process -Filter "Name='python.exe'" | Where-Object { $_.CommandLine -like '*goldbot*dauer*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }
-Get-Process cmd -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowTitle -like 'Goldbot*' } | Stop-Process -Force
-Start-Process -FilePath (Join-Path $root "windows\goldbot-starten.bat") -WorkingDirectory $root
-Write-Host "Fertig." -ForegroundColor Green
-Start-Sleep 3

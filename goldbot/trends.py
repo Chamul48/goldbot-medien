@@ -27,13 +27,32 @@ USER_AGENT = "goldbot-trendscanner/0.1 (personal research tool)"
 TIMEOUT = 20
 
 HIRING_RE = re.compile(r"\[(hiring|task|paid)\]", re.I)
-# Aufträge ohne Tag, z. B. "Looking for a video editor for TikTok"
+# Aufträge ohne Tag, z. B. "Looking for a video editor for TikTok" oder
+# "Need someone to edit my videos". Zählt nur in Auftrags-Subreddits.
 HIRING_PHRASE_RE = re.compile(
-    r"\b(looking for|need(ed|ing)?|seeking|searching for|hiring|suche)\b[^.?!]{0,40}?"
-    r"\b(video ?editors?|editors?|cutter|reels?|shorts|tiktok|youtube)\b",
+    r"\b(looking for|need(ed|ing)?|seeking|searching for|hiring|suche)\s+"
+    r"(an?\s+|some\s+|einen?\s+)?([\w/&+-]+\s+){0,3}?"
+    r"(video\s?)?(editors?|cutters?|creators?|videograph\w*)\b"
+    r"|\bneed(ed|ing)?\s+(someone|somebody|help)\s+to\s+edit\b",
     re.I,
 )
-FORHIRE_RE = re.compile(r"\[for ?hire\]", re.I)
+# Fragen und Hilfe-Posts sind keine Aufträge
+QUESTION_RE = re.compile(
+    r"\b(feedback|advice|tips?|critique|review my|opinions?|how (do|to|can)|do i need|"
+    r"is it worth|recommend(ation)?s?)\b",
+    re.I,
+)
+# Unbezahlt / Hobby
+UNPAID_RE = re.compile(r"\[(hobby|unpaid|free|collab)\]|\b(unpaid|for free|no budget|rev(enue)? ?share)\b", re.I)
+# Anbieter (Konkurrenz) – mit und ohne Tag
+FORHIRE_RE = re.compile(
+    r"\[(for ?hire|offer|available)\]|^\s*for hire\b|\b(i'?m|i am) an? [\w ]{0,20}?(editor|creator)\b|"
+    r"\b(hire me|my services|dm me|available for (work|hire|projects)|searching for clients|"
+    r"looking for (new )?(clients|work|projects)|disponível|disponible|creo videos)\b",
+    re.I,
+)
+# Subreddits, in denen auch Posts ohne [Hiring]-Tag als Auftrag zählen
+HIRING_SUBREDDITS = {"forhire", "hireaneditor", "videoeditingrequests", "freelance_forhire"}
 PRICE_RE = re.compile(r"(?:\$|€|usd|eur)\s?\d[\d.,]*|\d[\d.,]*\s?(?:\$|€|usd|eur)\b", re.I)
 
 
@@ -47,6 +66,7 @@ class TrendItem:
     traffic: int = 0
     kind: str = "trend"  # "trend", "auftrag" oder "konkurrenz"
     price: str = ""
+    category: str = ""  # bei Reddit: Subreddit, z. B. "HireAnEditor"
     matched: list[str] = field(default_factory=list)
     score: float = 0.0
 
@@ -94,6 +114,9 @@ def parse_feed(xml_text: str, source: str) -> list[TrendItem]:
                 data.setdefault(name, (child.text or "").strip())
             elif name in ("description", "summary", "content"):
                 data.setdefault("summary", child.text or "")
+            elif name == "category":
+                label = child.get("term") or child.get("label") or (child.text or "")
+                data.setdefault("category", label.strip().removeprefix("r/"))
         title = _clean_text(data.get("title"), 200)
         if not title:
             continue
@@ -105,6 +128,7 @@ def parse_feed(xml_text: str, source: str) -> list[TrendItem]:
                 published=data.get("pubDate") or data.get("published") or data.get("updated", ""),
                 summary=_clean_text(data.get("summary")),
                 traffic=_parse_traffic(data.get("approx_traffic", "")),
+                category=data.get("category", ""),
             )
         )
     return items
@@ -234,6 +258,25 @@ def collect(
 # Bewertung
 # --------------------------------------------------------------------------- #
 
+def _plain(title: str) -> str:
+    """Markdown-Zeichen wie _FETT_ oder **fett** entfernen, damit Wortgrenzen stimmen."""
+    return re.sub(r"[_*~`]+", " ", title)
+
+
+def is_job_post(item: TrendItem) -> bool:
+    """Echter, bezahlter Auftrag? (Anbieter vorher schon aussortiert)"""
+    title = _plain(item.title)
+    if UNPAID_RE.search(title) or QUESTION_RE.search(title):
+        return False
+    if HIRING_RE.search(title):
+        return True
+    # Ohne Tag nur in Subreddits, in denen gezielt Aufträge gepostet werden
+    sub = (item.category or "").lower()
+    in_hiring_sub = sub in HIRING_SUBREDDITS or (not sub and any(
+        f"r/{name}" in item.source.lower() and "+" not in item.source for name in HIRING_SUBREDDITS))
+    return in_hiring_sub and bool(HIRING_PHRASE_RE.search(title))
+
+
 def score(items: Iterable[TrendItem], keywords: list[str]) -> list[TrendItem]:
     """Bewertet Einträge nach Relevanz für deine Nische und sortiert absteigend."""
     # Ab 4 Zeichen auch als Wortanfang (Deutsch: "gold" -> "Goldpreis"),
@@ -248,12 +291,12 @@ def score(items: Iterable[TrendItem], keywords: list[str]) -> list[TrendItem]:
         item.matched = [kw for kw, pat in patterns.items() if pat.search(text)]
         s = 2.0 * len(item.matched)
         is_reddit = item.source.startswith("Reddit")
-        if is_reddit and FORHIRE_RE.search(item.title):
+        if is_reddit and FORHIRE_RE.search(_plain(item.title)):
             # Andere Anbieter: kein Trend, aber nützlich für den Preisvergleich
             item.kind = "konkurrenz"
             price = PRICE_RE.search(f"{item.title} {item.summary}")
             item.price = price.group(0) if price else ""
-        elif is_reddit and (HIRING_RE.search(item.title) or HIRING_PHRASE_RE.search(item.title)):
+        elif is_reddit and is_job_post(item):
             item.kind = "auftrag"
             s += 3.0 if item.matched else 0.5
         if item.traffic:

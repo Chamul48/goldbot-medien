@@ -20,13 +20,14 @@ import time
 from . import ideas as ideas_mod
 from . import leads as leads_mod
 from . import llm, profile as profile_mod, report, trends as trends_mod
-from .config import load_config
+from .config import load_config, output_dir
+from .lock import AlreadyRunning, single_instance
 
 log = logging.getLogger("goldbot")
 
 
 def run(cfg: dict, command: str) -> None:
-    out_dir = cfg.get("output_dir", "reports")
+    out_dir = output_dir(cfg)
     kwargs: dict = {}
 
     log.info("KI: %s", llm.describe(cfg.get("llm", {})))
@@ -48,11 +49,14 @@ def run(cfg: dict, command: str) -> None:
         hints = [t.title for t in (scanned[0] if scanned else []) if t.matched][:15]
         kwargs["profile"] = profile_mod.build_profile(cfg, hints)
 
-    if scanned:
-        leads_mod.check(cfg, scanned[0])
-
     folder = report.write(out_dir, **kwargs)
     print(f"Fertig. Bericht: {folder / 'bericht.md'}")
+
+    if scanned:
+        try:  # ein Fehler beim Auftrags-Check darf den fertigen Bericht nicht gefährden
+            leads_mod.check(cfg, scanned[0])
+        except Exception:
+            log.exception("Auftrags-Check fehlgeschlagen.")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -80,9 +84,16 @@ def main(argv: list[str] | None = None) -> int:
 
     full = max(args.alle, 1.0) * 3600
     lead_hours = args.auftraege_alle or float((cfg.get("leads") or {}).get("check_every_hours", 1))
-    lead = min(max(lead_hours, 0.25), args.alle) * 3600  # nicht öfter als alle 15 min (Reddit)
+    # nicht öfter als alle 15 min (Reddit) und nicht seltener als der Komplett-Lauf
+    lead = max(min(lead_hours * 3600, full), 15 * 60)
     log.info("Dauerbetrieb: Aufträge alle %.2g h, Komplett-Lauf alle %.3g h. Beenden mit Strg+C.",
              lead / 3600, full / 3600)
+    try:
+        lock = single_instance(output_dir(cfg) / ".dauer.lock")
+        lock.__enter__()
+    except AlreadyRunning:
+        log.error("Goldbot läuft schon im Dauerbetrieb (anderes Fenster). Dieses Fenster beendet sich.")
+        return 2
     next_full = next_lead = time.monotonic()
     try:
         while True:

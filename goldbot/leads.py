@@ -11,17 +11,26 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
 from . import llm, notify, trends as trends_mod
-from .config import ROOT
+from .config import ROOT, output_dir
 from .trends import TrendItem
 
 log = logging.getLogger(__name__)
 
 KEEP_DAYS = 30
+
+# Ein Auftrag muss mindestens einen dieser Begriffe enthalten (Video-Bezug).
+# Sonst würde z. B. "[Hiring] AI chatbot developer" wegen "ai" gemeldet.
+DEFAULT_LEAD_TERMS = [
+    "video", "editor", "editing", "edit", "reel", "reels", "shorts", "tiktok", "youtube",
+    "caption", "subtitle", "untertitel", "ugc", "faceless", "schnitt", "cutter", "creator", "premiere",
+    "capcut", "davinci",
+]
 
 REPLY_SCHEMA = {
     "type": "object",
@@ -54,7 +63,9 @@ REPLY_SYSTEM = (
 # --------------------------------------------------------------------------- #
 
 def state_path(cfg: dict[str, Any]) -> Path:
-    raw = (cfg.get("leads") or {}).get("state_file") or str(Path(cfg.get("output_dir", "reports")) / ".gesehen.json")
+    raw = (cfg.get("leads") or {}).get("state_file")
+    if not raw:
+        return output_dir(cfg) / ".gesehen.json"
     path = Path(raw)
     return path if path.is_absolute() else ROOT / path
 
@@ -78,12 +89,19 @@ def _key(item: TrendItem) -> str:
     return item.url or item.title
 
 
-def find_new(items: list[TrendItem], state: dict[str, str]) -> list[TrendItem]:
-    """Passende Aufträge (Stichwort-Treffer), die noch nicht gemeldet wurden."""
+def _video_related(item: TrendItem, terms: list[str]) -> bool:
+    text = f"{item.title} {item.summary}".lower()
+    return any(re.search(rf"\b{re.escape(t.lower())}" + ("" if len(t) >= 4 else r"\b"), text) for t in terms)
+
+
+def find_new(items: list[TrendItem], state: dict[str, str], terms: list[str] | None = None) -> list[TrendItem]:
+    """Passende Aufträge mit Video-Bezug, die noch nicht gemeldet wurden."""
+    terms = terms or DEFAULT_LEAD_TERMS
     out, seen = [], set()
     for item in items:
         key = _key(item)
-        if item.kind == "auftrag" and item.matched and key not in state and key not in seen:
+        if (item.kind == "auftrag" and item.matched and _video_related(item, terms)
+                and key not in state and key not in seen):
             seen.add(key)
             out.append(item)
     return out
@@ -162,14 +180,14 @@ def check(
             log.warning("Auftrags-Quellen nicht erreichbar: %s", ", ".join(errors))
     path = state_path(cfg)
     state = load_state(path)
-    new = find_new(items, state)
+    new = find_new(items, state, (cfg.get("leads") or {}).get("require_any"))
     if not new:
         log.info("Keine neuen passenden Aufträge.")
         return []
 
     log.info("%d neue passende Aufträge – schreibe Antwort-Entwürfe …", len(new))
     drafts = draft_replies(cfg, new)
-    file = write_leads(cfg.get("output_dir", "reports"), new, drafts, now)
+    file = write_leads(output_dir(cfg), new, drafts, now)
     title = "Goldbot: 1 neuer Auftrag" if len(new) == 1 else f"Goldbot: {len(new)} neue Aufträge"
     body = new[0].title if len(new) == 1 else "; ".join(i.title[:60] for i in new[:3])
     details = "\n\n".join(f"{i.title}\n{i.url}" for i in new)

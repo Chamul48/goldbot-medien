@@ -22,6 +22,12 @@ def _merge(base: dict, override: dict) -> dict:
     return out
 
 
+def output_dir(cfg: dict[str, Any]) -> Path:
+    """Ausgabeordner, relativ zum Projektordner (unabhängig vom aktuellen Ordner)."""
+    path = Path(cfg.get("output_dir", "reports"))
+    return path if path.is_absolute() else ROOT / path
+
+
 def load_config(path: str | Path | None = None) -> dict[str, Any]:
     """Lädt die Konfiguration. Fehlende Werte kommen aus config.example.yaml."""
     example = ROOT / "config.example.yaml"

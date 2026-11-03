@@ -1,4 +1,4 @@
-# Speichert einen Claude-API-Key lokal (Benutzer-Umgebungsvariable) – nur nach erfolgreicher Prüfung.
+﻿# Speichert einen Claude-API-Key lokal (Benutzer-Umgebungsvariable) - nur nach erfolgreicher Pruefung.
 $Host.UI.RawUI.WindowTitle = "Goldbot - Claude API-Key einrichten"
 $root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 Write-Host "Goldbot - Claude API-Key einrichten" -ForegroundColor Yellow
@@ -24,7 +24,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 [Environment]::SetEnvironmentVariable("ANTHROPIC_API_KEY", $key, "User")
 Write-Host "Gespeichert. Goldbot nutzt ab jetzt Claude." -ForegroundColor Green
-Get-CimInstance Win32_Process -Filter "Name='python.exe'" | Where-Object { $_.CommandLine -like '*goldbot*dauer*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }
-Get-Process cmd -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowTitle -like 'Goldbot*' } | Stop-Process -Force
+Get-CimInstance Win32_Process -Filter "Name='python.exe'" | Where-Object { $_.CommandLine -like '*goldbot*dauer*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
+Get-CimInstance Win32_Process -Filter "Name='cmd.exe'" | Where-Object { $_.CommandLine -like '*goldbot-starten*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
 Start-Process -FilePath (Join-Path $root "windows\goldbot-starten.bat") -WorkingDirectory $root
 Read-Host "Goldbot neu gestartet. Enter zum Schliessen"

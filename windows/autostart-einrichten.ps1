@@ -1,4 +1,4 @@
-# Legt Goldbot in den Windows-Autostart (startet nach jeder Anmeldung) und
+﻿# Legt Goldbot in den Windows-Autostart (startet nach jeder Anmeldung) und
 # erstellt die Desktop-Verknuepfungen.
 $root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 $ws = New-Object -ComObject WScript.Shell

@@ -400,3 +400,71 @@ def test_multiline_cut_respects_limit():
     text = "Intro line\n\n" + "\n".join(f"- point number {i} with some words" for i in range(80))
     out = profile._cut(text, 300, multiline=True)
     assert len(out) <= 300 and out.startswith("Intro line\n\n- point")
+
+
+# Echte Titel aus r/HireAnEditor, r/VideoEditingRequests, r/slavelabour (03.11.2026)
+JOB_CASES = [
+    ("HireAnEditor", "Need a video editor for a features/trailer video for an app im making", True),
+    ("HireAnEditor", "LOOKING FOR UGC CREATORS", True),
+    ("VideoEditingRequests", "_HIRING - AI VIDEO CREATOR (WFH) - NORMAL AI TOOLS - 60K/MONTH_", True),
+    ("HireAnEditor", "[HIRING] LONG FORM VIDEOGAME EDITOR WITH GOOD COMEDY TIMING $50 BUDGET", True),
+    ("HireAnEditor", "Need someone to edit my videos", True),
+    ("forhire", "[Hiring] Video Editor to Record and Create a 20-40 Second Windows Software Showcase", True),
+    ("HireAnEditor", "Hey I am a video editor searching for clients", False),
+    ("HireAnEditor", "For hire", False),
+    ("HireAnEditor", "Editor de vídeo disponível", False),
+    ("HireAnEditor", "Creo videos (cortos, reels, etc)", False),
+    ("HireAnEditor", "[FOR HIRE] Freelance Video Editor | Shorts, TikTok & Reels", False),
+    ("VideoEditingRequests", "[HOBBY] LOOKING FOR ADOBE PREMIERE PRO EDITORS FOR SHORT FILM.", False),
+    ("NewTubers", "Need feedback on my youtube video", False),
+    ("NewTubers", "Looking for advice on growing my TikTok", False),
+    ("VideoEditing", "Need help, my Premiere export of shorts is laggy", False),
+    ("HireAnEditor", "Video editor available - need a YouTube editor? DM me", False),
+    ("NewTubers", "Looking for a video editor for my channel", False),
+    ("slavelabour", "[Offer] Reliable, affordable VA / data entry / chat support, $3-4 an hour", False),
+]
+
+
+@pytest.mark.parametrize("sub,title,is_job", JOB_CASES)
+def test_job_detection_on_real_titles(cfg, sub, title, is_job):
+    item = trends.TrendItem(source="Reddit r/forhire+HireAnEditor", title=title, category=sub)
+    assert (trends.score([item], cfg["trends"]["keywords"])[0].kind == "auftrag") == is_job
+
+
+def test_subreddit_is_parsed_from_atom_category():
+    xml = ('<feed xmlns="http://www.w3.org/2005/Atom"><entry><title>Need a video editor</title>'
+           '<category term="HireAnEditor" label="r/HireAnEditor"/><link href="https://r/1"/></entry></feed>')
+    assert trends.parse_feed(xml, "Reddit")[0].category == "HireAnEditor"
+
+
+def test_lead_needs_video_connection(lead_cfg):
+    items = trends.score([_lead(1, "[Hiring] AI chatbot developer"), _lead(2, "[Hiring] AI video editor")],
+                         lead_cfg["trends"]["keywords"])
+    new = leads.check(lead_cfg, items, now=_dt(2026, 11, 3))
+    assert [i.title for i in new] == ["[Hiring] AI video editor"]
+
+
+def test_single_instance_lock(tmp_path):
+    from goldbot.lock import AlreadyRunning, single_instance
+    with single_instance(tmp_path / "x.lock"):
+        with pytest.raises(AlreadyRunning):
+            # zweite Sperre über einen anderen Prozess simulieren
+            import subprocess, sys
+            code = ("import sys; sys.path.insert(0, %r); from goldbot.lock import single_instance, AlreadyRunning\n"
+                    "try:\n single_instance(%r).__enter__()\nexcept AlreadyRunning:\n sys.exit(3)\n")
+            rc = subprocess.run([sys.executable, "-c", code % (str(Path(__file__).parent.parent), str(tmp_path / "x.lock"))]).returncode
+            if rc == 3:
+                raise AlreadyRunning("x")
+    with single_instance(tmp_path / "x.lock"):  # nach Freigabe wieder nutzbar
+        pass
+
+
+def test_lead_check_failure_keeps_report(cfg, tmp_path, monkeypatch):
+    from goldbot import __main__ as cli
+    cfg["output_dir"] = str(tmp_path)
+    monkeypatch.setattr(cli.trends_mod, "scan", lambda c: ([], []))
+    def boom(*a, **k):
+        raise OSError("Datei gesperrt")
+    monkeypatch.setattr(cli.leads_mod, "check", boom)
+    cli.run(cfg, "trends")
+    assert list(tmp_path.glob("*/bericht.md"))
