@@ -476,7 +476,6 @@ def test_lead_check_failure_keeps_report(cfg, tmp_path, monkeypatch):
     "I create high-quality Reels for various industries. Portfolio: [PORTFOLIO-LINK]. Timeline?",
     "I work with creators on UGC content. [PORTFOLIO-LINK]. What do you need?",
     "I can help! Samples: https://example.com Deadline?",
-    "I can help with this. What is your budget?",  # ohne Platzhalter
 ])
 def test_ai_drafts_with_claims_fall_back_to_template(fake_ollama, lead_cfg, reply):
     items = trends.score([_lead(5)], lead_cfg["trends"]["keywords"])
@@ -495,3 +494,13 @@ def test_reddit_source_shows_real_subreddit(cfg):
             return R() if "reddit" in url else None
     items, _ = trends.scan(cfg, F(), only=("reddit",))
     assert items[0].source == "Reddit r/HireAnEditor" and items[0].kind == "auftrag"
+
+
+
+def test_missing_placeholder_is_added_not_rejected(fake_ollama, lead_cfg):
+    items = trends.score([_lead(6)], lead_cfg["trends"]["keywords"])
+    fake_ollama["answer"] = {"replies": [{"url": "https://reddit.com/p/6", "reply":
+        "I'd cut fast-paced promotional reels for your studio. What's the expected length of each reel?"}]}
+    draft = leads.draft_replies(lead_cfg, items)["https://reddit.com/p/6"]
+    assert draft == ("I'd cut fast-paced promotional reels for your studio. Samples: [PORTFOLIO-LINK]. "
+                     "What's the expected length of each reel?")

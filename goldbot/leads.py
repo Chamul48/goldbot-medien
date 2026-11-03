@@ -147,11 +147,17 @@ def draft_replies(cfg: dict[str, Any], items: list[TrendItem]) -> dict[str, str]
     result = llm.ask_json(REPLY_SYSTEM, "\n".join(lines), REPLY_SCHEMA, cfg.get("llm", {}))
     for entry in (result or {}).get("replies", []):
         url, reply = entry.get("url"), (entry.get("reply") or "").strip()
-        if url in drafts and 20 <= len(reply) <= 900 and "[PORTFOLIO-LINK]" in reply:
-            if CLAIM_RE.search(reply):
-                log.info("KI-Entwurf mit Erfahrungs-Behauptung verworfen – nutze Vorlage.")
-                continue
-            drafts[url] = reply
+        if url not in drafts or not 20 <= len(reply) <= 900:
+            continue
+        if CLAIM_RE.search(reply):
+            log.info("KI-Entwurf mit Erfahrungs-Behauptung verworfen – nutze Vorlage.")
+            continue
+        if "[PORTFOLIO-LINK]" not in reply:
+            # Platzhalter vergessen: vor der Schlussfrage einfügen statt alles zu verwerfen
+            head, sep, question = reply.rpartition(". ")
+            reply = (f"{head}. Samples: [PORTFOLIO-LINK]. {question}" if sep and question.endswith("?")
+                     else f"{reply} Samples: [PORTFOLIO-LINK]")
+        drafts[url] = reply
     return drafts
 
 
