@@ -64,11 +64,13 @@ def _prompt(profile: dict[str, Any], trends: list[TrendItem]) -> str:
     return "\n".join(lines)
 
 
-def lead_ideas(trends: list[TrendItem]) -> list[dict[str, Any]]:
+def lead_ideas(trends: list[TrendItem], terms: list[str] | None = None) -> list[dict[str, Any]]:
     """Echte, passende Auftrags-Posts – immer zuerst, unabhängig von der KI."""
+    from .leads import DEFAULT_LEAD_TERMS, _video_related  # spät importiert: leads braucht ideas nicht
     out = []
-    # Nur Aufträge, die zu deinen Stichwörtern passen (kein "Grafik-Praktikum")
-    for lead in [t for t in trends if t.kind == "auftrag" and t.matched][:3]:
+    # Nur Aufträge mit Video-Bezug, die zu deinen Stichwörtern passen (wie der Auftrags-Wächter)
+    terms = terms or DEFAULT_LEAD_TERMS
+    for lead in [t for t in trends if t.kind == "auftrag" and t.matched and _video_related(t, terms)][:3]:
         out.append({
             "title": f"Auftrag prüfen: {lead.title[:80]}",
             "why_now": f"Frisch gepostete Anfrage in {lead.source}, passt zu: {', '.join(lead.matched)}.",

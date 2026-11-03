@@ -131,10 +131,9 @@ def filtergraph(demo: dict[str, Any], work: Path) -> tuple[str, float]:
     total = HOOK + LINE * len(demo["lines"]) + CTA
     accent = demo["accent"]
     shadow = "fontcolor=white:shadowcolor=black@0.6:shadowx=4:shadowy=4"
-    parts = [
-        # Fortschrittsbalken oben
-        f"drawbox=x=0:y=0:w='iw*t/{total}':h=14:color={accent}@1:t=fill",
-    ]
+    # Der Fortschrittsbalken kommt per overlay in render() dazu – drawbox kennt keine Zeit
+    # ("t" ist dort die Rahmendicke), der Balken stünde sonst die ganze Zeit voll da.
+    parts: list[str] = []
     # Hook: groß, gleitet leicht nach oben
     parts += _lines(work, "hook", demo["hook"], 16, 92, f"(h*0.40-30*min(t/{HOOK},1))", _fade(0, HOOK), shadow)
     for i, line in enumerate(demo["lines"]):
@@ -166,7 +165,11 @@ def render(demo: dict[str, Any], out: Path, ffmpeg: str, font: str) -> Path:
             "-f", "lavfi", "-i",
             f"gradients=s={W}x{H}:c0={c0}:c1={c1}:x0=0:y0=0:x1={W}:y1={H}:speed=0.008:d={total}:r={FPS}",
             "-f", "lavfi", "-i", f"anullsrc=r=48000:cl=stereo:d={total}",
-            "-vf", graph, "-shortest",
+            "-f", "lavfi", "-i", f"color=c={demo['accent']}:s={W}x14:r={FPS}:d={total}",
+            "-filter_complex",
+            # Balken schiebt sich von links herein: x läuft von -W bis 0
+            f"[0:v][2:v]overlay=x='-W+W*t/{total}':y=0:shortest=1,{graph}[v]",
+            "-map", "[v]", "-map", "1:a", "-shortest",
             "-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-pix_fmt", "yuv420p",
             "-c:a", "aac", "-b:a", "96k", "-movflags", "+faststart",
             str(target.resolve()),

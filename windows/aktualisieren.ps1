@@ -2,6 +2,8 @@
 # deine config.yaml, deine Berichte und die Python-Umgebung.
 param([string]$Branch = "main")
 $ErrorActionPreference = "Stop"
+# Ohne Fortschrittsbalken lädt PowerShell 5.1 um ein Vielfaches schneller
+$ProgressPreference = "SilentlyContinue"
 $Host.UI.RawUI.WindowTitle = "Goldbot aktualisieren"
 $root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 # Eigener Ordner pro Lauf: ein abgebrochener Lauf darf den nächsten nicht blockieren
@@ -19,27 +21,34 @@ function Stop-Goldbot {
         ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
 }
 
+function Start-Goldbot {
+    # Über die geplante Aufgabe starten, falls vorhanden: dann läuft Goldbot unabhängig
+    # von diesem Fenster weiter.
+    if (Get-ScheduledTask -TaskName "Goldbot" -ErrorAction SilentlyContinue) {
+        Start-ScheduledTask -TaskName "Goldbot"
+    } else {
+        Start-Process -FilePath (Join-Path $root "windows\goldbot-starten.bat") -WorkingDirectory $root
+    }
+}
+
 function Get-Source($name) {
     $folder = Join-Path $tmp ($name -replace '[/\\]', '_')
     $zip = "$folder.zip"
-    Invoke-WebRequest -UseBasicParsing "https://codeload.github.com/chamul48/goldbot-medien/zip/refs/heads/$name" -OutFile $zip
+    Invoke-WebRequest -UseBasicParsing "https://codeload.github.com/chamul48/goldbot-medien/zip/refs/heads/$name" -OutFile $zip -TimeoutSec 300
     Expand-Archive $zip -DestinationPath $folder -Force
     $dir = Get-ChildItem $folder -Directory | Select-Object -First 1
     if ($dir -and (Test-Path (Join-Path $dir.FullName "goldbot\leads.py"))) { return $dir.FullName }
     return $null
 }
 
+$stopped = $false
 try {
     New-Item -ItemType Directory -Force $tmp | Out-Null
 
     Write-Host "Lade neueste Version ($Branch) ..."
     $src = $null
-    try { $src = Get-Source $Branch } catch { }
-    if (-not $src) {
-        Write-Host "Auf '$Branch' noch nicht vorhanden - nehme den Entwicklungs-Branch."
-        $src = Get-Source "claude/automated-profile-sales-bot-8lab1g"
-    }
-    if (-not $src) { throw "Download fehlgeschlagen oder unvollständig." }
+    try { $src = Get-Source $Branch } catch { Write-Host "Download: $($_.Exception.Message)" }
+    if (-not $src) { throw "Download fehlgeschlagen oder unvollständig (Internet?)." }
 
     # Vergleich VOR dem Kopieren: wurde config.yaml selbst geändert?
     $userCfg = Join-Path $root "config.yaml"
@@ -49,6 +58,7 @@ try {
 
     Write-Host "Stoppe Goldbot ..."
     Stop-Goldbot
+    $stopped = $true
     Start-Sleep 1
 
     foreach ($item in "goldbot", "docs", "tests", "windows") {
@@ -75,19 +85,20 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "pip install ist fehlgeschlagen." }
 
     Write-Host "Starte Goldbot ..."
-    # Über die geplante Aufgabe starten, falls vorhanden: dann läuft Goldbot unabhängig
-    # von diesem Fenster weiter.
-    if (Get-ScheduledTask -TaskName "Goldbot" -ErrorAction SilentlyContinue) {
-        Start-ScheduledTask -TaskName "Goldbot"
-    } else {
-        Start-Process -FilePath (Join-Path $root "windows\goldbot-starten.bat") -WorkingDirectory $root
-    }
+    Start-Goldbot
+    $stopped = $false
     Write-Host "Fertig." -ForegroundColor Green
     Start-Sleep 3
 } catch {
     Write-Host ""
     Write-Host "Update fehlgeschlagen: $_" -ForegroundColor Red
-    Write-Host "Goldbot wurde nicht verändert oder läuft mit der alten Version weiter."
+    if ($stopped) {
+        # Goldbot war schon gestoppt: wieder starten, damit er nicht still stehen bleibt
+        try { Start-Goldbot; Write-Host "Goldbot wurde wieder gestartet. Bitte das Update später wiederholen." }
+        catch { Write-Host "Goldbot konnte nicht neu gestartet werden - bitte Desktop-Verknüpfung 'Goldbot' öffnen." -ForegroundColor Yellow }
+    } else {
+        Write-Host "Goldbot wurde nicht verändert und läuft mit der alten Version weiter."
+    }
     if ([Environment]::UserInteractive -and -not [Console]::IsInputRedirected) { Read-Host "Enter zum Schließen" }
     exit 1
 } finally {

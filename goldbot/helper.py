@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import html
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -37,9 +38,12 @@ def build_page(pack: dict[str, Any], languages: list[str] | None = None) -> str:
         parts.append(_field("Sprachen", "\n".join(languages), "„Sprache hinzufügen“ – nur, was du wirklich sprichst."))
     for i, gig in enumerate(pack.get("gigs", []), 1):
         parts.append(f"<h2>{i + 1} · Gig {i}</h2>")
-        parts.append(_field("Gig-Titel", gig["title"], "Fiverr setzt „I will“ schon davor – ggf. weglassen.", 80))
+        # Fiverr zeigt „I will“ fest vor dem Feld – nur den Rest kopieren
+        title = re.sub(r"^\s*(I will|Ich werde)\s+", "", gig["title"], flags=re.I)
+        parts.append(_field("Gig-Titel", title, "Ohne „I will“ – Fiverr setzt es selbst davor.", 80))
         parts.append(_field("Kategorie", gig.get("category", ""), "In Fiverr auswählen (Name kann leicht abweichen)."))
-        parts.append(_field("Tags (je einzeln eingeben)", "\n".join(gig.get("tags", [])), "", None))
+        for n, tag in enumerate(gig.get("tags", []), 1):
+            parts.append(_field(f"Tag {n}", tag, "Einfügen, dann Enter." if n == 1 else "", 20))
         parts.append(_field("Beschreibung", gig["description"], "", 1200))
         rows = "".join(
             f"<tr><td>{html.escape(p['name'])}</td><td>${p['price_usd']}</td><td>{p['delivery_days']} Tage</td>"
@@ -49,6 +53,9 @@ def build_page(pack: dict[str, Any], languages: list[str] | None = None) -> str:
         parts.append('<section class="field"><div class="head"><h3>Pakete</h3></div>'
                      "<table><tr><th>Paket</th><th>Preis</th><th>Lieferung</th><th>Revisionen</th>"
                      f"<th>Enthalten</th></tr>{rows}</table></section>")
+        for p in gig.get("packages", []):
+            desc = p.get("description") or "; ".join(p["includes"])
+            parts.append(_field(f"Paket {p['name']} – Beschreibung", desc, "Feld unter dem Paketnamen.", 100))
         for n, faq in enumerate(gig.get("faq", []), 1):
             parts.append(_field(f"FAQ {n} – Frage", faq["q"]))
             parts.append(_field(f"FAQ {n} – Antwort", faq["a"]))
