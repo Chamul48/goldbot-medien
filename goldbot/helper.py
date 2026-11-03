@@ -2,6 +2,9 @@
 
 Goldbot füllt Fiverr bewusst nicht selbst aus (Bot-Erkennung, Nutzungsbedingungen).
 Mit dieser Seite geht es trotzdem schnell: Kopieren → in Fiverr klicken → Strg+V.
+
+Der große Knopf „Nächstes kopieren“ (oder Taste N) kopiert immer das nächste offene Feld und hakt es
+ab; der Fortschritt bleibt im Browser gespeichert. Die Muster-Videos sind je Gig verlinkt.
 """
 
 from __future__ import annotations
@@ -18,7 +21,7 @@ FIVERR_ONBOARDING = "https://www.fiverr.com/seller_onboarding/0"
 def _field(label: str, text: str, hint: str = "", limit: int | None = None) -> str:
     count = f"{len(text)}" + (f" / {limit}" if limit else "")
     return (
-        '<section class="field">'
+        f'<section class="field" data-key="{html.escape(label, quote=True)}">'
         f'<div class="head"><h3>{html.escape(label)}</h3><span class="count">{count} Zeichen</span>'
         f'<button type="button" data-copy="{html.escape(json.dumps(text), quote=True)}">Kopieren</button></div>'
         + (f'<p class="hint">{html.escape(hint)}</p>' if hint else "")
@@ -26,7 +29,23 @@ def _field(label: str, text: str, hint: str = "", limit: int | None = None) -> s
     )
 
 
-def build_page(pack: dict[str, Any], languages: list[str] | None = None) -> str:
+# Welche Muster-Videos zu welchem Gig passen (Reihenfolge der Gigs im Profil-Paket)
+GIG_VIDEOS = [["gold_de", "gold_en"], ["finanzen_de", "finance_en"], ["krypto_de", "crypto_en"]]
+
+
+def _videos(folder: Path | None, names: list[str]) -> str:
+    if not folder:
+        return ""
+    found = [folder / f"{n}.mp4" for n in names if (folder / f"{n}.mp4").exists()]
+    if not found:
+        return ""
+    links = " · ".join(f'<a href="{f.as_uri()}">{html.escape(f.name)}</a>' for f in found)
+    return ('<section class="field info"><div class="head"><h3>Galerie: Videos hochladen</h3></div>'
+            f'<p class="hint">In Fiverr bei „Galerie“ → „Video“ hochladen. Datei aus: '
+            f'<a href="{folder.as_uri()}">{html.escape(str(folder))}</a></p><p>{links}</p></section>')
+
+
+def build_page(pack: dict[str, Any], languages: list[str] | None = None, videos: Path | None = None) -> str:
     parts = [
         '<h2>1 · Profil</h2>',
         _field("Einzeiler", pack["one_liner"], "Feld unter deinem Namen – ersetzt „bot“ (Stift-Symbol).", 60),
@@ -59,6 +78,7 @@ def build_page(pack: dict[str, Any], languages: list[str] | None = None) -> str:
         for n, faq in enumerate(gig.get("faq", []), 1):
             parts.append(_field(f"FAQ {n} – Frage", faq["q"]))
             parts.append(_field(f"FAQ {n} – Antwort", faq["a"]))
+        parts.append(_videos(videos, GIG_VIDEOS[i - 1] if i <= len(GIG_VIDEOS) else []))
 
     return """<!doctype html>
 <html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -75,26 +95,45 @@ button{background:var(--accent);color:#fff;border:0;border-radius:6px;padding:7p
 button.ok{background:#555}table{width:100%;border-collapse:collapse;margin-top:8px;font-size:13px}
 td,th{border-top:1px solid var(--line);padding:6px;text-align:left;vertical-align:top}
 a.big{display:inline-block;background:var(--accent);color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;font-weight:600}
+.field.done{opacity:.45}.field.done h3::before{content:"✓ ";color:var(--accent)}.field.next{outline:3px solid var(--accent)}
+.bar{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0;display:flex;gap:10px;align-items:center;border-bottom:1px solid var(--line)}
+.bar button.go{font-size:16px;padding:10px 18px}.bar .prog{flex:1;color:var(--muted);font-size:14px}
+.bar button.reset{background:transparent;color:var(--muted);border:1px solid var(--line)}
+.field.info{border-style:dashed}a{color:var(--accent)}
 </style></head><body><main>
 <h1>Goldbot Einfüge-Hilfe</h1>
 <p class="lead">Pro Feld: <b>Kopieren</b> → in Fiverr ins Feld klicken → <b>Strg+V</b>. Danach bei Fiverr speichern.
 Vorher prüfen: Sprachen und Herkunft stimmen, Preise passen.</p>
 <p><a class="big" href=\"""" + FIVERR_ONBOARDING + """\" target="_blank" rel="noopener">Fiverr-Profil öffnen</a></p>
+<div class="bar"><button type="button" class="go" id="next">Nächstes kopieren (N)</button>
+<span class="prog" id="prog"></span><button type="button" class="reset" id="reset">Neu anfangen</button></div>
 """ + "\n".join(parts) + """
 </main><script>
-document.querySelectorAll("button[data-copy]").forEach(function(b){
-  b.addEventListener("click",function(){
-    var t=JSON.parse(b.dataset.copy);
-    function done(){b.textContent="Kopiert ✓";b.classList.add("ok");setTimeout(function(){b.textContent="Kopieren";b.classList.remove("ok")},2000)}
-    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,fallback)}else{fallback()}
-    function fallback(){var a=document.createElement("textarea");a.value=t;document.body.appendChild(a);a.select();document.execCommand("copy");a.remove();done()}
-  });
-});
+var KEY="goldbot-einfuegen-erledigt", fields=[].slice.call(document.querySelectorAll(".field[data-key]"));
+var doneSet={};try{doneSet=JSON.parse(localStorage.getItem(KEY)||"{}")}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(doneSet))}catch(e){}}
+function refresh(){var n=0,next=null;fields.forEach(function(f){var d=!!doneSet[f.dataset.key];f.classList.toggle("done",d);
+  f.classList.remove("next");if(d)n++;else if(!next)next=f});if(next)next.classList.add("next");
+  document.getElementById("prog").textContent=n+" von "+fields.length+" Feldern erledigt"+(next?"":" – fertig! Jetzt bei Fiverr speichern.");
+  return next}
+function copy(b,cb){var t=JSON.parse(b.dataset.copy);
+  function done(){b.textContent="Kopiert ✓";b.classList.add("ok");setTimeout(function(){b.textContent="Kopieren";b.classList.remove("ok")},2000);if(cb)cb()}
+  function fallback(){var a=document.createElement("textarea");a.value=t;document.body.appendChild(a);a.select();document.execCommand("copy");a.remove();done()}
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,fallback)}else{fallback()}}
+fields.forEach(function(f,i){f.dataset.key=i+"·"+f.dataset.key});  // gleiche Namen je Gig unterscheiden
+fields.forEach(function(f){var b=f.querySelector("button[data-copy]");
+  b.addEventListener("click",function(){copy(b,function(){doneSet[f.dataset.key]=1;save();refresh()})});});
+function goNext(){var f=refresh();if(!f)return;f.scrollIntoView({block:"center",behavior:"smooth"});f.querySelector("button[data-copy]").click()}
+document.getElementById("next").addEventListener("click",goNext);
+document.getElementById("reset").addEventListener("click",function(){doneSet={};save();refresh();scrollTo(0,0)});
+document.addEventListener("keydown",function(e){if((e.key==="n"||e.key==="N")&&!e.ctrlKey&&!e.metaKey&&!e.altKey)goNext()});
+refresh();
 </script></body></html>"""
 
 
-def write(path: str | Path, pack: dict[str, Any], languages: list[str] | None = None) -> Path:
+def write(path: str | Path, pack: dict[str, Any], languages: list[str] | None = None,
+          videos: str | Path | None = None) -> Path:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(build_page(pack, languages), encoding="utf-8")
+    path.write_text(build_page(pack, languages, Path(videos).resolve() if videos else None), encoding="utf-8")
     return path
