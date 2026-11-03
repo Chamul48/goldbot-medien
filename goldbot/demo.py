@@ -562,7 +562,7 @@ def render(demo: dict[str, Any], out: Path, ffmpeg: str, font: tuple[str, str], 
             say(f"{demo['name']}: Szene {i + 1}/{len(scenes)} – " + (clip.name if clip else "Farbverlauf"))
             part = work / f"scene_{i}.mp4"
             scene_video(clip, sc["dur"], demo, part, ffmpeg, work, duration(clip, ffmpeg) if clip else 0.0)
-            if sc["kind"] == "line":  # Standbild ohne Text für die Gig-Titelbilder
+            if True:  # Standbild jeder Szene ohne Text – für die Gig-Titelbilder
                 stills = out / "standbilder"
                 stills.mkdir(exist_ok=True)
                 _run([ffmpeg, "-y", "-hide_banner", "-loglevel", "error", "-ss", f"{sc['dur'] * 0.6:.2f}",
@@ -681,8 +681,8 @@ def render_cover(videos: list[Path], title: str, accent: str, target: Path, ffmp
         cmd = [ffmpeg, "-y", "-hide_banner", "-loglevel", "error"]
         stills_dir = videos[0].parent / "standbilder"
         name = videos[0].stem
-        stills = [stills_dir / f"{name}_{k}.jpg" for k in (1, 2, 3)]
-        if all(f.exists() for f in stills):
+        stills = pick_stills(sorted(stills_dir.glob(f"{name}_*.jpg")), ffmpeg)
+        if len(stills) == 3:
             # Standbilder der drei Inhalts-Szenen – ganzes Bild, ohne Untertitel
             for f in stills:
                 cmd += ["-i", str(f)]
@@ -696,8 +696,12 @@ def render_cover(videos: list[Path], title: str, accent: str, target: Path, ffmp
         tile_w = COVER_W // 3 + 1
         fg = [f"[{k}:v]{prep.format(h=COVER_H)},crop={tile_w}:{COVER_H},setsar=1[t{k}]" for k in range(3)]
         fg.append("[t0][t1][t2]hstack=3,crop=1280:769[s]")
-        fg.append("[s]drawbox=x=0:y=ih-300:w=iw:h=300:color=black@0.62:t=fill,"
-                  f"drawbox=x=0:y=ih-300:w=iw:h=8:color={accent}@1:t=fill")
+        # weicher Verlauf statt hartem Balken: das Bild bleibt bis unten sichtbar
+        cmd += ["-f", "lavfi", "-i", f"color=black:s={COVER_W}x{COVER_H}"]
+        fg.append(f"[3:v]format=rgba,geq=r=0:g=0:b=0:a='if(gt(Y,{COVER_H - 340}),"
+                  f"min(205,205*(Y-{COVER_H - 340})/200),0)'[g]")
+        fg.append("[s][g]overlay=0:0:format=rgb,"
+                  f"drawbox=x=(iw-160)/2:y=ih-262:w=160:h=6:color={accent}@1:t=fill")
         rows = cover_headline(title)
         for k, row in enumerate(rows):
             (work / f"r{k}.txt").write_text(row, encoding="utf-8")
@@ -709,6 +713,23 @@ def render_cover(videos: list[Path], title: str, accent: str, target: Path, ffmp
                 str(target.resolve())]
         _run(cmd, work)
     return target
+
+
+def _brightness(path: Path, ffmpeg: str) -> float:
+    """Mittlere Helligkeit (0–255) eines Bildes über ffmpeg signalstats."""
+    out = subprocess.run([ffmpeg, "-hide_banner", "-i", str(path), "-vf", "signalstats,metadata=print",
+                          "-f", "null", "-"], capture_output=True, text=True)
+    m = re.search(r"lavfi\.signalstats\.YAVG=([\d.]+)", out.stderr + out.stdout)
+    return float(m.group(1)) if m else 0.0
+
+
+def pick_stills(stills: list[Path], ffmpeg: str) -> list[Path]:
+    """Die 3 hellsten Szenen-Standbilder (dunkle Bilder wirken auf Fiverr klein wie schwarze Flächen),
+    in Szenen-Reihenfolge."""
+    if len(stills) <= 3:
+        return stills
+    best = sorted(stills, key=lambda p: _brightness(p, ffmpeg), reverse=True)[:3]
+    return [p for p in stills if p in best]
 
 
 def render_covers(out: Path, gigs: list[dict[str, Any]], groups: list[list[str]]) -> list[Path]:
