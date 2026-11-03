@@ -47,7 +47,7 @@ DEMOS: list[dict[str, Any]] = [
                   "Blattgold ist sogar essbar: Lebensmittelzusatz E 175."],
         "cta": "Folge für mehr Edelmetall-Wissen",
         "footer": "Beispiel-Edit · keine Anlageberatung",
-        "clips": ["gold bars", "gold jewelry", "gold ingots", "gold leaf", "gold coins"],
+        "clips": ["gold bars", "gold jewelry", "gold bullion", "gold flakes", "gold coins"],
     },
     {
         "name": "gold_en", "lang": "en", "colors": ("0x14100a", "0x5c4512"), "accent": "0xd4a017",
@@ -58,7 +58,7 @@ DEMOS: list[dict[str, Any]] = [
                   "Gold leaf is even edible: food additive E 175."],
         "cta": "Follow for more precious metal facts",
         "footer": "Sample edit · not financial advice",
-        "clips": ["gold bars", "gold jewelry", "gold ingots", "gold leaf", "gold coins"],
+        "clips": ["gold bars", "gold jewelry", "gold bullion", "gold flakes", "gold coins"],
     },
     {
         "name": "finanzen_de", "lang": "de", "colors": ("0x07131f", "0x0f4c5c"), "accent": "0x1dbf73",
@@ -69,7 +69,7 @@ DEMOS: list[dict[str, Any]] = [
                   "20 % zum Sparen und für Rücklagen."],
         "cta": "Speichern und später nachrechnen",
         "footer": "Beispiel-Edit · keine Finanzberatung",
-        "clips": ["money counting", "apartment keys", "travel beach", "piggy bank", "calculator"],
+        "clips": ["money counting", "house keys", "travel suitcase", "piggy bank", "calculator money"],
     },
     {
         "name": "finance_en", "lang": "en", "colors": ("0x07131f", "0x0f4c5c"), "accent": "0x1dbf73",
@@ -80,7 +80,7 @@ DEMOS: list[dict[str, Any]] = [
                   "20% for savings and an emergency fund."],
         "cta": "Save this for your next budget",
         "footer": "Sample edit · not financial advice",
-        "clips": ["money counting", "apartment keys", "travel beach", "piggy bank", "calculator"],
+        "clips": ["money counting", "house keys", "travel suitcase", "piggy bank", "calculator money"],
     },
     {
         "name": "krypto_de", "lang": "de", "colors": ("0x120a1f", "0x3b1e6b"), "accent": "0xf7931a",
@@ -91,7 +91,7 @@ DEMOS: list[dict[str, Any]] = [
                   "Wer einen Block ändert, müsste alle folgenden mit ändern."],
         "cta": "Folge für mehr Krypto-Grundlagen",
         "footer": "Beispiel-Edit · keine Anlageberatung",
-        "clips": ["blockchain", "data network", "fingerprint scan", "digital code", "bitcoin"],
+        "clips": ["blockchain", "network technology", "fingerprint", "binary code", "bitcoin"],
     },
     {
         "name": "crypto_en", "lang": "en", "colors": ("0x120a1f", "0x3b1e6b"), "accent": "0xf7931a",
@@ -102,7 +102,7 @@ DEMOS: list[dict[str, Any]] = [
                   "Changing one block means changing every block after it."],
         "cta": "Follow for more crypto basics",
         "footer": "Sample edit · not financial advice",
-        "clips": ["blockchain", "data network", "fingerprint scan", "digital code", "bitcoin"],
+        "clips": ["blockchain", "network technology", "fingerprint", "binary code", "bitcoin"],
     },
 ]
 
@@ -193,6 +193,21 @@ def _pick_size(videos: dict[str, Any]) -> dict[str, Any] | None:
     return max(sizes, key=lambda v: v["width"])
 
 
+def relevance(hit: dict[str, Any], query: str) -> tuple[bool, int]:
+    """(alle Suchwörter in den Schlagwörtern?, Bonus für genaue Wortgruppe/Schlagwort an 1. Stelle)."""
+    tags = [t.strip().lower() for t in str(hit.get("tags", "")).split(",") if t.strip()]
+    words = query.lower().split()
+    tokens = {w for t in tags for w in re.findall(r"[a-z0-9]+", t)}
+
+    def has(word: str) -> bool:  # „bar“ passt auch zu „bars“
+        return any(tok == word or tok.rstrip("s") == word.rstrip("s") for tok in tokens)
+
+    phrase = " ".join(words)
+    bonus = (2 if any(phrase in t or phrase.rstrip("s") in t for t in tags) else 0) + \
+            (1 if tags and phrase.rstrip("s") in tags[0] else 0)
+    return all(has(w) for w in words), bonus
+
+
 class Footage:
     """Sucht und lädt passende Clips; Suchergebnisse und Clips werden zwischengespeichert."""
 
@@ -229,13 +244,18 @@ class Footage:
         return hits
 
     def pick(self, query: str, min_seconds: float, used: set[int]) -> Path | None:
-        """Bester unbenutzter Clip: echtes Video vor Animation, Hochformat vor Querformat."""
+        """Bester unbenutzter Clip, der wirklich zum Suchbegriff passt.
+
+        Pixabay liefert bei „gold bars“ auch gelbe Blumen – daher zählen nur Treffer, deren
+        Schlagwörter ALLE Suchwörter enthalten. Danach: genaue Wortgruppe, echtes Video vor
+        Animation, Hochformat, volle Auflösung, Beliebtheit.
+        """
         hits = [h for h in self.search(query) if h.get("id") not in used
-                and float(h.get("duration") or 0) >= min(min_seconds, 6)]
+                and float(h.get("duration") or 0) >= min(min_seconds, 6) and relevance(h, query)[0]]
 
         def rank(h: dict[str, Any]) -> tuple:
             size = _pick_size(h.get("videos") or {}) or {}
-            return (h.get("type") == "film", size.get("height", 0) > size.get("width", 1),
+            return (relevance(h, query)[1], h.get("type") == "film", size.get("height", 0) > size.get("width", 1),
                     size.get("height", 0) >= H or size.get("width", 0) >= 3000, h.get("downloads", 0))
 
         for hit in sorted(hits, key=rank, reverse=True)[:5]:

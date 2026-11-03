@@ -757,3 +757,12 @@ def test_degraded_full_run_is_retried_soon(cfg, tmp_path, monkeypatch):
     monkeypatch.setattr(cli.trends_mod, "scan", lambda c: ([], ["Reddit"]))
     monkeypatch.setattr(cli.leads_mod, "check", lambda c, items=None: [])
     assert cli.run(cfg, "trends") is False
+
+
+def test_pixabay_relevance_needs_all_query_words():
+    flowers = {"tags": "flowers, yellow, gold, nature"}
+    bars = {"tags": "gold bars, bullion, wealth"}
+    assert demo_mod.relevance(flowers, "gold bars")[0] is False
+    ok, bonus = demo_mod.relevance(bars, "gold bars")
+    assert ok and bonus == 3
+    assert demo_mod.relevance({"tags": "gold bar, finance"}, "gold bars")[0]
