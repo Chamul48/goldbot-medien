@@ -17,7 +17,7 @@ import time
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
 from typing import Any, Callable, Iterable
-from urllib.parse import quote_plus
+from urllib.parse import quote_plus, urlparse
 
 import requests
 
@@ -107,6 +107,8 @@ def parse_hackernews(payload: dict[str, Any], source: str) -> list[TrendItem]:
         title = hit.get("title") or hit.get("story_title")
         if not title:
             continue
+        # HN markiert Vorträge mit "[video]" / "[pdf]" – das ist kein Themen-Treffer
+        title = re.sub(r"\s*\[(video|pdf|audio)\]", "", title, flags=re.I)
         items.append(
             TrendItem(
                 source=source,
@@ -131,21 +133,42 @@ class Fetcher:
         self.session = session or requests.Session()
         self.session.headers["User-Agent"] = USER_AGENT
         self._last = 0.0
+        self.sleep = time.sleep
+
+    # Reddit drosselt anonyme Abrufe stark – dort länger warten.
+    HOST_DELAY = {"www.reddit.com": 8.0}
+    MAX_RETRIES = 2
+
+    def _pause(self, url: str) -> None:
+        host = urlparse(url).netloc
+        delay = max(self.delay, self.HOST_DELAY.get(host, 0.0)) if self.delay else 0.0
+        wait = delay - (time.monotonic() - self._last)
+        if wait > 0:
+            self.sleep(wait)
+        self._last = time.monotonic()
 
     def get(self, url: str) -> requests.Response | None:
-        wait = self.delay - (time.monotonic() - self._last)
-        if wait > 0:
-            time.sleep(wait)
-        self._last = time.monotonic()
-        try:
-            resp = self.session.get(url, timeout=TIMEOUT)
-        except requests.RequestException as exc:
-            log.warning("Abruf fehlgeschlagen: %s (%s)", url, exc.__class__.__name__)
-            return None
-        if resp.status_code != 200:
-            log.warning("Abruf %s -> HTTP %s", url, resp.status_code)
-            return None
-        return resp
+        for attempt in range(self.MAX_RETRIES + 1):
+            self._pause(url)
+            try:
+                resp = self.session.get(url, timeout=TIMEOUT)
+            except requests.RequestException as exc:
+                log.warning("Abruf fehlgeschlagen: %s (%s)", url, exc.__class__.__name__)
+                return None
+            if resp.status_code == 429 and attempt < self.MAX_RETRIES:
+                try:
+                    retry_after = float(resp.headers.get("Retry-After", ""))
+                except ValueError:
+                    retry_after = 15.0 * (attempt + 1)
+                retry_after = min(max(retry_after, 5.0), 60.0)
+                log.info("%s drosselt (429) – neuer Versuch in %.0f s.", urlparse(url).netloc, retry_after)
+                self.sleep(retry_after)
+                continue
+            if resp.status_code != 200:
+                log.warning("Abruf %s -> HTTP %s", url, resp.status_code)
+                return None
+            return resp
+        return None
 
 
 def collect(cfg: dict[str, Any], fetcher: Fetcher | None = None) -> tuple[list[TrendItem], list[str]]:

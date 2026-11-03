@@ -113,3 +113,38 @@ def test_ideas_and_report(cfg, tmp_path):
 def test_llm_offline():
     assert llm.available() is False
     assert llm.ask_json("s", "p", {"type": "object"}) is None
+
+
+def test_fetcher_retries_on_429():
+    class R:
+        def __init__(self, code, headers=None): self.status_code, self.headers = code, headers or {}
+
+    class S:
+        headers = {}
+        def __init__(self): self.calls = 0
+        def get(self, url, timeout):
+            self.calls += 1
+            return R(429, {"Retry-After": "7"}) if self.calls == 1 else R(200)
+
+    sess, slept = S(), []
+    f = trends.Fetcher(delay=0, session=sess)
+    f.sleep = slept.append
+    assert f.get("https://www.reddit.com/r/x/new/.rss").status_code == 200
+    assert sess.calls == 2 and slept == [7.0]
+
+
+def test_fetcher_gives_up_after_retries():
+    class S:
+        headers = {}
+        def get(self, url, timeout):
+            return type("R", (), {"status_code": 429, "headers": {}})()
+
+    f = trends.Fetcher(delay=0, session=S())
+    f.sleep = lambda s: None
+    assert f.get("https://www.reddit.com/x") is None
+
+
+def test_hn_video_tag_is_not_a_topic_match():
+    items = trends.parse_hackernews({"hits": [{"title": "Future of AI [video]", "objectID": "1"}]}, "HN")
+    assert items[0].title == "Future of AI"
+    assert trends.score(items, ["video"])[0].matched == []
