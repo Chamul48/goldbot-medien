@@ -10,7 +10,9 @@ Fiverr-Grenzen (Stand 2026, bitte bei Änderungen anpassen):
 
 from __future__ import annotations
 
+import json
 import re
+from pathlib import Path
 from typing import Any
 
 from . import llm
@@ -284,6 +286,24 @@ def template_profile(profile: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _load_pack(path: str | None) -> dict[str, Any] | None:
+    """Lädt ein vorbereitetes Profil-Paket (z. B. aus der Web-Recherche)."""
+    if not path:
+        return None
+    file = Path(path)
+    if not file.is_absolute():
+        file = Path(__file__).resolve().parent.parent / file
+    try:
+        pack = json.loads(file.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    required = ("one_liner", "about", "skills", "gigs")
+    if not all(k in pack for k in required):
+        return None
+    pack.setdefault("profile_photo_tips", template_profile({})["profile_photo_tips"])
+    return pack
+
+
 def build_profile(cfg: dict[str, Any], trend_hints: list[str] | None = None) -> tuple[dict[str, Any], str, list[str]]:
     """Gibt (Profil-Paket, Quelle, Hinweise) zurück. Quelle: 'claude' oder 'vorlage'."""
     profile = cfg.get("profile", {})
@@ -296,6 +316,8 @@ def build_profile(cfg: dict[str, Any], trend_hints: list[str] | None = None) -> 
         effort=llm_cfg.get("effort", "medium"),
     )
     source = "claude"
+    if not pack:
+        pack, source = _load_pack(profile.get("pack_file")), "recherche"
     if not pack:
         pack, source = template_profile(profile), "vorlage"
     pack, notes = enforce_limits(pack)

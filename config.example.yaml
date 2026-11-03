@@ -26,8 +26,10 @@ profile:
     - Finanz-, Krypto- und Edelmetall-Kanäle
     - kleine Online-Shops
   tone: professionell, freundlich, klar
-  # Preisrahmen in USD für Basic / Standard / Premium
-  price_range: [15, 45, 120]
+  # Preisrahmen in USD für Basic / Standard / Premium (Richtwert laut Recherche 03.11.2026)
+  price_range: [25, 60, 150]
+  # Recherchiertes Profil-Paket – wird ohne API-Key statt der Vorlage verwendet
+  pack_file: docs/profil-paket.json
 
 trends:
   # Begriffe, nach denen Trends/Chancen bewertet werden
@@ -47,6 +49,20 @@ trends:
     - ugc
     - podcast
     - caption
+    # aus der Recherche vom 03.11.2026
+    - faceless
+    - youtube automation
+    - cash cow
+    - ai voiceover
+    - ai label
+    - ai disclosure
+    - german video editor
+    - deutsch
+    - untertitel
+    - edelmetall
+    - precious metals
+    - silver
+    - goldpreis
   google_trends_geo: [AT, DE]
   reddit_subreddits: [forhire, freelance, Entrepreneur, NewTubers, socialmedia, VideoEditing]
   hackernews_queries: [ai video, automation, short form video]

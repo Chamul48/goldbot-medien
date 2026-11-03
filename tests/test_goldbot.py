@@ -79,6 +79,7 @@ def test_collect_survives_failing_sources(cfg):
 
 
 def test_template_profile_respects_fiverr_limits(cfg):
+    cfg["profile"]["pack_file"] = None
     pack, source, _ = profile.build_profile(cfg)
     assert source == "vorlage"
     assert len(pack["one_liner"]) <= profile.LIMITS["one_liner"]
@@ -192,3 +193,16 @@ def test_template_gigs_have_distinct_packages_and_faq(cfg):
     for g in gigs:
         prices = [p["price_usd"] for p in g["packages"]]
         assert prices == sorted(prices) and prices[0] >= 5
+
+
+def test_research_pack_is_used_without_api(cfg):
+    pack, source, notes = profile.build_profile(cfg)
+    assert source == "recherche" and not notes
+    for g in pack["gigs"]:
+        assert len(g["title"]) <= 80 and len(g["tags"]) == 5 and len(g["description"]) <= 1200
+    assert pack["profile_photo_tips"] and len(pack["gigs"]) == 3
+
+
+def test_missing_pack_falls_back_to_template(cfg):
+    cfg["profile"]["pack_file"] = "docs/gibt-es-nicht.json"
+    assert profile.build_profile(cfg)[1] == "vorlage"
