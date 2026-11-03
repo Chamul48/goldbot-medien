@@ -11,6 +11,22 @@ ist Deutsch mit echten Umlauten. Fiverr-Texte und Reddit-Antworten bleiben Engli
 - Lokale KI: Ollama aus dem AMD AI Bundle, Modell `qwen3:14b` (RX 9070). Kein Claude-API-Key gesetzt.
 - Fiverr wird nie automatisch bedient (Bot-Erkennung, Nutzungsbedingungen) – nur Texte zum Einfügen.
 
+## Andere Agenten auf demselben PC (nicht verwechseln)
+- **Gold-Bot** (Trading-Spielgeld + Social-Autopilot): `C:\Users\User\Desktop\golden_bot`, eigene Regeln im
+  Skill `gold-bot-pc`. Andere Claude-Sitzungen arbeiten dort parallel → nur lesen/prüfen, ändern nur nach
+  Rückfrage beim Nutzer. Seine `.env` liefert den Pixabay-Schlüssel für die Muster-Videos (nur lesen).
+- **Shopify-Agent**: Branch `claude/peaceful-rubin-0bk72i`, am PC `C:\Users\User\Desktop\goldbot-medien`
+  (Desktop, nicht Documents!), Start „Shop starten.bat“, Abgleich nur mit `python pc_sync.py <commit-sha>`.
+  Eigene `CLAUDE.md` im Branch.
+
+## Stand 2026-11-03
+- Goldbot 0.4.0 läuft im Dauerbetrieb (geplante Aufgabe „Goldbot“). 112 Tests grün, alles in `main`.
+- Muster-Videos neu: `python -m goldbot muster` (alle) bzw. `--nur krypto_de finance_en` (einzelne).
+  Clip pro Szene über `DEMOS[...]["clips"]` steuern; vorher Treffer prüfen (Tags + Bild ansehen).
+- Shopify-Agent: Review-Fixes in Commit `5d89200` am PC eingespielt; läuft erst nach Neustart des Fensters.
+- Offen beim Nutzer: Fiverr-Profil mit „Goldbot Fiverr-Hilfe“ ausfüllen, Muster-Videos als Portfolio
+  hochladen, `[PORTFOLIO-LINK]` ersetzen, Reddit-Aufträge selbst beantworten.
+
 ## Gelernt (bitte beachten)
 - **Remote gestartete Prozesse sterben.** Was über Desktop Commander mit `Start-Process` gestartet
   wird, endet mit dessen Sitzung (auch sichtbare Fenster). Goldbot daher immer über die geplante
@@ -43,7 +59,8 @@ ist Deutsch mit echten Umlauten. Fiverr-Texte und Reddit-Antworten bleiben Engli
 - **Gedächtnis atomar schreiben** (`.tmp` + `os.replace`); unlesbares wird als `.defekt` gesichert.
 - **Muster-Videos** = echtes Material: Pixabay-Clips (Schlüssel aus `muster.pixabay_env`, Standard
   `~/Desktop/golden_bot/.env`, nie ausgeben), Stimme edge-tts, Untertitel als ASS (libass,
-  `fontsdir=.`). Pixabay-„popular“ liefert Unpassendes → nur Treffer mit ALLEN Suchwörtern in den Tags.
+  `fontsdir=.`). Pixabay-„popular“ liefert Unpassendes → nur Treffer mit ALLEN Suchwörtern in den Tags, echtes
+  Video vor Animation, kein Green-Screen/Freistell-Material.
   Nutzer will **wenig Text** und **hohe Bildqualität**: max. 2 Wörter je Untertitel, kein Zähler/Etikett;
   Zoom per `scale …:eval=frame` (zoompan ruckelt). Test am PC: `reports\muster_test.py` lädt `demo.py`
   per Commit-SHA (raw.githubusercontent cacht Branch-URLs).
