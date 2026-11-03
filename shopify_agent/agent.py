@@ -19,7 +19,7 @@ MAX_TOOL_ROUNDS = 25
 SYSTEM_PROMPT = """\
 You are the Shopify agent for a store that sells gold-themed products and \
 publishes "Gold-Agent" videos and reels. You help the owner run the store: \
-look up products and orders, improve titles and descriptions, adjust prices, \
+look up products and orders, improve titles and descriptions, \
 and upload videos/images from the local media folder to Shopify and attach \
 them to products.
 
@@ -32,6 +32,8 @@ Write tools ask the owner for approval; if they decline, ask what they want inst
 - Texts must be factual: never invent specifications (weight, purity, \
 dimensions, origin, certificates) that are not in the product data. Write in a \
 calm, premium tone; no exaggerated claims, no fake scarcity.
+- Prices, publishing/archiving, deletions and legal texts are the owner's \
+decision: recommend them (escalate tool), never change them on your own.
 - Use the escalate tool for decisions that belong to the owner.
 - Reply in the language the owner writes in (often German). Keep replies short \
 and concrete: what you found, what you changed, what is left.
@@ -76,11 +78,13 @@ class ShopifyAgent:
             response = self._call()
             self.messages.append({"role": "assistant", "content": response.content})
 
-            if response.stop_reason == "refusal":
-                return "[The model declined this request.]"
             if response.stop_reason == "pause_turn":
                 continue
-            if response.stop_reason == "max_tokens":
+            if response.stop_reason in ("refusal", "max_tokens"):
+                # Every tool_use needs a tool_result, otherwise the next request fails (HTTP 400).
+                self._close_open_tool_uses(response)
+                if response.stop_reason == "refusal":
+                    return "[The model declined this request.]"
                 return _text(response) + "\n[Reply was cut off at max_tokens.]"
 
             tool_uses = [b for b in response.content if b.type == "tool_use"]
@@ -104,6 +108,15 @@ class ShopifyAgent:
 
         return "[Stopped: too many tool rounds in one turn.]"
 
+    def _close_open_tool_uses(self, response: Any) -> None:
+        open_ids = [b.id for b in response.content if b.type == "tool_use"]
+        if open_ids:
+            self.messages.append({"role": "user", "content": [
+                {"type": "tool_result", "tool_use_id": i, "is_error": True,
+                 "content": "Not executed: the reply was cut off or declined."}
+                for i in open_ids
+            ]})
+
 
 def _text(response: Any) -> str:
     return "\n".join(b.text for b in response.content if b.type == "text").strip()
@@ -119,7 +132,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("prompt", nargs="*", help="One-shot request; omit for interactive chat.")
     parser.add_argument("--media-dir", default=os.environ.get("MEDIA_DIR", "social"),
                         help="Folder with videos/images to upload (default: social/).")
-    parser.add_argument("--yes", action="store_true", help="Approve all store changes without asking.")
+    parser.add_argument("--yes", action="store_true",
+                        help="Approve text and media changes without asking (prices, status and raw mutations still ask).")
     parser.add_argument("--autopilot", action="store_true",
                         help="Unattended run: safe changes only, everything else is escalated.")
     parser.add_argument("--out-dir", default="autopilot", help="Autopilot reports and state (default: autopilot/).")
@@ -139,7 +153,8 @@ def main(argv: list[str] | None = None) -> int:
         print(exc, file=sys.stderr)
         return 2
 
-    confirm = (lambda _k, _s: True) if args.yes else ask_confirm
+    # --yes covers only the reversible kinds; prices, status and raw mutations always ask.
+    confirm = (lambda k, s: k in {"content", "media"} or ask_confirm(k, s)) if args.yes else ask_confirm
 
     if args.audit:
         from .audit import run_audit
@@ -152,7 +167,8 @@ def main(argv: list[str] | None = None) -> int:
         for line in restore(shop, Path(args.restore), confirm) or ["Nichts zurückzusetzen."]:
             print(line)
         return 0
-    agent = ShopifyAgent(Toolbox(shop, Path(args.media_dir), confirm))
+    agent = ShopifyAgent(Toolbox(shop, Path(args.media_dir), confirm, backup_dir=Path(args.out_dir),
+                                 change_log=Path(args.out_dir)))
 
     if args.prompt:
         print(agent.send(" ".join(args.prompt)))

@@ -15,7 +15,9 @@ Tool-Nutzung, Shopify Admin GraphQL API).
 - Beliebige GraphQL-Abfragen ausführen (Änderungen nur mit Freigabe)
 
 Jede Änderung am Shop wird vorher angezeigt und muss mit `j` bestätigt werden
-(`--yes` schaltet das ab).
+(`--yes` schaltet das nur für Texte und Medien ab – Preise, Status und freie GraphQL-Änderungen
+fragen immer). Vor der ersten Änderung einer Sitzung legt der Agent `autopilot/backup-<datum>.json`
+an, jede Änderung landet mit ID in `autopilot/aenderungen-<datum>.md`.
 
 **Einrichtung**
 1. Shopify-Zugang anlegen – eine der beiden Varianten:

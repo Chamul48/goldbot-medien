@@ -20,6 +20,9 @@ from typing import Any, Callable
 from .shopify import ShopifyError
 
 PAGE = 50
+# Shopify rejects queries over 1000 cost points; a product page with nested media and
+# variants costs about PRODUCT_PAGE * (2 + media + variants).
+PRODUCT_PAGE = 10
 
 SHOP_Q = """
 { shop {
@@ -37,7 +40,7 @@ query($n: Int!, $after: String) {
       id title handle status vendor productType tags descriptionHtml onlineStoreUrl
       seo { title description }
       media(first: 30) { edges { node { id alt mediaContentType } } }
-      variants(first: 100) { edges { node { id title sku price compareAtPrice inventoryQuantity } } }
+      variants(first: 50) { edges { node { id title sku price compareAtPrice inventoryQuantity } } }
     } }
   }
 }
@@ -82,11 +85,11 @@ def _edges(conn: dict[str, Any]) -> list[dict[str, Any]]:
     return [e["node"] for e in conn["edges"]]
 
 
-def _paged(shop: Any, query: str, key: str) -> list[dict[str, Any]]:
+def _paged(shop: Any, query: str, key: str, n: int = PAGE) -> list[dict[str, Any]]:
     out: list[dict[str, Any]] = []
     after = None
     while True:
-        conn = shop.graphql(query, {"n": PAGE, "after": after})[key]
+        conn = shop.graphql(query, {"n": n, "after": after})[key]
         out += _edges(conn)
         info = conn.get("pageInfo") or {}
         if not info.get("hasNextPage"):
@@ -95,7 +98,7 @@ def _paged(shop: Any, query: str, key: str) -> list[dict[str, Any]]:
 
 
 def read_products(shop: Any) -> list[dict[str, Any]]:
-    items = _paged(shop, PRODUCTS_Q, "products")
+    items = _paged(shop, PRODUCTS_Q, "products", n=PRODUCT_PAGE)
     for p in items:
         p["media"] = _edges(p["media"])
         p["variants"] = _edges(p["variants"])
@@ -199,28 +202,28 @@ def restore(shop: Any, backup_file: Path, confirm: Callable[[str, str], bool]) -
         if _seo_input(b.get("seo")) != _seo_input(cur.get("seo")):
             fields["seo"] = _seo_input(b.get("seo"))
         if fields and confirm("content", f"Zurücksetzen {b['title']}: {', '.join(fields)}"):
-            res = shop.graphql(
+            res = _safe(log, shop.graphql,
                 """
                 mutation($product: ProductUpdateInput!) {
                   productUpdate(product: $product) { product { id } userErrors { field message } }
                 }
                 """,
                 {"product": {"id": b["id"], **fields}},
-            )["productUpdate"]
+            key="productUpdate")
             log.append(f"{b['title']}: {', '.join(fields)}" + (f" FEHLER {res['userErrors']}" if res["userErrors"] else ""))
 
         cur_alt = {m["id"]: m.get("alt") for m in cur.get("media", [])}
         alts = [{"id": m["id"], "alt": m.get("alt") or ""} for m in b.get("media", [])
                 if m["id"] in cur_alt and (cur_alt[m["id"]] or "") != (m.get("alt") or "")]
         if alts and confirm("content", f"Alt-Texte zurücksetzen bei {b['title']} ({len(alts)})"):
-            res = shop.graphql(
+            res = _safe(log, shop.graphql,
                 """
                 mutation($files: [FileUpdateInput!]!) {
                   fileUpdate(files: $files) { files { id } userErrors { field message } }
                 }
                 """,
                 {"files": alts},
-            )["fileUpdate"]
+            key="fileUpdate")
             log.append(f"{b['title']}: {len(alts)} Alt-Texte" + (f" FEHLER {res['userErrors']}" if res["userErrors"] else ""))
 
     cur_cols = {c["id"]: c for c in snapshot_collections(shop)}
@@ -235,14 +238,14 @@ def restore(shop: Any, backup_file: Path, confirm: Callable[[str, str], bool]) -
         if _seo_input(b.get("seo")) != _seo_input(cur.get("seo")):
             fields["seo"] = _seo_input(b.get("seo"))
         if fields and confirm("content", f"Kollektion zurücksetzen {b['title']}: {', '.join(fields)}"):
-            res = shop.graphql(
+            res = _safe(log, shop.graphql,
                 """
                 mutation($collection: CollectionUpdateInput!) {
                   collectionUpdate(collection: $collection) { collection { id } userErrors { field message } }
                 }
                 """,
                 {"collection": {"id": b["id"], **fields}},
-            )["collectionUpdate"]
+            key="collectionUpdate")
             log.append(f"Kollektion {b['title']}: {', '.join(fields)}" + (f" FEHLER {res['userErrors']}" if res["userErrors"] else ""))
     return log
 
@@ -427,3 +430,12 @@ def run_audit(shop: Any, out_dir: Path) -> tuple[Path, Path, list[dict[str, Any]
     report_path = out_dir / f"audit-{snap['date']}.md"
     report_path.write_text(report(snap, found, backup_path), encoding="utf-8")
     return report_path, backup_path, found
+
+
+def _safe(log: list[str], fn: Callable[..., Any], *args: Any, key: str) -> dict[str, Any]:
+    """One restore step; an error is logged and the next item continues."""
+    try:
+        return fn(*args)[key]
+    except (ShopifyError, KeyError, TypeError, OSError) as exc:
+        log.append(f"FEHLER ({key}): {exc}"[:400])
+        return {"userErrors": ["übersprungen"]}

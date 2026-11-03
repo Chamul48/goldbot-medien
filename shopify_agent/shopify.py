@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import mimetypes
 import os
+import time
 from pathlib import Path
 from typing import Any
 
@@ -88,18 +89,44 @@ class ShopifyClient:
             {"X-Shopify-Access-Token": token, "Content-Type": "application/json"}
         )
 
+    retries = 4
+    sleep = staticmethod(time.sleep)
+
     def graphql(self, query: str, variables: dict[str, Any] | None = None) -> dict[str, Any]:
-        resp = self.session.post(
-            self.endpoint,
-            json={"query": query, "variables": variables or {}},
-            timeout=self.timeout,
-        )
-        if resp.status_code != 200:
-            raise ShopifyError(f"HTTP {resp.status_code}: {resp.text[:500]}")
-        body = resp.json()
-        if body.get("errors"):
-            raise ShopifyError(f"GraphQL errors: {body['errors']}")
-        return body["data"]
+        """Run a query. Throttling (429/THROTTLED), 5xx and network errors are retried."""
+        for attempt in range(self.retries + 1):
+            last = attempt == self.retries
+            wait = min(2 ** attempt, 30)
+            try:
+                resp = self.session.post(
+                    self.endpoint,
+                    json={"query": query, "variables": variables or {}},
+                    timeout=self.timeout,
+                )
+            except requests.RequestException as exc:
+                if last:
+                    raise ShopifyError(f"Network error: {exc}") from exc
+                self.sleep(wait)
+                continue
+            if resp.status_code in (429, 500, 502, 503, 504) and not last:
+                self.sleep(float(resp.headers.get("Retry-After") or wait))
+                continue
+            if resp.status_code != 200:
+                raise ShopifyError(f"HTTP {resp.status_code}: {resp.text[:500]}")
+            try:
+                body = resp.json()
+            except ValueError as exc:
+                raise ShopifyError(f"Invalid JSON from Shopify: {resp.text[:300]}") from exc
+            errors = body.get("errors")
+            if errors and not last and any(
+                (e.get("extensions") or {}).get("code") == "THROTTLED" for e in errors if isinstance(e, dict)
+            ):
+                self.sleep(wait)
+                continue
+            if errors:
+                raise ShopifyError(f"GraphQL errors: {errors}")
+            return body["data"]
+        raise ShopifyError("unreachable")
 
     # ---- Staged upload (videos / images / files) -------------------------
 

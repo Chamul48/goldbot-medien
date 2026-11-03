@@ -11,6 +11,7 @@ from __future__ import annotations
 import datetime
 import json
 import re
+import sys
 import time
 from pathlib import Path
 from typing import Any, Callable
@@ -234,14 +235,22 @@ class Toolbox:
         media_dir: Path,
         confirm: Callable[[str, str], bool],
         state_file: Path | None = None,
+        backup_dir: Path | None = None,
+        change_log: Path | None = None,
     ) -> None:
         self.shop = shop
+        # Chat mode: back up all texts once before the first approved write.
+        self.backup_dir = backup_dir
+        self._backed_up = backup_dir is None
+        # Every successful write is logged with its IDs (autopilot/aenderungen-<date>.md).
+        self.change_log = change_log
+        self.changes: list[dict[str, Any]] = []
         self.media_dir = media_dir.resolve()
         self.confirm = confirm
         self.state_file = state_file
         self.state: dict[str, Any] = {"uploaded": {}}
         if state_file and state_file.is_file():
-            self.state = json.loads(state_file.read_text())
+            self.state = json.loads(state_file.read_text(encoding="utf-8"))
             self.state.setdefault("uploaded", {})
         self.escalations: list[dict[str, str]] = []
         self.sleep = time.sleep
@@ -251,7 +260,7 @@ class Toolbox:
     def _save_state(self) -> None:
         if self.state_file:
             self.state_file.parent.mkdir(parents=True, exist_ok=True)
-            self.state_file.write_text(json.dumps(self.state, ensure_ascii=False, indent=1))
+            self.state_file.write_text(json.dumps(self.state, ensure_ascii=False, indent=1), encoding="utf-8")
 
     def run(self, name: str, args: dict[str, Any]) -> tuple[str, bool]:
         """Execute a tool. Returns (result_text, is_error)."""
@@ -262,7 +271,24 @@ class Toolbox:
             result = fn(**args)
         except (ShopifyError, ValueError, OSError, TypeError) as exc:
             return f"Error: {exc}", True
+        except Exception as exc:  # a tool bug must not end the whole run
+            return f"Error: {type(exc).__name__}: {exc}", True
+        if name in WRITE_TOOLS and not (name == "graphql" and not _is_mutation(args.get("query", ""))):
+            self._log_change(name, args)
         return json.dumps(result, ensure_ascii=False, indent=1), False
+
+    def _log_change(self, name: str, args: dict[str, Any]) -> None:
+        ids = sorted({str(v) for v in _walk(args) if isinstance(v, str) and v.startswith("gid://")})
+        entry = {"time": time.strftime("%Y-%m-%d %H:%M"), "tool": name,
+                 "ids": ids, "fields": sorted(k for k, v in args.items() if v is not None)}
+        self.changes.append(entry)
+        if self.change_log:
+            self.change_log.mkdir(parents=True, exist_ok=True)
+            path = self.change_log / f"aenderungen-{time.strftime('%Y-%m-%d')}.md"
+            line = (f"- {entry['time']} `{name}` {', '.join(ids) or args.get('path') or args.get('title') or ''}"
+                    f" – Felder: {', '.join(entry['fields'])}\n")
+            with path.open("a", encoding="utf-8") as fh:
+                fh.write(line)
 
     def _approve(self, kind: str, summary: str) -> None:
         if not self.confirm(kind, summary):
@@ -270,6 +296,14 @@ class Toolbox:
                 "Not approved. In chat: ask the owner what they want instead. "
                 "In autopilot: this was recorded for the owner; do not retry it another way."
             )
+        if not self._backed_up:
+            from . import audit
+            snap = audit.snapshot(self.shop)
+            if snap["errors"].get("products") or snap["errors"].get("collections"):
+                raise ValueError(f"No change: the backup could not be written ({snap['errors']}).")
+            path = audit.write_backup(snap, self.backup_dir)
+            self._backed_up = True
+            print(f"Sicherung vor der ersten Änderung: {path.as_posix()}", file=sys.stderr)
 
     def _full_seo(self, kind: str, gid: str, title: str | None, description: str | None) -> dict[str, str]:
         """SEO input with both fields, so changing one never blanks the other."""
@@ -611,13 +645,35 @@ class Toolbox:
 
     def t_escalate(self, topic: str, details: str) -> Any:
         self.escalations.append({"topic": topic, "details": details})
+        if self.state_file is None:  # chat: nobody reads the autopilot report
+            print(f"\n⚑ Für dich: {topic}\n{details}", file=sys.stderr)
+            return {"recorded": True, "note": "Chat mode: also tell the owner directly in your reply."}
         return {"recorded": True}
 
     def t_graphql(self, query: str, variables_json: str) -> Any:
         variables = json.loads(variables_json or "{}")
         if not isinstance(variables, dict):
             raise ValueError("variables_json must be a JSON object")
-        # Any "mutation" keyword counts, not just at the start ("{ a }, mutation { ... }").
-        if re.search(r"\bmutation\b", query, re.IGNORECASE):
+        if _is_mutation(query):
             self._approve("graphql", f"Run GraphQL mutation:\n{query}\nvariables: {variables_json}")
         return self.shop.graphql(query, variables)
+
+
+WRITE_TOOLS = {"update_product", "update_variant_prices", "upload_media", "set_media_alt",
+               "update_collection", "create_collection", "graphql"}
+
+
+def _is_mutation(query: str) -> bool:
+    # Any "mutation" keyword counts, not just at the start ("{ a }, mutation { ... }").
+    return bool(re.search(r"\bmutation\b", query or "", re.IGNORECASE))
+
+
+def _walk(value: Any):
+    if isinstance(value, dict):
+        for v in value.values():
+            yield from _walk(v)
+    elif isinstance(value, list):
+        for v in value:
+            yield from _walk(v)
+    else:
+        yield value

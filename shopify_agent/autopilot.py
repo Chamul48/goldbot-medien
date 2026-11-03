@@ -82,39 +82,54 @@ def run(media_dir: Path, out_dir: Path) -> int:
     # Back up first; without a complete backup, texts are not touched.
     report_path, backup_path, found = audit.run_audit(shop, out_dir)
     snap_errors = [f for f in found if f["area"] == "Technik"]
-    allowed = ALLOWED_ALONE if not snap_errors else {"media"}
+    # Texts stay untouched only if the backup itself is incomplete (orders/themes don't matter).
+    blocking = [f for f in snap_errors if any(f"'{s}'" in f["text"] for s in ("products", "collections", "pages"))]
+    allowed = ALLOWED_ALONE if not blocking else {"media"}
 
     ref: list[Toolbox] = []
-    toolbox = Toolbox(shop, media_dir, autopilot_policy(ref, allowed), state_file=out_dir / "state.json")
+    toolbox = Toolbox(shop, media_dir, autopilot_policy(ref, allowed), state_file=out_dir / "state.json",
+                      change_log=out_dir)
     ref.append(toolbox)
-    if snap_errors:
+    if blocking:
         toolbox.escalations.append({
             "topic": "Shop konnte nicht vollständig gelesen werden",
             "details": "Ohne vollständige Sicherung ändert der Autopilot keine Texte.\n"
-                       + "\n".join(f["text"] for f in snap_errors),
+                       + "\n".join(f["text"] for f in blocking),
         })
     agent = ShopifyAgent(toolbox)
 
     todo = [f for f in found if f["who"] == "auto"][:MAX_FINDINGS_IN_TASK]
     todo_text = "\n".join(f"- P{f['prio']} [{f['area']}] {f['text']}" for f in todo) or "- (none)"
-    summary = agent.send(AUTOPILOT_TASK.format(date=date, findings=todo_text))
+    code = 0
+    try:
+        summary = agent.send(AUTOPILOT_TASK.format(date=date, findings=todo_text))
+    except Exception as exc:  # still write the report: changes may already have happened
+        code = 1
+        summary = "(Lauf abgebrochen – siehe „Needs you“)"
+        toolbox.escalations.append({"topic": "Autopilot abgebrochen", "details": f"{type(exc).__name__}: {exc}"[:1000]})
 
     report = [f"# Autopilot {date}", "", summary or "(no summary)", "",
               f"Sicherung: `{backup_path.as_posix()}` · Kontrolle: `{report_path.as_posix()}`", ""]
+    if toolbox.changes:
+        report += ["## Änderungen (aus dem Protokoll, nicht aus der KI-Zusammenfassung)", ""]
+        report += [f"- `{c['tool']}` {', '.join(c['ids'])} – {', '.join(c['fields'])}" for c in toolbox.changes]
+        report += [""]
     if toolbox.escalations:
         report += ["## Needs you", ""]
         for e in toolbox.escalations:
             report += [f"### {e['topic']}", "", e["details"], ""]
     reports = out_dir / "reports"
     reports.mkdir(exist_ok=True)
-    (reports / f"{date}.md").write_text("\n".join(report))
+    (reports / f"{date}.md").write_text("\n".join(report), encoding="utf-8")
 
     esc_file = out_dir / "ESCALATIONS.md"
     if toolbox.escalations:
-        esc_file.write_text("\n".join(report))
+        esc_file.write_text("\n".join(report), encoding="utf-8")
     elif esc_file.exists():
         esc_file.unlink()
 
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(errors="replace")
     print("\n".join(report))
-    print(json.dumps({"escalations": len(toolbox.escalations)}), file=sys.stderr)
-    return 0
+    print(json.dumps({"escalations": len(toolbox.escalations), "changes": len(toolbox.changes)}), file=sys.stderr)
+    return code

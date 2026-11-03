@@ -47,3 +47,8 @@ Antworten auf Deutsch, Ergebnis zuerst, einfach erklärt (der Inhaber ist kein P
    Allowed domains).
 10. **Zugangsdaten**: Werte nie in den Chat. Auf dem PC nur über `eintragen.py` (Zwischenablage) bzw.
     `env_pruefen.py` (zeigt nur „gesetzt/fehlt“).
+11. **Review 2026-11-03** (behoben, Tests in `tests/test_review_fixes.py`): Produktabfrage lag über Shopifys
+    Kostengrenze 1000 (jetzt `PRODUCT_PAGE = 10`); abgeschnittene/abgelehnte Antworten ließen ein `tool_use` ohne
+    `tool_result` zurück (jede weitere Chat-Anfrage HTTP 400); `--yes` gab auch Preise/Status frei; Chat schrieb ohne
+    Sicherung; Änderungen wurden nicht protokolliert; keine Wiederholung bei THROTTLED/429/5xx; Dateien ohne
+    `encoding="utf-8"` (Windows cp1252).
