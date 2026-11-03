@@ -653,6 +653,11 @@ def cover_headline(title: str) -> list[str]:
     """Gig-Titel ohne „I will“, als höchstens 2 Zeilen für das Titelbild."""
     import textwrap
     text = re.sub(r"^\s*(I will|Ich werde)\s+", "", title, flags=re.I).strip()
+    # Zusätze wie „in german or english“ / „for your … channel“ weglassen – kurz wirkt besser
+    text = re.sub(r"\s+(in (german|english)\b.*|for (your|you)\b.*)$", "", text, flags=re.I).strip() or text
+    for low, nice in (("tiktoks", "TikToks"), ("tiktok", "TikTok"), ("youtube", "YouTube"), ("ai", "AI"),
+                      ("german", "German"), ("english", "English")):
+        text = re.sub(rf"\b{low}\b", nice, text)
     text = text[:1].upper() + text[1:]
     rows = textwrap.wrap(text, 30, break_on_hyphens=False)
     if len(rows) > 2:
@@ -663,17 +668,20 @@ def cover_headline(title: str) -> list[str]:
 
 def render_cover(videos: list[Path], title: str, accent: str, target: Path, ffmpeg: str,
                  font: tuple[str, str]) -> Path:
-    """Drei Standbilder aus den Muster-Videos nebeneinander + Gig-Titel."""
+    """Drei Standbilder (verschiedene Szenen, ohne Untertitel) nebeneinander + Gig-Titel."""
     with tempfile.TemporaryDirectory() as tmp:
         work = Path(tmp)
         shutil.copy(font[0], work / "font.ttf")
-        picks = [(videos[k % len(videos)], t) for k, t in enumerate((5.5, 9.5, 13.5))]
+        # Ein Video, drei verschiedene Szenen (Hook mit großem Text auslassen)
+        length = duration(videos[0], ffmpeg) or 16.0
+        picks = [(videos[0], length * f) for f in (0.30, 0.52, 0.74)]
         cmd = [ffmpeg, "-y", "-hide_banner", "-loglevel", "error"]
         for path, t in picks:
             length = duration(path, ffmpeg)
             cmd += ["-ss", f"{min(t, max(length - 1, 0)):.2f}", "-i", str(path)]
         tile_w = COVER_W // 3 + 1
-        fg = [f"[{k}:v]format=rgb24,scale=-2:{COVER_H},crop={tile_w}:{COVER_H},setsar=1[t{k}]" for k in range(3)]
+        # nur der obere Bildteil: ohne Fortschrittsbalken und ohne Untertitel (die sitzen bei 66 %)
+        fg = [f"[{k}:v]format=rgb24,crop=iw:ih*0.58:0:ih*0.02,scale=-2:{COVER_H},crop={tile_w}:{COVER_H},setsar=1[t{k}]" for k in range(3)]
         fg.append("[t0][t1][t2]hstack=3,crop=1280:769[s]")
         fg.append("[s]drawbox=x=0:y=ih-300:w=iw:h=300:color=black@0.62:t=fill,"
                   f"drawbox=x=0:y=ih-300:w=iw:h=8:color={accent}@1:t=fill")
