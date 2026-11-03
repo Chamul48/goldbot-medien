@@ -32,7 +32,8 @@ profile:
   pack_file: docs/profil-paket.json
 
 trends:
-  # Begriffe, nach denen Trends/Chancen bewertet werden
+  # Begriffe, nach denen Trends/Chancen bewertet werden.
+  # Ab 4 Buchstaben zählen auch zusammengesetzte Wörter (gold -> Goldpreis, Goldkurs).
   keywords:
     - reels
     - shorts
@@ -50,7 +51,6 @@ trends:
     - podcast
     - caption
     # aus der Recherche vom 03.11.2026
-    - faceless
     - youtube automation
     - cash cow
     - ai voiceover
@@ -62,7 +62,6 @@ trends:
     - edelmetall
     - precious metals
     - silver
-    - goldpreis
   google_trends_geo: [AT, DE]
   reddit_subreddits: [forhire, freelance, Entrepreneur, NewTubers, socialmedia, VideoEditing]
   hackernews_queries: [ai video, automation, short form video]
@@ -72,7 +71,7 @@ trends:
   request_delay_seconds: 2
 
 llm:
-  # Ohne API-Key arbeitet der Bot mit eingebauten Vorlagen weiter.
+  # Ohne API-Key nutzt der Bot das recherchierte Profil (pack_file) bzw. eingebaute Vorlagen.
   model: claude-opus-5-5
   effort: medium
 
