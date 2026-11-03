@@ -255,7 +255,8 @@ class Footage:
 
         def rank(h: dict[str, Any]) -> tuple:
             size = _pick_size(h.get("videos") or {}) or {}
-            return (relevance(h, query)[1], h.get("type") == "film", size.get("height", 0) > size.get("width", 1),
+            # Echtes Video schlägt Animation (3D-Schriftzüge wirken billig)
+            return (h.get("type") == "film", relevance(h, query)[1], size.get("height", 0) > size.get("width", 1),
                     size.get("height", 0) >= H or size.get("width", 0) >= 3000, h.get("downloads", 0))
 
         for hit in sorted(hits, key=rank, reverse=True)[:5]:
@@ -338,7 +339,12 @@ def word_times(text: str, marks: list[tuple[float, float, str]] | None, length: 
     nicht Wort für Wort zugeordnet, sondern über den Textanteil: ein Wort bei 40 % des Textes
     startet dort, wo die Stimme 40 % ihrer Wörter gesprochen hat.
     """
-    words = text.split()
+    words: list[str] = []
+    for token in text.split():
+        if words and not re.search(r"\w", token):  # „–“ allein ist kein Wort: an das vorige hängen
+            words[-1] += " " + token if token not in "–—-" else ""
+        else:
+            words.append(token)
     if not words:
         return []
     chars = [len(w) + 1 for w in words]
