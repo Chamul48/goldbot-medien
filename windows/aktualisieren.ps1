@@ -72,7 +72,13 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "pip install ist fehlgeschlagen." }
 
     Write-Host "Starte Goldbot ..."
-    Start-Process -FilePath (Join-Path $root "windows\goldbot-starten.bat") -WorkingDirectory $root
+    # Über die geplante Aufgabe starten, falls vorhanden: dann läuft Goldbot unabhängig
+    # von diesem Fenster weiter.
+    if (Get-ScheduledTask -TaskName "Goldbot" -ErrorAction SilentlyContinue) {
+        Start-ScheduledTask -TaskName "Goldbot"
+    } else {
+        Start-Process -FilePath (Join-Path $root "windows\goldbot-starten.bat") -WorkingDirectory $root
+    }
     Write-Host "Fertig." -ForegroundColor Green
     Start-Sleep 3
 } catch {

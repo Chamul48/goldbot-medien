@@ -16,10 +16,11 @@ from __future__ import annotations
 
 import argparse
 import logging
+import os
 import sys
 import time
 
-from . import helper
+from . import __version__, helper
 from . import ideas as ideas_mod
 from . import leads as leads_mod
 from . import llm, profile as profile_mod, report, trends as trends_mod
@@ -27,6 +28,18 @@ from .config import load_config, output_dir
 from .lock import AlreadyRunning, single_instance
 
 log = logging.getLogger("goldbot")
+
+
+def setup_file_log(path) -> None:
+    """Zusätzlich in eine Datei loggen (max. 3 × 1 MB), damit Fehler später nachvollziehbar sind."""
+    from logging.handlers import RotatingFileHandler
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        handler = RotatingFileHandler(path, maxBytes=1_000_000, backupCount=2, encoding="utf-8", delay=True)
+    except OSError:
+        return
+    handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s", "%Y-%m-%d %H:%M:%S"))
+    logging.getLogger().addHandler(handler)
 
 
 def run(cfg: dict, command: str) -> None:
@@ -77,6 +90,7 @@ def main(argv: list[str] | None = None) -> int:
     logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO,
                         format="%(asctime)s %(levelname)s %(message)s", datefmt="%H:%M:%S")
     cfg = load_config(args.config)
+    setup_file_log(output_dir(cfg) / "goldbot.log")
 
     if args.befehl == "muster":
         from . import demo
@@ -107,6 +121,7 @@ def main(argv: list[str] | None = None) -> int:
     lead_hours = args.auftraege_alle or float((cfg.get("leads") or {}).get("check_every_hours", 1))
     # nicht öfter als alle 15 min (Reddit) und nicht seltener als der Komplett-Lauf
     lead = max(min(lead_hours * 3600, full), 15 * 60)
+    log.info("Goldbot %s gestartet (PID %d).", __version__, os.getpid())
     log.info("Dauerbetrieb: Aufträge alle %.2g h, Komplett-Lauf alle %.3g h. Beenden mit Strg+C.",
              lead / 3600, full / 3600)
     try:

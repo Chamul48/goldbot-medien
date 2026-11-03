@@ -26,5 +26,6 @@ if ($LASTEXITCODE -ne 0) {
 Write-Host "Gespeichert. Goldbot nutzt ab jetzt Claude." -ForegroundColor Green
 Get-CimInstance Win32_Process -Filter "Name='python.exe'" | Where-Object { $_.CommandLine -like '*goldbot*dauer*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
 Get-CimInstance Win32_Process -Filter "Name='cmd.exe'" | Where-Object { $_.CommandLine -like '*goldbot-starten*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
-Start-Process -FilePath (Join-Path $root "windows\goldbot-starten.bat") -WorkingDirectory $root
+if (Get-ScheduledTask -TaskName "Goldbot" -ErrorAction SilentlyContinue) { Start-ScheduledTask -TaskName "Goldbot" }
+else { Start-Process -FilePath (Join-Path $root "windows\goldbot-starten.bat") -WorkingDirectory $root }
 Read-Host "Goldbot neu gestartet. Enter zum Schließen"

@@ -547,3 +547,20 @@ def test_demo_contents_are_marked_as_demo():
 def test_demo_render_real_video(tmp_path):
     out = demo_mod.render_all(tmp_path, ["krypto_de"])
     assert out and out[0].stat().st_size > 50_000
+
+
+def test_file_log_written(tmp_path):
+    import logging as _l
+    from goldbot import __main__ as cli
+    root = _l.getLogger()
+    before = list(root.handlers)
+    try:
+        cli.setup_file_log(tmp_path / "goldbot.log")
+        _l.getLogger("goldbot").warning("Testmeldung äöü")
+        for h in root.handlers:
+            h.flush()
+        assert "Testmeldung äöü" in (tmp_path / "goldbot.log").read_text(encoding="utf-8")
+    finally:
+        for h in root.handlers[len(before):]:
+            h.close()
+        root.handlers[:] = before
