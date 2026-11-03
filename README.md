@@ -76,6 +76,6 @@ Alternativ einfach `python -m goldbot dauer --alle 24` in einem offenen Fenster 
 
 ## Entwicklung
 ```bash
-pip install -r requirements.txt pytest
+pip install -r requirements-dev.txt
 python -m pytest -q
 ```

@@ -821,3 +821,22 @@ def test_toast_opens_leads_file(monkeypatch, tmp_path):
     monkeypatch.setattr(notify.subprocess, "run", lambda *a, **k: seen.update(k["env"]))
     assert notify.windows_toast("t", "b", tmp_path / "x.md")
     assert seen["GOLDBOT_TOAST_LAUNCH"].startswith("file://") and "launch" in notify._TOAST_SCRIPT
+
+
+def test_dotenv_loads_without_overriding(tmp_path, monkeypatch):
+    from goldbot.config import load_dotenv
+    import os
+    env = tmp_path / ".env"
+    env.write_text("# x\nGOLDBOT_TEST_A=1\nGOLDBOT_TEST_B=neu\nGOLDBOT_TEST_C=\n", encoding="utf-8")
+    monkeypatch.setenv("GOLDBOT_TEST_B", "alt")
+    monkeypatch.delenv("GOLDBOT_TEST_A", raising=False)
+    assert load_dotenv(env) == ["GOLDBOT_TEST_A"]
+    assert os.environ["GOLDBOT_TEST_A"] == "1" and os.environ["GOLDBOT_TEST_B"] == "alt"
+    monkeypatch.delenv("GOLDBOT_TEST_A")
+
+
+def test_env_example_has_no_values():
+    from goldbot.config import ROOT
+    lines = (ROOT / ".env.example").read_text(encoding="utf-8").splitlines()
+    assert all(l.endswith("=") for l in lines if l and not l.startswith("#"))
+

@@ -31,6 +31,31 @@ def output_dir(cfg: dict[str, Any]) -> Path:
     return path if path.is_absolute() else ROOT / path
 
 
+def load_dotenv(path: Path | None = None) -> list[str]:
+    """KEY=WERT-Zeilen aus .env laden, ohne gesetzte Umgebungsvariablen zu überschreiben.
+
+    Gibt die Namen der geladenen Schlüssel zurück (nie die Werte).
+    """
+    import os
+    path = path or ROOT / ".env"
+    loaded: list[str] = []
+    try:
+        lines = path.read_text(encoding="utf-8-sig").splitlines()
+    except OSError:
+        return loaded
+    for line in lines:
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        key = key.strip().removeprefix("export ").strip()
+        value = value.strip().strip('"').strip("'")
+        if key and value and key not in os.environ:
+            os.environ[key] = value
+            loaded.append(key)
+    return loaded
+
+
 def _read_user(path: Path) -> dict[str, Any]:
     """config.yaml lesen – mit verständlicher Meldung statt Python-Fehler."""
     try:

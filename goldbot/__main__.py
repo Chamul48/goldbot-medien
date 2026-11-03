@@ -119,6 +119,8 @@ def main(argv: list[str] | None = None) -> int:
 
     logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO,
                         format="%(asctime)s %(levelname)s %(message)s", datefmt="%H:%M:%S")
+    from .config import load_dotenv
+    load_dotenv()  # Schlüssel aus .env (KI, Telegram, Pixabay) – Werte werden nie geloggt
     try:
         cfg = load_config(args.config)
     except (OSError, ValueError) as exc:
