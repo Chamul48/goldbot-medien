@@ -41,6 +41,12 @@ ist Deutsch mit echten Umlauten. Fiverr-Texte und Reddit-Antworten bleiben Engli
 - **Eingeschränkter Komplett-Lauf** (kein Netz/keine KI direkt nach der Anmeldung) wird nach 15 min
   wiederholt (max. 3×), die Aufgabe startet 1 min nach der Anmeldung.
 - **Gedächtnis atomar schreiben** (`.tmp` + `os.replace`); unlesbares wird als `.defekt` gesichert.
+- **Muster-Videos** = echtes Material: Pixabay-Clips (Schlüssel aus `muster.pixabay_env`, Standard
+  `~/Desktop/golden_bot/.env`, nie ausgeben), Stimme edge-tts, Untertitel als ASS (libass,
+  `fontsdir=.`). Pixabay-„popular“ liefert Unpassendes → nur Treffer mit ALLEN Suchwörtern in den Tags.
+  Nutzer will **wenig Text** und **hohe Bildqualität**: max. 2 Wörter je Untertitel, kein Zähler/Etikett;
+  Zoom per `scale …:eval=frame` (zoompan ruckelt). Test am PC: `reports\muster_test.py` lädt `demo.py`
+  per Commit-SHA (raw.githubusercontent cacht Branch-URLs).
 - **ffmpeg drawbox kennt keine Zeit** (`t` = Rahmendicke) → animierte Balken per `overlay` mit `t`.
 - **Fiverr-Paketbeschreibung max. 100 Zeichen**; Gig-Titel ohne „I will“ kopieren (Fiverr setzt es davor).
 - **Update-Skript** startet Goldbot nach einem Fehler wieder; `$ProgressPreference = 'SilentlyContinue'`.

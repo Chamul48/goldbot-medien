@@ -8,7 +8,7 @@ Gold-Agent Videos und Reels – plus **Goldbot**, ein Assistent für dein Fiverr
 | `python -m goldbot auftraege` | Sucht **neue** passende Aufträge (u. a. r/forhire, r/HireAnEditor), schreibt zu jedem einen Antwort-Entwurf und meldet sie per Windows-Hinweis. Bereits gemeldete Aufträge kommen nicht noch einmal. |
 | `python -m goldbot profil` | Fertige Profiltexte: Einzeiler, „Über mich“, Fähigkeiten, 3 Gigs mit Paketen und FAQ – Fiverr-Grenzen werden eingehalten. |
 | `python -m goldbot einfuegen` | Öffnet die **Einfüge-Hilfe**: eine Seite mit „Kopieren“-Knopf für jedes Fiverr-Feld. |
-| `python -m goldbot muster` | Erstellt 6 **Muster-Videos** (9:16, Gold/Finanzen/Krypto, Deutsch + Englisch) für dein Portfolio. Braucht ffmpeg. |
+| `python -m goldbot muster` | Erstellt 6 **Muster-Videos** (9:16, Gold/Finanzen/Krypto, Deutsch + Englisch) mit echtem Stock-Material (Pixabay), Sprecherstimme, Wort-für-Wort-Untertiteln, Zoom-Schnitten und Musik. Braucht ffmpeg und einen kostenlosen Pixabay-Schlüssel (`PIXABAY_API_KEY`). |
 | `python -m goldbot trends` | Trends und Konkurrenz-Preise aus Google Trends, Reddit, Hacker News und eigenen RSS-Feeds. |
 | `python -m goldbot ideen` | Trends + Vertriebsideen für die nächsten 7 Tage – echte Aufträge immer zuerst. |
 | `python -m goldbot alles` | Alles zusammen (Standard). |
