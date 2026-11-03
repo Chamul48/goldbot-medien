@@ -1,13 +1,13 @@
 """Uebernimmt die Zwischenablage in die .env, ohne den Wert anzuzeigen.
 
-Aufruf: python eintragen.py SHOPIFY_CLIENT_ID|SHOPIFY_CLIENT_SECRET|SHOPIFY_ACCESS_TOKEN|SHOPIFY_STORE
+Aufruf: python eintragen.py SHOPIFY_CLIENT_ID|SHOPIFY_CLIENT_SECRET|SHOPIFY_ACCESS_TOKEN|SHOPIFY_STORE|ANTHROPIC_API_KEY
 """
 import re
 import sys
 import tkinter
 from pathlib import Path
 
-ERLAUBT = {"SHOPIFY_STORE", "SHOPIFY_CLIENT_ID", "SHOPIFY_CLIENT_SECRET", "SHOPIFY_ACCESS_TOKEN"}
+ERLAUBT = {"SHOPIFY_STORE", "SHOPIFY_CLIENT_ID", "SHOPIFY_CLIENT_SECRET", "SHOPIFY_ACCESS_TOKEN", "ANTHROPIC_API_KEY"}
 key = sys.argv[1] if len(sys.argv) > 1 else ""
 if key not in ERLAUBT:
     sys.exit("Unbekannter Name: " + key)
@@ -22,6 +22,8 @@ root.destroy()
 
 if not wert or "\n" in wert or " " in wert:
     sys.exit("In der Zwischenablage steht kein einzelner Wert (leer oder mehrere Woerter).")
+if key == "ANTHROPIC_API_KEY" and not wert.startswith("sk-ant-"):
+    sys.exit("Das sieht nicht nach einem Claude-API-Schluessel aus (beginnt nicht mit sk-ant-). Nichts gespeichert.")
 if key == "SHOPIFY_STORE":
     m = re.search(r"([a-z0-9][a-z0-9-]*)\.myshopify\.com", wert.lower())
     # admin.shopify.com/store/<name>/... is what the browser shows in the admin
