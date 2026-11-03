@@ -179,3 +179,16 @@ def test_keyword_matches_german_compounds_but_not_short_substrings():
     items = [trends.TrendItem(source="G", title="Goldpreis steigt"), trends.TrendItem(source="G", title="Air Max")]
     a, b = trends.score(items, ["gold", "ai"])
     assert a.matched == ["gold"] and b.matched == []
+
+
+def test_template_gigs_have_distinct_packages_and_faq(cfg):
+    pack = profile.template_profile(cfg["profile"])
+    gigs = pack["gigs"]
+    assert len({str(g["packages"]) for g in gigs}) == 3
+    assert len({str(g["faq"]) for g in gigs}) == 3
+    reels, faceless, automation = gigs
+    assert faceless["packages"][0]["price_usd"] > reels["packages"][0]["price_usd"]
+    assert not any("video up to 30s" in i for p in automation["packages"] for i in p["includes"])
+    for g in gigs:
+        prices = [p["price_usd"] for p in g["packages"]]
+        assert prices == sorted(prices) and prices[0] >= 5

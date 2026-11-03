@@ -179,24 +179,56 @@ def template_profile(profile: dict[str, Any]) -> dict[str, Any]:
         customers=", ".join(customers[:3]),
     )
 
-    def packages(extra: str) -> list[dict[str, Any]]:
-        return [
-            {"name": "Basic", "price_usd": low, "delivery_days": 2, "revisions": 1,
-             "includes": ["1 video up to 30s", "captions", "background music"]},
-            {"name": "Standard", "price_usd": mid, "delivery_days": 3, "revisions": 2,
-             "includes": ["3 videos up to 60s", "captions", "hook rewrite", extra]},
-            {"name": "Premium", "price_usd": high, "delivery_days": 5, "revisions": 3,
-             "includes": ["8 videos up to 60s", "captions", "hooks + scripts",
-                          extra, "thumbnail/cover"]},
-        ]
+    def packages(factor: float, tiers: list[tuple[int, int, list[str]]]) -> list[dict[str, Any]]:
+        """Pakete je Gig; `factor` skaliert den Preisrahmen nach Aufwand."""
+        out = []
+        for name, base, (days, revisions, includes) in zip(
+            ("Basic", "Standard", "Premium"), (low, mid, high), tiers
+        ):
+            price = int(round(base * factor / 5.0) * 5) or 5
+            out.append({"name": name, "price_usd": price, "delivery_days": days,
+                        "revisions": revisions, "includes": includes})
+        return out
 
-    faq = [
+    reels_packages = packages(1.0, [
+        (2, 1, ["1 video up to 30s", "animated captions", "music + sound effects"]),
+        (3, 2, ["3 videos up to 60s", "animated captions", "hook rewrite", "subtitles EN or DE"]),
+        (5, 3, ["8 videos up to 60s", "animated captions", "hooks + scripts", "subtitles EN + DE", "cover images"]),
+    ])
+    faceless_packages = packages(2.0, [
+        (3, 1, ["1 video up to 60s", "script", "AI voiceover", "stock footage + captions"]),
+        (4, 2, ["1 video up to 5 min", "researched script", "AI voiceover", "charts + stock footage", "thumbnail"]),
+        (7, 3, ["4 shorts + 1 video up to 8 min", "researched scripts", "AI voiceover", "charts + stock footage", "thumbnails"]),
+    ])
+    automation_packages = packages(2.5, [
+        (2, 1, ["workflow review", "list of AI tools for your content", "written recommendations"]),
+        (4, 2, ["setup of 1 AI workflow (ideas, scripts, captions)", "prompt templates", "short video guide"]),
+        (7, 3, ["full content pipeline: long video to shorts", "prompt + caption templates", "documentation", "30 min handover call on Fiverr"]),
+    ])
+
+    reels_faq = [
         {"q": "What do you need from me?",
-         "a": "Your raw clips or topic, your brand colors/logo and 1-2 example videos you like."},
+         "a": "Your raw clips, logo/brand colors if you have them, and 1-2 example videos you like."},
         {"q": "Can you post for me?",
-         "a": "I deliver ready-to-post files plus captions and hashtags; you keep full control of your accounts."},
-        {"q": "Do you offer bulk deals?",
-         "a": "Yes, message me for monthly packages with a discount."},
+         "a": "I deliver ready-to-post 9:16 files plus caption text and hashtags; you keep full control of your accounts."},
+        {"q": "Do you offer monthly packages?",
+         "a": "Yes, message me for a recurring package with a lower price per video."},
+    ]
+    faceless_faq = [
+        {"q": "Do I need to record anything?",
+         "a": "No. Send me the topic or a few keywords; I write the script and add an AI voiceover."},
+        {"q": "Is the content financial advice?",
+         "a": "No. Videos are educational and contain no investment recommendations."},
+        {"q": "Can you match my channel style?",
+         "a": "Yes, send me your channel link or example videos and I follow your format and fonts."},
+    ]
+    automation_faq = [
+        {"q": "Which tools do you use?",
+         "a": "I pick tools that fit your budget; you keep your own accounts and logins at all times."},
+        {"q": "Do I need technical skills?",
+         "a": "No. You get step-by-step documentation and templates you can use right away."},
+        {"q": "Can you also edit the videos?",
+         "a": "Yes, check my short-form editing gig or message me for a combined offer."},
     ]
 
     gigs = [
@@ -210,8 +242,8 @@ def template_profile(profile: dict[str, Any]) -> dict[str, Any]:
                 "music and sound effects, export in 9:16 for TikTok, Reels and Shorts. "
                 "Perfect for " + ", ".join(customers[:-1]) + " and " + customers[-1] + "."
             ),
-            "packages": packages("subtitles in 2 languages"),
-            "faq": faq,
+            "packages": reels_packages,
+            "faq": reels_faq,
         },
         {
             "title": "I will create faceless finance and gold videos for your channel",
@@ -222,8 +254,8 @@ def template_profile(profile: dict[str, Any]) -> dict[str, Any]:
                 "the topic, write the script, add AI voiceover, stock footage, charts and captions. "
                 "You get a ready-to-upload video. No financial advice is given in the content."
             ),
-            "packages": packages("script + voiceover"),
-            "faq": faq,
+            "packages": faceless_packages,
+            "faq": faceless_faq,
         },
         {
             "title": "I will automate your short video workflow with ai tools",
@@ -234,8 +266,8 @@ def template_profile(profile: dict[str, Any]) -> dict[str, Any]:
                 "captions and repurposing long videos into shorts. You get a documented process "
                 "and templates you can reuse."
             ),
-            "packages": packages("workflow documentation"),
-            "faq": faq,
+            "packages": automation_packages,
+            "faq": automation_faq,
         },
     ]
 
