@@ -149,9 +149,8 @@ def build_ideas(cfg: dict[str, Any], trends: list[TrendItem]) -> tuple[dict[str,
         SYSTEM,
         _prompt(profile, trends),
         IDEAS_SCHEMA,
-        model=llm_cfg.get("model", "claude-opus-5-5"),
-        effort=llm_cfg.get("effort", "medium"),
+        llm_cfg,
     )
     if result:
-        return result, "claude"
+        return result, llm.describe(llm_cfg)
     return template_ideas(profile, trends), "vorlage"

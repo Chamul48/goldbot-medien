@@ -206,3 +206,64 @@ def test_research_pack_is_used_without_api(cfg):
 def test_missing_pack_falls_back_to_template(cfg):
     cfg["profile"]["pack_file"] = "docs/gibt-es-nicht.json"
     assert profile.build_profile(cfg)[1] == "vorlage"
+
+
+# --------------------------------------------------------------------------- #
+# Lokale KI (Ollama) – mit nachgebautem Server, ohne echtes Netzwerk
+# --------------------------------------------------------------------------- #
+
+class _FakeResp:
+    def __init__(self, payload, code=200):
+        self._payload, self.status_code = payload, code
+    def json(self):
+        return self._payload
+    def raise_for_status(self):
+        if self.status_code >= 400:
+            raise llm.requests.HTTPError(str(self.status_code))
+
+
+@pytest.fixture
+def fake_ollama(monkeypatch):
+    monkeypatch.delenv("GOLDBOT_OFFLINE", raising=False)
+    for var in ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_PROFILE"):
+        monkeypatch.delenv(var, raising=False)
+    llm._OLLAMA_CACHE.clear()
+    state = {"models": ["qwen3:14b"], "answer": {"ideas": [], "weekly_focus": "x"}, "posted": []}
+    monkeypatch.setattr(llm.requests, "get", lambda url, timeout: _FakeResp({"models": [{"name": m} for m in state["models"]]}))
+    def post(url, json, timeout):
+        state["posted"].append(json)
+        return _FakeResp({"message": {"content": __import__("json").dumps(state["answer"])}})
+    monkeypatch.setattr(llm.requests, "post", post)
+    yield state
+    llm._OLLAMA_CACHE.clear()
+
+
+def test_auto_uses_ollama_without_key(fake_ollama):
+    cfg = {"provider": "auto", "ollama_model": "qwen3:14b"}
+    assert llm.provider(cfg) == "ollama"
+    data = llm.ask_json("s", "p", {"type": "object", "required": ["ideas"]}, cfg)
+    assert data["weekly_focus"] == "x"
+    sent = fake_ollama["posted"][0]
+    assert sent["format"]["type"] == "object" and sent["stream"] is False and sent["model"] == "qwen3:14b"
+
+
+def test_missing_model_means_no_ai(fake_ollama):
+    fake_ollama["models"] = []
+    assert llm.provider({"ollama_model": "qwen3:14b"}) is None
+
+
+def test_incomplete_answer_is_rejected(fake_ollama):
+    fake_ollama["answer"] = {"weekly_focus": "x"}
+    assert llm.ask_json("s", "p", {"type": "object", "required": ["ideas"]}, {}) is None
+
+
+def test_provider_off(fake_ollama):
+    assert llm.provider({"provider": "aus"}) is None
+
+
+def test_ideas_from_ollama_end_to_end(fake_ollama, cfg):
+    fake_ollama["answer"] = {"weekly_focus": "Fokus", "ideas": [{
+        "title": "KI-Idee", "why_now": "w", "action_steps": ["a"], "channel": "Fiverr",
+        "effort": "niedrig", "revenue_potential": "hoch"}]}
+    result, source = ideas.build_ideas(cfg, [])
+    assert result["ideas"][0]["title"] == "KI-Idee" and "Ollama" in source

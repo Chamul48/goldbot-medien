@@ -26,8 +26,7 @@ def run(cfg: dict, command: str) -> None:
     out_dir = cfg.get("output_dir", "reports")
     kwargs: dict = {}
 
-    if not llm.available():
-        log.info("Kein Claude-API-Zugang gefunden – nutze eingebaute Vorlagen.")
+    log.info("KI: %s", llm.describe(cfg.get("llm", {})))
 
     scanned = None
     if command in ("trends", "ideen", "alles"):

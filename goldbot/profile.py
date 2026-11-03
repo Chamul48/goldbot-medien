@@ -312,10 +312,9 @@ def build_profile(cfg: dict[str, Any], trend_hints: list[str] | None = None) -> 
         SYSTEM,
         _prompt(profile, trend_hints or []),
         PROFILE_SCHEMA,
-        model=llm_cfg.get("model", "claude-opus-5-5"),
-        effort=llm_cfg.get("effort", "medium"),
+        llm_cfg,
     )
-    source = "claude"
+    source = llm.describe(llm_cfg)
     if not pack:
         pack, source = _load_pack(profile.get("pack_file")), "recherche"
     if not pack:
