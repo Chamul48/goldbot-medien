@@ -768,3 +768,4 @@ def test_pixabay_relevance_needs_all_query_words():
     ok, bonus = demo_mod.relevance(bars, "gold bars")
     assert ok and bonus == 3
     assert demo_mod.relevance({"tags": "gold bar, finance"}, "gold bars")[0]
+    assert demo_mod.relevance({"tags": "fingerprint, green screen, scan"}, "fingerprint")[0] is False

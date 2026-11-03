@@ -202,6 +202,8 @@ def relevance(hit: dict[str, Any], query: str) -> tuple[bool, int]:
     def has(word: str) -> bool:  # „bar“ passt auch zu „bars“
         return any(tok == word or tok.rstrip("s") == word.rstrip("s") for tok in tokens)
 
+    if any(re.search(r"green ?screen|chroma|alpha channel|transparent|green background|overlay", t) for t in tags):
+        return False, 0  # Freistell-Material (grüner Hintergrund) ist kein fertiges Bild
     phrase = " ".join(words)
     bonus = (2 if any(phrase in t or phrase.rstrip("s") in t for t in tags) else 0) + \
             (1 if tags and phrase.rstrip("s") in tags[0] else 0)
