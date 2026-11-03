@@ -137,7 +137,23 @@ I'm a native German speaker from Austria and I also work in English. I edit shor
 
 **Beschreibung:**
 ```
-Need vertical videos that keep people watching? I edit short-form videos for TikTok, Instagram Reels and YouTube Shorts, in German or English. What you get: - A strong hook in the first seconds and tight jump cuts - Burned-in, easy-to-read captions (German or English) - 9:16 format, ready to upload - B-roll, zooms, simple motion text and background music from licensed or royalty-free sources - Optional: German subtitles for English footage, or English subtitles for German footage Good for creators, coaches, small businesses and brands in the DACH region that want captions written by a native German speaker. How it works: 1. Send your raw footage or a long video to cut down 2. Tell me the platform, the target length and your style 3. I edit and deliver, with revisions included AI tools help with transcription, rough cuts and optional B-roll. I do all the final editing by hand. I'm new on Fiverr, so I put extra care and quick replies into every order. Send me a message before ordering if you're unsure which package fits.
+Need vertical videos that keep people watching? I edit short-form videos for TikTok, Instagram Reels and YouTube Shorts, in German or English.
+
+What you get:
+- A strong hook in the first seconds and tight jump cuts
+- Burned-in, easy-to-read captions (German or English)
+- 9:16 format, ready to upload
+- B-roll, zooms, simple motion text and background music from licensed or royalty-free sources
+- Optional: German subtitles for English footage, or English subtitles for German footage
+
+Good for creators, coaches, small businesses and brands in the DACH region that want captions written by a native German speaker.
+
+How it works:
+1. Send your raw footage or a long video to cut down
+2. Tell me the platform, the target length and your style
+3. I edit and deliver, with revisions included
+
+AI tools help with transcription, rough cuts and optional B-roll. I do all the final editing by hand. I'm new on Fiverr, so I put extra care and quick replies into every order. Send me a message before ordering if you're unsure which package fits.
 ```
 | Paket | Preis | Lieferung | Revisionen | Enthalten |
 |---|---|---|---|---|
@@ -157,7 +173,23 @@ Need vertical videos that keep people watching? I edit short-form videos for Tik
 
 **Beschreibung:**
 ```
-Run a faceless channel about gold, precious metals, personal finance or crypto? I turn your script or talking points into engaging vertical shorts, in German or English. What you get: - 9:16 faceless shorts for YouTube Shorts, TikTok and Reels - Charts, screen recordings, stock footage and simple motion graphics - Bold burned-in captions for viewers watching without sound - A voiceover that you provide, or an AI voiceover on request - A hook in the first seconds and a clear call to action Compliance first: - No misleading photorealistic AI scenes in finance videos - Help with the correct 'altered or synthetic content' setting in YouTube Studio and with AI labels on TikTok - Your script stays your content. I don't add price predictions or investment promises DACH focus: native German captions and voiceover timing for channels about Gold, Silber, Edelmetalle or Finanzen. Important: I produce videos. I don't give financial advice, and the content of the script is the channel owner's responsibility.
+Run a faceless channel about gold, precious metals, personal finance or crypto? I turn your script or talking points into engaging vertical shorts, in German or English.
+
+What you get:
+- 9:16 faceless shorts for YouTube Shorts, TikTok and Reels
+- Charts, screen recordings, stock footage and simple motion graphics
+- Bold burned-in captions for viewers watching without sound
+- A voiceover that you provide, or an AI voiceover on request
+- A hook in the first seconds and a clear call to action
+
+Compliance first:
+- No misleading photorealistic AI scenes in finance videos
+- Help with the correct 'altered or synthetic content' setting in YouTube Studio and with AI labels on TikTok
+- Your script stays your content. I don't add price predictions or investment promises
+
+DACH focus: native German captions and voiceover timing for channels about Gold, Silber, Edelmetalle or Finanzen.
+
+Important: I produce videos. I don't give financial advice, and the content of the script is the channel owner's responsibility.
 ```
 | Paket | Preis | Lieferung | Revisionen | Enthalten |
 |---|---|---|---|---|
@@ -177,7 +209,21 @@ Run a faceless channel about gold, precious metals, personal finance or crypto? 
 
 **Beschreibung:**
 ```
-Want to post shorts regularly without editing each one from scratch? I build an AI-assisted workflow for your faceless channel and produce the first videos with it. What you get: - A repeatable workflow: script, AI voiceover, visuals, captions, export - A reusable editing template (intro, caption style, colors, outro) - AI-generated B-roll or stock footage, chosen to fit your topic - Human quality control on every video, with no fully automated uploads of unchecked content - A written step-by-step guide so you or your team can repeat the process Niches: gold and precious metals, personal finance, crypto, tech and general explainers, in German or English. Platform rules matter: YouTube and TikTok label realistic AI content and expect creators to disclose it. I build the workflow so that AI disclosure is part of every upload checklist. AI handles the automation and B-roll, and a human handles the editing. Please note: results such as views or income depend on many factors, so I don't promise them. Message me with your niche and posting goal before ordering.
+Want to post shorts regularly without editing each one from scratch? I build an AI-assisted workflow for your faceless channel and produce the first videos with it.
+
+What you get:
+- A repeatable workflow: script, AI voiceover, visuals, captions, export
+- A reusable editing template (intro, caption style, colors, outro)
+- AI-generated B-roll or stock footage, chosen to fit your topic
+- Human quality control on every video, with no fully automated uploads of unchecked content
+- A written step-by-step guide so you or your team can repeat the process
+
+Niches: gold and precious metals, personal finance, crypto, tech and general explainers, in German or English.
+
+Platform rules matter:
+YouTube and TikTok label realistic AI content and expect creators to disclose it. I build the workflow so that AI disclosure is part of every upload checklist. AI handles the automation and B-roll, and a human handles the editing.
+
+Please note: results such as views or income depend on many factors, so I don't promise them. Message me with your niche and posting goal before ordering.
 ```
 | Paket | Preis | Lieferung | Revisionen | Enthalten |
 |---|---|---|---|---|

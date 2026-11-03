@@ -119,15 +119,27 @@ _DANGLING = {"for", "and", "with", "of", "to", "in", "on", "the", "a", "an", "or
              "für", "und", "mit", "von", "zu", "im", "in", "der", "die", "das", "oder"}
 
 
-def _cut(text: str, limit: int) -> str:
-    text = re.sub(r"\s+", " ", text).strip()
+def _cut(text: str, limit: int, multiline: bool = False) -> str:
+    """Kürzt auf `limit` Zeichen an einer Wortgrenze.
+
+    multiline=True behält Zeilenumbrüche (Gig-Beschreibungen mit Aufzählungen),
+    sonst wird alles zu einer Zeile zusammengezogen.
+    """
+    if multiline:
+        lines = [re.sub(r"[ \t]+", " ", ln).strip() for ln in text.replace("\r\n", "\n").split("\n")]
+        text = re.sub(r"\n{3,}", "\n\n", "\n".join(lines)).strip()
+    else:
+        text = re.sub(r"\s+", " ", text).strip()
     if len(text) <= limit:
         return text
-    words = text[: limit + 1].rsplit(" ", 1)[0].split(" ")
+    head = text[: limit + 1]
+    cut_at = max(head.rfind(" "), head.rfind("\n"))
+    head = head[:cut_at] if cut_at > 0 else head[:limit]
+    words = head.rstrip().split(" ")
     # Kein hängendes "for", "and", "&" … am Ende stehen lassen
     while len(words) > 1 and words[-1].lower().strip(",;:-–") in _DANGLING:
         words.pop()
-    return " ".join(words).rstrip(",;:-–& ")[:limit]
+    return " ".join(words).rstrip(",;:-–& \n")[:limit]
 
 
 def _clean_tag(tag: str) -> str:
@@ -158,7 +170,7 @@ def enforce_limits(pack: dict[str, Any]) -> tuple[dict[str, Any], list[str]]:
             if clean and clean not in tags:
                 tags.append(clean)
         gig["tags"] = tags[: LIMITS["tag_count"]]
-        gig["description"] = _cut(gig["description"], LIMITS["gig_description"])
+        gig["description"] = _cut(gig["description"], LIMITS["gig_description"], multiline=True)
     return pack, notes
 
 

@@ -388,3 +388,15 @@ def test_notify_without_channels_is_quiet(monkeypatch):
 def test_single_lead_title(lead_cfg):
     leads.check(lead_cfg, trends.score([_lead(9)], lead_cfg["trends"]["keywords"]), now=_dt(2026, 11, 3))
     assert lead_cfg["_sent"][0][0] == "Goldbot: 1 neuer Auftrag"
+
+
+def test_gig_description_keeps_line_breaks(cfg):
+    pack, _, _ = profile.build_profile(cfg)
+    desc = pack["gigs"][0]["description"]
+    assert "\n- " in desc and "\n\n" in desc and len(desc) <= 1200
+
+
+def test_multiline_cut_respects_limit():
+    text = "Intro line\n\n" + "\n".join(f"- point number {i} with some words" for i in range(80))
+    out = profile._cut(text, 300, multiline=True)
+    assert len(out) <= 300 and out.startswith("Intro line\n\n- point")
