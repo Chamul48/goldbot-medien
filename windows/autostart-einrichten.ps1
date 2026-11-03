@@ -1,4 +1,5 @@
-﻿# Legt Goldbot in den Windows-Autostart (startet nach jeder Anmeldung) und
+﻿# Richtet Goldbot als geplante Aufgabe ein (startet nach jeder Anmeldung, unabhängig
+# von dem Programm, das sie gestartet hat) und
 # erstellt die Desktop-Verknüpfungen.
 $root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 $ws = New-Object -ComObject WScript.Shell
@@ -10,7 +11,24 @@ function New-Link($path, $target, $arguments = "", $icon = "") {
     $l = $ws.CreateShortcut($path); $l.TargetPath = $target; $l.Arguments = $arguments
     $l.WorkingDirectory = $root; if ($icon) { $l.IconLocation = $icon }; $l.Save()
 }
-New-Link (Join-Path $startup "Goldbot.lnk") $bat "" "$env:SystemRoot\System32\shell32.dll,13"
+# Autostart als geplante Aufgabe: läuft unabhängig vom aufrufenden Programm und
+# zeigt das Fenster normal am Desktop. Fallback: Verknüpfung im Autostart-Ordner.
+$taskOk = $false
+try {
+    $action = New-ScheduledTaskAction -Execute "cmd.exe" -Argument "/c `"$bat`"" -WorkingDirectory $root
+    $trigger = New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME
+    $principal = New-ScheduledTaskPrincipal -UserId "$env:USERDOMAIN\$env:USERNAME" -LogonType Interactive -RunLevel Limited
+    $settings = New-ScheduledTaskSettingsSet -ExecutionTimeLimit ([TimeSpan]::Zero) -MultipleInstances IgnoreNew `
+        -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable
+    Register-ScheduledTask -TaskName "Goldbot" -Action $action -Trigger $trigger -Principal $principal `
+        -Settings $settings -Description "Goldbot Dauerbetrieb" -Force -ErrorAction Stop | Out-Null
+    $taskOk = $true
+    Remove-Item (Join-Path $startup "Goldbot.lnk") -ErrorAction SilentlyContinue  # sonst doppelter Start
+    Write-Host "Geplante Aufgabe 'Goldbot' eingerichtet."
+} catch {
+    Write-Host "Geplante Aufgabe nicht möglich ($($_.Exception.Message)) - nutze Autostart-Ordner." -ForegroundColor Yellow
+    New-Link (Join-Path $startup "Goldbot.lnk") $bat "" "$env:SystemRoot\System32\shell32.dll,13"
+}
 New-Link (Join-Path $desk "Goldbot.lnk") $bat "" "$env:SystemRoot\System32\shell32.dll,13"
 New-Link (Join-Path $desk "Goldbot Aufträge.lnk") (Join-Path $root "reports\auftraege")
 New-Link (Join-Path $desk "Goldbot Berichte.lnk") (Join-Path $root "reports")

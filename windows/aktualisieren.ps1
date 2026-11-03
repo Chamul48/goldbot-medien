@@ -4,7 +4,11 @@ param([string]$Branch = "main")
 $ErrorActionPreference = "Stop"
 $Host.UI.RawUI.WindowTitle = "Goldbot aktualisieren"
 $root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
-$tmp = Join-Path $env:TEMP "goldbot-update"
+# Eigener Ordner pro Lauf: ein abgebrochener Lauf darf den nächsten nicht blockieren
+$tmp = Join-Path $env:TEMP ("goldbot-update-" + [guid]::NewGuid().ToString("N").Substring(0, 8))
+Get-ChildItem $env:TEMP -Directory -Filter "goldbot-update*" -ErrorAction SilentlyContinue |
+    Where-Object { $_.LastWriteTime -lt (Get-Date).AddHours(-1) } |
+    Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
 
 function Stop-Goldbot {
     Get-CimInstance Win32_Process -Filter "Name='python.exe'" |
@@ -26,8 +30,7 @@ function Get-Source($name) {
 }
 
 try {
-    Remove-Item $tmp -Recurse -Force -ErrorAction SilentlyContinue
-    New-Item -ItemType Directory $tmp | Out-Null
+    New-Item -ItemType Directory -Force $tmp | Out-Null
 
     Write-Host "Lade neueste Version ($Branch) ..."
     $src = $null
@@ -72,14 +75,20 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "pip install ist fehlgeschlagen." }
 
     Write-Host "Starte Goldbot ..."
-    Start-Process -FilePath (Join-Path $root "windows\goldbot-starten.bat") -WorkingDirectory $root
+    # Über die geplante Aufgabe starten, falls vorhanden: dann läuft Goldbot unabhängig
+    # von diesem Fenster weiter.
+    if (Get-ScheduledTask -TaskName "Goldbot" -ErrorAction SilentlyContinue) {
+        Start-ScheduledTask -TaskName "Goldbot"
+    } else {
+        Start-Process -FilePath (Join-Path $root "windows\goldbot-starten.bat") -WorkingDirectory $root
+    }
     Write-Host "Fertig." -ForegroundColor Green
     Start-Sleep 3
 } catch {
     Write-Host ""
     Write-Host "Update fehlgeschlagen: $_" -ForegroundColor Red
     Write-Host "Goldbot wurde nicht verändert oder läuft mit der alten Version weiter."
-    Read-Host "Enter zum Schließen"
+    if ([Environment]::UserInteractive -and -not [Console]::IsInputRedirected) { Read-Host "Enter zum Schließen" }
     exit 1
 } finally {
     Remove-Item $tmp -Recurse -Force -ErrorAction SilentlyContinue
