@@ -70,7 +70,7 @@ ist Deutsch mit echten Umlauten. Fiverr-Texte und Reddit-Antworten bleiben Engli
 - **ffmpeg drawbox kennt keine Zeit** (`t` = Rahmendicke) → animierte Balken per `overlay` mit `t`.
 - **Gig-Titelbilder:** links kurzer Text aus `demo.COVER_TEXT` (Pillow misst die Breite, max. 520 px), rechts
   3 Standbilder als Handys (`COVER_STILLS`), Shorts-Untertitel auf dem mittleren (`COVER_CAPTION`). Gig 3 zeigt
-  drei Kanäle (Gold/Krypto/Finanzen) = Automatisierung, nicht Krypto. Kleine Etiketten sind als Vorschau unlesbar. Nur die Titelbilder neu: `demo.render_covers(...)` statt ganzem `muster`.
+  drei Kanäle (Krypto/Ozean/Finanzen, Ozean-Videos `ozean_de`/`ocean_en`) = Automatisierung, nicht Krypto. Kleine Etiketten sind als Vorschau unlesbar. Nur die Titelbilder neu: `demo.render_covers(...)` statt ganzem `muster`.
 - **Fiverr-Paketbeschreibung max. 100 Zeichen**; Gig-Titel ohne „I will“ kopieren (Fiverr setzt es davor).
 - **Update-Skript** startet Goldbot nach einem Fehler wieder; `$ProgressPreference = 'SilentlyContinue'`.
 - `reports\` und `config.yaml` sind nicht im Repo – nichts Persönliches committen.

@@ -708,14 +708,14 @@ COVER_BADGE = "DE · EN"
 COVER_STILLS: dict[str, list[str]] = {
     "gold_de": ["gold_de_0", "gold_de_3", "gold_de_4"],
     "finanzen_de": ["finanzen_de_0", "finanzen_de_1", "finanzen_de_4"],
-    "krypto_de": ["gold_de_3", "krypto_de_4", "finanzen_de_4"],
+    "krypto_de": ["krypto_de_4", "ocean_en_2", "finanzen_de_4"],
 }
 # Untertitel im Shorts-Stil auf dem mittleren Handy (Text, Höhe 0–1): zeigt „fertiges Short“
-# statt Stockfoto. Bei Gig 3 oben, damit das Bitcoin-„B“ frei bleibt.
+# statt Stockfoto. Gig 3: Ozean-Video in der Mitte (kein Geld-Thema), Untertitel oben über der Qualle.
 COVER_CAPTION: dict[str, tuple[str, float]] = {
     "gold_de": ("EDIBLE GOLD?", 0.62),
     "finanzen_de": ("50% NEEDS", 0.30),
-    "krypto_de": ("BLOCKCHAIN?", 0.22),
+    "krypto_de": ("80% UNEXPLORED", 0.20),
 }
 
 
