@@ -597,8 +597,9 @@ def test_footage_cache_and_no_key_offline(tmp_path):
 
 def test_demo_contents_are_marked_as_demo():
     for d in demo_mod.DEMOS:
-        assert ("Beispiel" in d["footer"] or "Sample" in d["footer"]) and \
-            ("beratung" in d["footer"].lower() or "advice" in d["footer"])
+        assert "Beispiel" in d["footer"] or "Sample" in d["footer"]
+        if not d["name"].startswith(("ozean", "ocean")):  # Geld-Themen brauchen den Hinweis
+            assert "beratung" in d["footer"].lower() or "advice" in d["footer"]
 
 
 @pytest.mark.skipif(not demo_mod.find_ffmpeg() or not demo_mod.find_font(), reason="ffmpeg/Schrift fehlt")

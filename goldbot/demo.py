@@ -104,6 +104,29 @@ DEMOS: list[dict[str, Any]] = [
         "footer": "Sample edit · not financial advice",
         "clips": ["blockchain", "network technology", "fingerprint", "dominoes falling", "bitcoin coin"],
     },
+    # Thema ohne Geld: zeigt, dass Gig 3 (Automatisierung) für jeden Faceless-Kanal taugt
+    {
+        "name": "ozean_de", "lang": "de", "colors": ("0x04121f", "0x0b3d5c"), "accent": "0x29b6f6",
+        "chip": "NATUR-FAKTEN",
+        "hook": "3 Fakten über den Ozean, die kaum jemand kennt", "highlight": ["Ozean,"],
+        "lines": ["Über 80 % der Ozeane sind noch nie erforscht worden.",
+                  "Etwa die Hälfte unseres Sauerstoffs kommt aus dem Meer.",
+                  "Der Marianengraben ist fast 11 Kilometer tief."],
+        "cta": "Folge für mehr Natur-Fakten",
+        "footer": "Beispiel-Edit",
+        "clips": ["ocean waves", "coral reef", "underwater fish", "sea turtle", "ocean sunset"],
+    },
+    {
+        "name": "ocean_en", "lang": "en", "colors": ("0x04121f", "0x0b3d5c"), "accent": "0x29b6f6",
+        "chip": "NATURE FACTS",
+        "hook": "3 ocean facts most people don't know", "highlight": ["ocean"],
+        "lines": ["More than 80% of the ocean has never been explored.",
+                  "About half of the oxygen we breathe comes from the sea.",
+                  "The Mariana Trench is almost 11 kilometres deep."],
+        "cta": "Follow for more nature facts",
+        "footer": "Sample edit",
+        "clips": ["ocean waves", "coral reef", "underwater fish", "sea turtle", "ocean sunset"],
+    },
 ]
 
 VOICES = {"de": "de-DE-ConradNeural", "en": "en-US-AndrewNeural"}
