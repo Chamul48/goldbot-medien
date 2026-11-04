@@ -22,7 +22,7 @@ from urllib.parse import urlparse
 AGENT = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
          "(KHTML, like Gecko) Chrome/130.0 Safari/537.36")
 PAUSE_JE_DOMAIN = 10.0
-MAX_BETRAEGE = 40
+MAX_BETRAEGE = 120
 
 BETRAG_RE = re.compile(
     r"(?:€|EUR|\$|USD)\s?\d{1,3}(?:[.\s]\d{3})*(?:,\d{1,2}|\.\d{1,2})?"

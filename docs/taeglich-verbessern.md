@@ -22,6 +22,14 @@ Der Inhaber ist kein Programmierer: alles für ihn auf Deutsch, Ergebnis zuerst,
   und danach die Datei mit `read_file` lesen (`%TEMP%` = `C:\Users\User\AppData\Local\Temp`) (direkte Konsolenausgabe verliert unter Windows das €-Zeichen).
   (JSON: Titel, Beschreibung, JSON-LD-Angebote, Beträge mit Kontext, `captcha`-Hinweis; wartet selbst 10 s je Domain).
   Ist der PC aus/nicht erreichbar: ohne ihn weitermachen und das im Bericht sagen.
+  **Höchstens 3 URLs pro Aufruf** und Ausgabe mit `> %TEMP%\x.log 2>&1` umleiten: Dann endet `start_process` erst,
+  wenn alles gelesen ist (`read_process_output` wartet nicht zuverlässig, längere Läufe wirken sonst „verschwunden“).
+  Für Auswertungen die JSON-Datei mit einem kurzen `python -c` filtern (Zeilen mit „Lieferzeit“ = Händlerangebote).
+- **Bewährte Preisquellen** (gold.de-Seiten listen je Produkt die günstigsten Händler, Kurs steht in der Kopfzeile):
+  `gold.de/kaufen/goldmuenzen/wiener-philharmoniker/`, `…/kruegerrand/`, `…/maple-leaf/`, `…/kaenguru/`,
+  `gold.de/kaufen/goldbarren/1-gramm/`, `…/10-gramm/`, `…/50-gramm/`, `…/1-oz/`, `…/tafeln-kombi-barren/`,
+  `…/muenze-oesterreich/`; Österreich: `philoro.at` (Startseite zeigt Kauf/Verkauf Philharmoniker); Kurs:
+  `goldpreis.de`. Diese Seiten zeigen die 1-oz-Größe – für Bruchstücke (1/10, 1/25 oz) eigene Seiten suchen.
 - **Repo**: Branch `claude/peaceful-rubin-0bk72i`. Zu Beginn `git fetch origin main && git merge --no-edit origin/main`.
 
 ## A. Gold-Shop (chuchcapone)
