@@ -31,6 +31,61 @@ def _field(label: str, text: str, hint: str = "", limit: int | None = None) -> s
 
 # Welche Muster-Videos zu welchem Gig passen (Reihenfolge der Gigs im Profil-Paket)
 GIG_VIDEOS = [["gold_de", "gold_en"], ["finanzen_de", "finance_en"], ["krypto_de", "crypto_en", "ozean_de", "ocean_en"]]
+# Fiverr erlaubt pro Gig nur EIN Video: dieses kommt in die Galerie (Englisch – die meisten Käufer).
+# Gig 3: Ozean statt Krypto, zeigt „jedes Thema automatisierbar“.
+GIG_UPLOAD = ["gold_en", "finance_en", "ocean_en"]
+GIG_FOLDERS = ["Gig 1 - Kurzvideos bearbeiten", "Gig 2 - Faceless Gold und Finanzen",
+               "Gig 3 - KI-Video-Automatisierung"]
+UPLOAD_DIR = "fiverr_hochladen"
+
+
+def gallery_video(folder: Path, gig: int) -> Path | None:
+    """Das eine Galerie-Video für Gig `gig` (1-basiert): Wunsch-Video, sonst erstes vorhandene (EN zuerst)."""
+    names = GIG_VIDEOS[gig - 1] if 0 < gig <= len(GIG_VIDEOS) else []
+    wish = [GIG_UPLOAD[gig - 1]] if 0 < gig <= len(GIG_UPLOAD) else []
+    ordered = wish + sorted(names, key=lambda n: not n.endswith("_en"))
+    return next((folder / f"{n}.mp4" for n in ordered if (folder / f"{n}.mp4").exists()), None)
+
+
+def _link(src: Path, dst: Path) -> None:
+    """Harter Link (kein zusätzlicher Speicher); geht das nicht (anderes Laufwerk), wird kopiert."""
+    import os
+    import shutil
+    try:
+        os.link(src, dst)
+    except OSError:
+        shutil.copy2(src, dst)
+
+
+def upload_folder(folder: Path, gigs: int = 3) -> Path | None:
+    """`fiverr_hochladen\Gig N …\1_Titelbild.jpg + 2_Video.mp4`, übrige Videos unter „Portfolio“.
+
+    Wird bei jedem Lauf neu aufgebaut, damit er zu den aktuellen Videos/Titelbildern passt."""
+    import shutil
+    target = folder / UPLOAD_DIR
+    shutil.rmtree(target, ignore_errors=True)
+    used: set[Path] = set()
+    made = False
+    for gig in range(1, gigs + 1):
+        cover, video = folder / f"gig{gig}_titelbild.jpg", gallery_video(folder, gig)
+        if not cover.exists() and not video:
+            continue
+        name = GIG_FOLDERS[gig - 1] if gig <= len(GIG_FOLDERS) else f"Gig {gig}"
+        d = target / name
+        d.mkdir(parents=True, exist_ok=True)
+        if cover.exists():
+            _link(cover, d / "1_Titelbild.jpg")
+        if video:
+            _link(video, d / "2_Video.mp4")
+            used.add(video)
+        made = True
+    rest = [v for v in sorted(folder.glob("*.mp4")) if v not in used]
+    if rest:
+        (target / "Portfolio (weitere Videos)").mkdir(parents=True, exist_ok=True)
+        for v in rest:
+            _link(v, target / "Portfolio (weitere Videos)" / v.name)
+        made = True
+    return target if made else None
 
 
 def _videos(folder: Path | None, names: list[str]) -> str:
@@ -41,13 +96,21 @@ def _videos(folder: Path | None, names: list[str]) -> str:
         return ""
     gig = GIG_VIDEOS.index(names) + 1 if names in GIG_VIDEOS else 0
     cover = folder / f"gig{gig}_titelbild.jpg"
+    main = gallery_video(folder, gig) or found[0]
     img = (f'<p><img src="{cover.as_uri()}" alt="Titelbild Gig {gig}" style="width:100%;border-radius:8px"></p>'
            if cover.exists() else "")
-    links = " · ".join(f'<a href="{f.as_uri()}">{html.escape(f.name)}</a>' for f in found + ([cover] if img else []))
-    return ('<section class="field info"><div class="head"><h3>Galerie: Titelbild + Videos hochladen</h3></div>'
+    files = ([f'Titelbild: <a href="{cover.as_uri()}">{html.escape(cover.name)}</a>'] if img else []) + \
+        [f'Video: <a href="{main.as_uri()}">{html.escape(main.name)}</a>']
+    others = [f for f in found if f != main]
+    extra = (f'<p class="hint">Weitere Videos fürs Portfolio (nicht in die Galerie): '
+             + " · ".join(f'<a href="{f.as_uri()}">{html.escape(f.name)}</a>' for f in others) + "</p>") if others else ""
+    up = folder / UPLOAD_DIR
+    where = up if up.exists() else folder
+    return ('<section class="field info"><div class="head"><h3>Galerie: 1 Titelbild + 1 Video</h3></div>'
             + img +
-            f'<p class="hint">In Fiverr bei „Galerie“: Bild = Titelbild, Video = ein Muster-Video. Datei aus: '
-            f'<a href="{folder.as_uri()}">{html.escape(str(folder))}</a></p><p>{links}</p></section>')
+            f'<p class="hint">Fiverr erlaubt pro Gig nur ein Video. Bei „Gallery“: Images = Titelbild an erster '
+            f'Stelle, Video = dieses eine. Fertig sortiert in: <a href="{where.as_uri()}">{html.escape(str(where))}</a></p>'
+            f'<p>{" · ".join(files)}</p>{extra}</section>')
 
 
 def build_page(pack: dict[str, Any], languages: list[str] | None = None, videos: Path | None = None) -> str:
