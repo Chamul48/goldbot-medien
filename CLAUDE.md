@@ -99,8 +99,10 @@ ist Deutsch mit echten Umlauten. Fiverr-Texte und Reddit-Antworten bleiben Engli
 - Jede Änderung mit ID in `autopilot/aenderungen-<datum>.md` festhalten.
 
 ### Tägliche Verbesserung (Shop + Fiverr)
-- Geplante Claude-Code-Aufgabe **„Shop & Fiverr täglich verbessern“** (täglich 19:17 Wiener Zeit, neue Cloud-Sitzung,
-  Connectors Shopify + Remote Desktop Commander) arbeitet `docs/taeglich-verbessern.md` ab: Preisvergleich →
+- Geplante Claude-Code-Aufgabe **„Shop & Fiverr täglich verbessern“** (täglich 19:17 Wiener Zeit, `trig_01D1FE45f14b38RemFGyVdUv`)
+  läuft **in die Sitzung `session_0155eVhoZEbc2sDv5doEFoeY`**, weil nur sie Shopify + Remote Desktop Commander hat:
+  `create_trigger` kann dieser Organisation keine Connectors mitgeben (neue Sitzungen liefen sonst ohne). Die alte
+  Variante mit neuer Sitzung pro Lauf (`trig_01VuH1pXZQbBuBa2hktQdQLE`) ist abgeschaltet. Sie arbeitet `docs/taeglich-verbessern.md` ab: Preisvergleich →
   `autopilot/preise-<datum>.md`, Fiverr-Vorschlag → `docs/fiverr-vorschlag-<datum>.md`, Lernkurve → `autopilot/journal.md`.
 - Abschalten/ändern: claude.ai → Code → geplante Aufgaben, oder in einer Sitzung `list_triggers` / `update_trigger enabled=false`.
 - Öffentliche Seiten vom PC lesen: `windows/seite_lesen.py` (Cloud-WebFetch ist für Händlerseiten gesperrt).
