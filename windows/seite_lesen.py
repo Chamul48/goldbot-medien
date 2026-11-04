@@ -120,7 +120,7 @@ def main(urls: list[str]) -> int:
     if ziel:
         with open(ziel, "w", encoding="utf-8") as f:
             f.write(text)
-        print(f"{len(ergebnisse)} Seiten gelesen → {ziel}")
+        print(f"{len(ergebnisse)} Seiten gelesen -> {ziel}")
     else:
         sys.stdout.reconfigure(encoding="utf-8")
         print(text)
