@@ -672,9 +672,56 @@ def cover_headline(title: str) -> list[str]:
     return rows
 
 
+# Kurzer Titelbild-Text je Gig (nach erstem Muster-Video): groß und in 1 Sekunde lesbar, auch als
+# kleines Vorschaubild in der Fiverr-Suche. Englisch, weil die meisten Käufer englisch suchen.
+COVER_TEXT: dict[str, tuple[list[str], str]] = {
+    "gold_de": (["Short-Form", "Video Editing"], "Reels · TikTok · Shorts"),
+    "finanzen_de": (["Faceless", "Finance Shorts"], "Gold · Money · Markets"),
+    "krypto_de": (["AI Video", "Automation"], "For faceless channels"),
+}
+COVER_BADGE = "DE · EN"
+
+
+def cover_text(title: str, name: str) -> tuple[list[str], str]:
+    """Überschrift (max. 2 Zeilen) und Unterzeile fürs Titelbild."""
+    if name in COVER_TEXT:
+        rows, sub = COVER_TEXT[name]
+        return list(rows), sub
+    import textwrap
+    rows = textwrap.wrap(" ".join(cover_headline(title)).rstrip(" …"), 14, break_on_hyphens=False)[:2]
+    return rows, ""
+
+
+def cover_font_size(rows: list[str], font_file: str | None = None, width: int = 520, largest: int = 84) -> int:
+    """Größte Schrift, bei der die längste Zeile in die Textspalte passt (links neben den Handys).
+
+    Misst mit Pillow in der echten Schrift; ohne Pillow vorsichtige Schätzung (breite Fett-Schrift).
+    """
+    try:
+        from PIL import ImageFont
+        if font_file:
+            for size in range(largest, 47, -2):
+                face = ImageFont.truetype(font_file, size)
+                if max((face.getlength(r) for r in rows), default=0) <= width:
+                    return size
+            return 48
+    except (ImportError, OSError):
+        pass
+    longest = max((len(r) for r in rows), default=1)
+    return max(48, min(largest, int(width / (0.8 * longest))))
+
+
+def _phone(k: int, w: int, h: int) -> str:
+    """Standbild k als Handy: Bild + dunkler Rahmen + feiner heller Rand."""
+    return (f"[{k}:v]format=rgb24,scale={w}:{h}:force_original_aspect_ratio=increase:flags=lanczos,"
+            f"crop={w}:{h},pad={w + 20}:{h + 20}:10:10:color=0x0b0b0b,"
+            f"pad={w + 26}:{h + 26}:3:3:color=0x6b6b6b,setsar=1[p{k}]")
+
+
 def render_cover(videos: list[Path], title: str, accent: str, target: Path, ffmpeg: str,
                  font: tuple[str, str]) -> Path:
-    """Drei Standbilder (verschiedene Szenen, ohne Untertitel) nebeneinander + Gig-Titel."""
+    """Titelbild: links kurzer, großer Text, rechts drei Hochkant-Szenen als Handys (zeigt sofort
+    „Shorts/Reels“), dahinter dieselbe Szene weichgezeichnet."""
     with tempfile.TemporaryDirectory() as tmp:
         work = Path(tmp)
         shutil.copy(font[0], work / "font.ttf")
@@ -683,32 +730,53 @@ def render_cover(videos: list[Path], title: str, accent: str, target: Path, ffmp
         name = videos[0].stem
         stills = pick_stills(sorted(stills_dir.glob(f"{name}_*.jpg")), ffmpeg)
         if len(stills) == 3:
-            # Standbilder der drei Inhalts-Szenen – ganzes Bild, ohne Untertitel
             for f in stills:
-                cmd += ["-i", str(f)]
-            prep = "format=rgb24,scale=-2:{h}"
+                cmd += ["-loop", "1", "-i", str(f)]
         else:
             # Ältere Videos ohne Standbilder: Bilder aus dem Video, nur oberer Teil (ohne Untertitel)
             length = duration(videos[0], ffmpeg) or 16.0
             for f in (0.30, 0.52, 0.74):
                 cmd += ["-ss", f"{length * f:.2f}", "-i", str(videos[0])]
-            prep = "format=rgb24,crop=iw:ih*0.58:0:ih*0.02,scale=-2:{h}"
-        tile_w = COVER_W // 3 + 1
-        fg = [f"[{k}:v]{prep.format(h=COVER_H)},crop={tile_w}:{COVER_H},setsar=1[t{k}]" for k in range(3)]
-        fg.append("[t0][t1][t2]hstack=3,crop=1280:769[s]")
-        # weicher Verlauf statt hartem Balken: das Bild bleibt bis unten sichtbar
-        cmd += ["-f", "lavfi", "-i", f"color=black:s={COVER_W}x{COVER_H}"]
-        fg.append(f"[3:v]format=rgba,geq=r=0:g=0:b=0:a='if(gt(Y,{COVER_H - 340}),"
-                  f"min(205,205*(Y-{COVER_H - 340})/200),0)'[g]")
-        fg.append("[s][g]overlay=0:0:format=rgb,"
-                  f"drawbox=x=(iw-160)/2:y=ih-262:w=160:h=6:color={accent}@1:t=fill")
-        rows = cover_headline(title)
+        W, H = COVER_W, COVER_H
+        cw, ch, sw, sh = 300, 533, 240, 427          # Bildgröße Handy Mitte / Seiten
+        cx = 780
+        lx, rx = cx - (sw + 26) + 100, cx + (cw + 26) - 100
+        cy, sy = (H - ch - 26) // 2, (H - sh - 26) // 2
+        fg = [
+            "[1:v]split=2[c1][b1]",
+            f"[b1]format=rgb24,scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},"
+            "boxblur=28:4,eq=brightness=-0.12:saturation=1.2,setsar=1[bg]",
+        ]
+        fg.append(_phone(0, sw, sh))
+        fg.append(_phone(2, sw, sh))
+        fg.append(_phone(1, cw, ch).replace("[1:v]", "[c1]"))
+        # Verlauf links, damit der Text auf jedem Bild lesbar bleibt
+        cmd += ["-f", "lavfi", "-i", f"color=black:s={W}x{H}"]
+        fg.append(f"[3:v]format=rgba,geq=r=0:g=0:b=0:a='max(0,min(235,235*(1-(X-380)/420)))'[g]")
+        fg.append(f"[bg][g]overlay=0:0:format=rgb[b0];[b0][p0]overlay={lx}:{sy}:format=rgb[b1x];"
+                  f"[b1x][p2]overlay={rx}:{sy}:format=rgb[b2x];[b2x][p1]overlay={cx}:{cy}:format=rgb")
+        rows, sub = cover_text(title, name)
+        size = cover_font_size(rows, font[0])
+        line = int(size * 1.12)
+        block = 48 + 34 + len(rows) * line + (28 + 26 + 40 if sub else 0)
+        y = (H - block) // 2
+        # Sprach-Abzeichen
+        (work / "badge.txt").write_text(COVER_BADGE, encoding="utf-8")
+        fg[-1] += (f",drawbox=x=56:y={y}:w=150:h=48:color={accent}@1:t=fill,"
+                   f"drawtext=fontfile=font.ttf:textfile=badge.txt:expansion=none:fontsize=28:fontcolor=0x111111:"
+                   f"x=56+(150-text_w)/2:y={y}+(48-text_h)/2")
+        y += 48 + 34
         for k, row in enumerate(rows):
             (work / f"r{k}.txt").write_text(row, encoding="utf-8")
-            y = COVER_H - 300 + 60 + k * 92 + (46 if len(rows) == 1 else 0)
-            fg[-1] += (f",drawtext=fontfile=font.ttf:textfile=r{k}.txt:expansion=none:fontsize=72:"
-                       f"fontcolor=white:x=(w-text_w)/2:y={y}:shadowcolor=black@0.6:shadowx=3:shadowy=3")
-        fg[-1] += "[v]"
+            fg[-1] += (f",drawtext=fontfile=font.ttf:textfile=r{k}.txt:expansion=none:fontsize={size}:"
+                       f"fontcolor=white:x=56:y={y + k * line}:shadowcolor=black@0.7:shadowx=3:shadowy=3")
+        y += len(rows) * line + 28
+        if sub:
+            (work / "sub.txt").write_text(sub, encoding="utf-8")
+            fg[-1] += (f",drawbox=x=58:y={y}:w=90:h=6:color={accent}@1:t=fill,"
+                       f"drawtext=fontfile=font.ttf:textfile=sub.txt:expansion=none:fontsize=34:"
+                       f"fontcolor={accent}:x=56:y={y + 26}:shadowcolor=black@0.7:shadowx=2:shadowy=2")
+        fg[-1] += ",format=rgb24[v]"
         cmd += ["-filter_complex", ";".join(fg), "-map", "[v]", "-frames:v", "1", "-q:v", "2",
                 str(target.resolve())]
         _run(cmd, work)
