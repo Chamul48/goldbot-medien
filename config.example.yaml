@@ -107,3 +107,19 @@ muster:
   stimmen:
     de: de-DE-ConradNeural
     en: en-US-AndrewNeural
+
+# Simulation des ersten Monats (python -m goldbot simulation → reports\simulation.md).
+# Alle Werte sind Annahmen; echte Zahlen unter "ist" machen sie genauer (die Simulation lernt daraus).
+simulation:
+  stunden_pro_tag: 3        # wie viel Zeit du täglich für Aufträge hast
+  antworten_pro_tag: 5      # wie viele Reddit-Antworten du täglich verschickst
+  reddit_passend: 0.35      # Anteil der Reddit-Aufträge, der zu deinen Gigs passt
+  ist:                      # deine echten Zahlen, sobald die Gigs online sind
+    tage: 0                 # seit wie vielen Tagen die Gigs online sind
+    impressionen: 0         # Fiverr: Summe aller 3 Gigs
+    klicks: 0
+    bestellungen: 0
+    anfragen: 0             # Nachrichten von Interessenten
+    reddit_antworten: 0     # wie viele Antworten du verschickt hast
+    reddit_rueckmeldungen: 0  # wie viele zurückgeschrieben haben
+    reddit_auftraege: 0     # wie viele daraus bezahlt haben

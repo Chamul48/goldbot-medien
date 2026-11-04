@@ -20,7 +20,10 @@ ist Deutsch mit echten Umlauten. Fiverr-Texte und Reddit-Antworten bleiben Engli
   Regeln: Abschnitt „Shopify-Agent“ unten.
 
 ## Stand 2026-11-03
-- Goldbot 0.4.0 läuft im Dauerbetrieb (geplante Aufgabe „Goldbot“). 112 Tests grün, alles in `main`.
+- Goldbot 0.6.0 läuft im Dauerbetrieb (geplante Aufgabe „Goldbot“). 122 Tests grün, alles in `main`.
+- `python -m goldbot simulation`: Monte-Carlo des ersten Monats (Fiverr + Reddit). Quoten sind Beta-Annahmen,
+  `simulation.ist` (echte Fiverr-Zahlen) verrechnet sie; Reddit-Rate wird aus `.gesehen.json` gelernt
+  (erster Abruf = Rückstand, zählt nicht). Ergebnis 1. Lauf: Median ~130 $, Reddit bringt ~80 %.
 - Muster-Videos neu: `python -m goldbot muster` (alle) bzw. `--nur krypto_de finance_en` (einzelne).
   Clip pro Szene über `DEMOS[...]["clips"]` steuern; vorher Treffer prüfen (Tags + Bild ansehen).
 - Shopify-Agent: Review-Fixes in Commit `5d89200` am PC eingespielt; läuft erst nach Neustart des Fensters.
@@ -65,6 +68,9 @@ ist Deutsch mit echten Umlauten. Fiverr-Texte und Reddit-Antworten bleiben Engli
   Zoom per `scale …:eval=frame` (zoompan ruckelt). Test am PC: `reports\muster_test.py` lädt `demo.py`
   per Commit-SHA (raw.githubusercontent cacht Branch-URLs).
 - **ffmpeg drawbox kennt keine Zeit** (`t` = Rahmendicke) → animierte Balken per `overlay` mit `t`.
+- **Gig-Titelbilder:** links kurzer Text aus `demo.COVER_TEXT` (Pillow misst die Breite, max. 520 px), rechts
+  3 Standbilder als Handys (`COVER_STILLS`), Shorts-Untertitel auf dem mittleren (`COVER_CAPTION`). Gig 3 zeigt
+  drei Kanäle (Krypto/Ozean/Finanzen, Ozean-Videos `ozean_de`/`ocean_en`) = Automatisierung, nicht Krypto. Kleine Etiketten sind als Vorschau unlesbar. Nur die Titelbilder neu: `demo.render_covers(...)` statt ganzem `muster`.
 - **Fiverr-Paketbeschreibung max. 100 Zeichen**; Gig-Titel ohne „I will“ kopieren (Fiverr setzt es davor).
 - **Update-Skript** startet Goldbot nach einem Fehler wieder; `$ProgressPreference = 'SilentlyContinue'`.
 - **Testbilder nie mit echten fremden Personen zeigen.** Eine Vorschau mit einem bekannten Fußballer (OpenCV-Beispiel)

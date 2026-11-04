@@ -597,8 +597,9 @@ def test_footage_cache_and_no_key_offline(tmp_path):
 
 def test_demo_contents_are_marked_as_demo():
     for d in demo_mod.DEMOS:
-        assert ("Beispiel" in d["footer"] or "Sample" in d["footer"]) and \
-            ("beratung" in d["footer"].lower() or "advice" in d["footer"])
+        assert "Beispiel" in d["footer"] or "Sample" in d["footer"]
+        if not d["name"].startswith(("ozean", "ocean")):  # Geld-Themen brauchen den Hinweis
+            assert "beratung" in d["footer"].lower() or "advice" in d["footer"]
 
 
 @pytest.mark.skipif(not demo_mod.find_ffmpeg() or not demo_mod.find_font(), reason="ffmpeg/Schrift fehlt")
@@ -840,3 +841,57 @@ def test_env_example_has_no_values():
     lines = (ROOT / ".env.example").read_text(encoding="utf-8").splitlines()
     assert all(l.endswith("=") for l in lines if l and not l.startswith("#"))
 
+
+
+# --------------------------------------------------------------------------- #
+# Simulation
+# --------------------------------------------------------------------------- #
+
+def test_simulation_learns_reddit_rate_without_backlog():
+    from goldbot import simulation
+    state = {"a": "2026-11-03T07:00:00", "b": "2026-11-03T07:00:00",
+             "c": "2026-11-03T13:00:00", "d": "2026-11-03T19:00:00"}
+    rate, count, hours = simulation.learn_reddit_rate(state)
+    assert count == 2 and hours == 12 and rate == 4.0
+    assert simulation.learn_reddit_rate({"a": "2026-11-03T07:00:00"})[0] is None
+
+
+def test_simulation_observed_numbers_shift_beta():
+    from goldbot import simulation
+    p = {k: (list(v) if isinstance(v, list) else v) for k, v in simulation.DEFAULTS.items()}
+    before = simulation.beta_mean(p["klickrate"])
+    notes = simulation.apply_observed(p, {"tage": 14, "gigs": 3, "impressionen": 4200, "klicks": 210})
+    assert simulation.beta_mean(p["klickrate"]) > before  # 5 % beobachtet > 1,5 % Annahme
+    assert p["impressionen_pro_tag"] == 100 / p["start_schub"]
+    assert notes
+
+
+def test_simulation_report_runs(tmp_path):
+    from goldbot import simulation
+    cfg = {"output_dir": str(tmp_path), "leads": {"state_file": str(tmp_path / "s.json")},
+           "simulation": {"laeufe": 100}}
+    path, data = simulation.write(cfg)
+    text = path.read_text(encoding="utf-8")
+    assert "Auf einen Blick" in text and "Was wäre, wenn" in text
+    base = data["base"]
+    assert base["n"] == 100 and 0 <= base["mind_ein_auftrag"] <= 1
+    assert base["p"]["netto"][0] <= base["p"]["netto"][1] <= base["p"]["netto"][2]
+    # ohne Reddit-Antworten gibt es keine Reddit-Aufträge
+    _, data0 = simulation.report(cfg, {"antworten_pro_tag": 0})
+    assert data0["base"]["mittel"]["reddit"] == 0
+
+
+def test_cover_text_short_and_fits():
+    rows, sub = demo_mod.cover_text("I will edit short form reels", "gold_de")
+    assert rows == ["Short-Form", "Video Editing"] and "Reels" in sub
+    rows, sub = demo_mod.cover_text("I will create faceless gold and finance shorts in german", "unbekannt")
+    assert 1 <= len(rows) <= 2 and sub == ""
+    font = demo_mod.find_font()
+    if font:
+        from PIL import ImageFont
+        for name in demo_mod.COVER_TEXT:
+            r = demo_mod.COVER_TEXT[name][0]
+            size = demo_mod.cover_font_size(r, font[0])
+            face = ImageFont.truetype(font[0], size)
+            assert size == 48 or max(face.getlength(x) for x in r) <= 520
+    assert demo_mod.cover_font_size(["x" * 40]) == 48  # Schätzung ohne Schriftdatei
