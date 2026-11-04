@@ -30,7 +30,7 @@ def _field(label: str, text: str, hint: str = "", limit: int | None = None) -> s
 
 
 # Welche Muster-Videos zu welchem Gig passen (Reihenfolge der Gigs im Profil-Paket)
-GIG_VIDEOS = [["gold_de", "gold_en"], ["finanzen_de", "finance_en"], ["krypto_de", "crypto_en"]]
+GIG_VIDEOS = [["gold_de", "gold_en"], ["finanzen_de", "finance_en"], ["krypto_de", "crypto_en", "ozean_de", "ocean_en"]]
 
 
 def _videos(folder: Path | None, names: list[str]) -> str:
