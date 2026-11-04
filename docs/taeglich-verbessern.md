@@ -18,7 +18,8 @@ Der Inhaber ist kein Programmierer: alles für ihn auf Deutsch, Ergebnis zuerst,
 - **Shopify**: Connector-Tools (`get-shop-info`, `graphql_query`, `graphql_mutation`). Jede Operation vorher mit
   `graphql_schema` prüfen (CLAUDE.md, Lehre 3).
 - **PC des Inhabers** (Desktop Commander, Gerät DESKTOP-0GHOAH2, immer `shell: "cmd"`): öffentliche Seiten lesen mit
-  `C:\Users\User\Desktop\goldbot-medien\.venv\Scripts\python.exe C:\Users\User\Desktop\goldbot-medien\windows\seite_lesen.py <url> [<url> …]`
+  `C:\Users\User\Desktop\goldbot-medien\.venv\Scripts\python.exe C:\Users\User\Desktop\goldbot-medien\windows\seite_lesen.py -o %TEMP%\seiten.json <url> [<url> …]`
+  und danach die Datei mit `read_file` lesen (`%TEMP%` = `C:\Users\User\AppData\Local\Temp`) (direkte Konsolenausgabe verliert unter Windows das €-Zeichen).
   (JSON: Titel, Beschreibung, JSON-LD-Angebote, Beträge mit Kontext, `captcha`-Hinweis; wartet selbst 10 s je Domain).
   Ist der PC aus/nicht erreichbar: ohne ihn weitermachen und das im Bericht sagen.
 - **Repo**: Branch `claude/peaceful-rubin-0bk72i`. Zu Beginn `git fetch origin main && git merge --no-edit origin/main`.
@@ -47,7 +48,7 @@ Der Inhaber ist kein Programmierer: alles für ihn auf Deutsch, Ergebnis zuerst,
    Testdaten (Snowboards), Rechtstexte AT, Passwortseite, Test-Theme, Zahlungen, Versand.
 
 ## B. Fiverr (chuchcapone)
-1. **Eigenes Profil lesen** (1×): `seite_lesen.py https://www.fiverr.com/chuchcapone`. Festhalten: Titel/Untertitel,
+1. **Eigenes Profil lesen** (1×): `seite_lesen.py -o %TEMP%\fiverr.json https://www.fiverr.com/chuchcapone`. Festhalten: Titel/Untertitel,
    Beschreibung (Länge! max. 600), Profilbild vorhanden (Rohseite enthält `profileImageUrl`; das Bild selbst nicht
    herunterladen, außer zur Prüfung, dass es keine fremde Person zeigt), sichtbare Gigs.
 2. **Übernommen?** Mit dem letzten `docs/fiverr-vorschlag-*.md` vergleichen: Was hat der Inhaber übernommen, was nicht?
@@ -81,7 +82,8 @@ Der Inhaber ist kein Programmierer: alles für ihn auf Deutsch, Ergebnis zuerst,
    (bei Ablehnung: `git pull --rebase`, testen, erneut pushen). Keinen Pull Request anlegen, nichts auf GitHub kommentieren.
 3. Hat sich Code geändert, auf den PC bringen: im Ordner `C:\Users\User\Desktop\goldbot-medien`
    `.venv\Scripts\python.exe pc_sync.py <commit-sha>` (meldet lokal geänderte Dateien – nicht überschreiben),
-   danach dort `pytest` (Ausgabe in eine Datei umleiten und lesen).
+   danach dort `pytest` (Ausgabe in eine Datei umleiten und lesen). Fehlen Pakete:
+   `.venv\Scripts\python.exe -m pip install -q -r requirements.txt`.
 4. **Schlussnachricht** (geht als Push ans Handy) auf Deutsch, höchstens 8 Zeilen:
    Goldkurs heute · wichtigste Preisempfehlung · was im Shop verbessert wurde · Fiverr-Vorschlag (ja/nein, was) ·
    **was du heute tun solltest** (1–3 Punkte) · Dateien zum Nachlesen.

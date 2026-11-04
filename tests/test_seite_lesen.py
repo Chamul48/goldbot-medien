@@ -42,3 +42,10 @@ def test_fehler_einer_seite_stoppt_nicht_die_anderen(monkeypatch, capsys):
     assert sl.main(["https://a.at/kaputt", "https://b.at/ok"]) == 0
     out = capsys.readouterr().out
     assert '"fehler": "OSError: weg"' in out and "Philharmoniker 1 oz" in out
+
+
+def test_ausgabe_in_datei_als_utf8(monkeypatch, tmp_path):
+    monkeypatch.setattr(sl, "holen", lambda url, timeout=25.0: PROBE)
+    ziel = tmp_path / "e.json"
+    assert sl.main(["-o", str(ziel), "https://b.at/ok"]) == 0
+    assert "3.712,50 €" in ziel.read_text(encoding="utf-8")

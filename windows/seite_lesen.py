@@ -1,6 +1,8 @@
 """Liest eine öffentliche Webseite und gibt die wichtigsten Angaben als JSON aus.
 
-Aufruf:  python seite_lesen.py <url> [<url> …]
+Aufruf:  python seite_lesen.py [-o ergebnis.json] <url> [<url> …]
+
+Mit -o wird das Ergebnis als UTF-8-Datei geschrieben (sicher für €/Umlaute unter Windows).
 
 Für den täglichen Preis- und Wettbewerbsvergleich (docs/taeglich-verbessern.md). Ausgabe je URL:
 Titel, Beschreibung, Preise aus JSON-LD-Angeboten und €/$-Beträge mit etwas Text davor.
@@ -96,6 +98,9 @@ def holen(url: str, timeout: float = 25.0) -> str:
 
 
 def main(urls: list[str]) -> int:
+    ziel = None
+    if len(urls) >= 2 and urls[0] == "-o":
+        ziel, urls = urls[1], urls[2:]
     if not urls:
         print(__doc__)
         return 2
@@ -111,8 +116,14 @@ def main(urls: list[str]) -> int:
             ergebnisse.append(auswerten(url, holen(url)))
         except Exception as exc:  # eine kaputte Seite darf die anderen nicht verhindern
             ergebnisse.append({"url": url, "fehler": f"{type(exc).__name__}: {exc}"[:200]})
-    sys.stdout.reconfigure(encoding="utf-8")
-    print(json.dumps(ergebnisse, ensure_ascii=False, indent=1))
+    text = json.dumps(ergebnisse, ensure_ascii=False, indent=1)
+    if ziel:
+        with open(ziel, "w", encoding="utf-8") as f:
+            f.write(text)
+        print(f"{len(ergebnisse)} Seiten gelesen → {ziel}")
+    else:
+        sys.stdout.reconfigure(encoding="utf-8")
+        print(text)
     return 0
 
 
