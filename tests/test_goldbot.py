@@ -780,6 +780,7 @@ def test_helper_next_button_progress_and_videos(cfg, tmp_path):
     page = helper.build_page(pack, None, tmp_path)
     assert 'id="next"' in page and "localStorage" in page and 'data-key="Einzeiler"' in page
     assert "gold_de.mp4" in page and "finance_en.mp4" not in page  # nur vorhandene Videos
+    assert "nur ein Video" in page
     assert 'f.dataset.key=i+"·"+f.dataset.key' in page  # Gig-Felder gleichen Namens getrennt abhaken
 
 
@@ -895,3 +896,22 @@ def test_cover_text_short_and_fits():
             face = ImageFont.truetype(font[0], size)
             assert size == 48 or max(face.getlength(x) for x in r) <= 520
     assert demo_mod.cover_font_size(["x" * 40]) == 48  # Schätzung ohne Schriftdatei
+
+
+def test_upload_folder_one_video_per_gig(tmp_path):
+    from goldbot import helper
+    for n in ["gold_de", "gold_en", "finance_en", "krypto_de", "crypto_en", "ozean_de", "ocean_en"]:
+        (tmp_path / f"{n}.mp4").write_bytes(n.encode())
+    for g in (1, 2, 3):
+        (tmp_path / f"gig{g}_titelbild.jpg").write_bytes(b"jpg")
+    up = helper.upload_folder(tmp_path)
+    gig1, gig3 = up / helper.GIG_FOLDERS[0], up / helper.GIG_FOLDERS[2]
+    assert sorted(p.name for p in gig1.iterdir()) == ["1_Titelbild.jpg", "2_Video.mp4"]
+    assert (gig1 / "2_Video.mp4").read_bytes() == b"gold_en"
+    assert (gig3 / "2_Video.mp4").read_bytes() == b"ocean_en"
+    portfolio = sorted(p.name for p in (up / "Portfolio (weitere Videos)").iterdir())
+    assert portfolio == ["crypto_en.mp4", "gold_de.mp4", "krypto_de.mp4", "ozean_de.mp4"]
+    # ohne Wunsch-Video: englische Fassung vor deutscher
+    (tmp_path / "ocean_en.mp4").unlink()
+    assert helper.gallery_video(tmp_path, 3).name == "crypto_en.mp4"
+    helper.upload_folder(tmp_path)  # zweiter Lauf baut neu auf, ohne Fehler
