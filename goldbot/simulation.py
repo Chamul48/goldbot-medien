@@ -348,6 +348,7 @@ SCENARIOS = [
     ("Ohne Reddit, nur Fiverr", {"antworten_pro_tag": 0}),
     ("Nur 1,5 h Zeit pro Tag", {"stunden_pro_tag": 1.5}),
     ("Basic-Preise −20 % (mehr Bestellungen)", {"_rabatt": 0.2}),
+    ("Stärkere Titelbilder (Annahme: +30 % Klicks)", {"_klicks": 1.3}),
 ]
 
 
@@ -376,7 +377,11 @@ def report(cfg: dict[str, Any], overrides: dict[str, Any] | None = None) -> tupl
     for name, ov in SCENARIOS[1:]:
         ov = dict(ov)
         rabatt = ov.pop("_rabatt", 0)
+        klicks = ov.pop("_klicks", 1.0)
         q = {**p, **ov}
+        if klicks != 1.0:  # Mittelwert der Klickrate verschieben, Unsicherheit bleibt gleich
+            a, b = q["klickrate"]
+            q["klickrate"] = [a * klicks, b]
         if rabatt:  # Rabatt verschiebt den Mix Richtung Basic und hebt die Umwandlung leicht
             a, b = q["bestellrate"]
             q["bestellrate"] = [a * (1 + rabatt), b]
@@ -488,6 +493,11 @@ def advice(base: dict[str, Any], scen: list[tuple[str, dict[str, Any]]], p: dict
         else:
             out.append(f"- Billigere Basic-Pakete bringen kaum etwas ({a:.0%} statt {b:.0%} für ≥ 1 Auftrag). "
                        "Lieber bei den jetzigen Preisen bleiben.")
+    covers = by.get("Stärkere Titelbilder (Annahme: +30 % Klicks)")
+    if covers:
+        out.append(f"- Bessere Titelbilder (30 % mehr Klicks) heben die Chance auf eine Fiverr-Bestellung: "
+                   f"≥ 1 Auftrag {covers['mind_ein_auftrag']:.0%} statt {base['mind_ein_auftrag']:.0%}, "
+                   f"Fiverr im Schnitt {covers['mittel']['fiverr']:.1f} statt {base['mittel']['fiverr']:.1f} Aufträge.")
     out.append("- Die erste Bewertung ist der Wendepunkt: schnell liefern (vor der Frist) und den Kunden freundlich "
                "um eine Bewertung bitten.")
     return out

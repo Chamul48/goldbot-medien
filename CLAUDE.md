@@ -68,6 +68,8 @@ ist Deutsch mit echten Umlauten. Fiverr-Texte und Reddit-Antworten bleiben Engli
   Zoom per `scale …:eval=frame` (zoompan ruckelt). Test am PC: `reports\muster_test.py` lädt `demo.py`
   per Commit-SHA (raw.githubusercontent cacht Branch-URLs).
 - **ffmpeg drawbox kennt keine Zeit** (`t` = Rahmendicke) → animierte Balken per `overlay` mit `t`.
+- **Gig-Titelbilder:** links kurzer Text aus `demo.COVER_TEXT` (Pillow misst die Breite, max. 520 px), rechts
+  3 Szenen-Standbilder als Handys. Nur die Titelbilder neu: `demo.render_covers(...)` statt ganzem `muster`.
 - **Fiverr-Paketbeschreibung max. 100 Zeichen**; Gig-Titel ohne „I will“ kopieren (Fiverr setzt es davor).
 - **Update-Skript** startet Goldbot nach einem Fehler wieder; `$ProgressPreference = 'SilentlyContinue'`.
 - `reports\` und `config.yaml` sind nicht im Repo – nichts Persönliches committen.

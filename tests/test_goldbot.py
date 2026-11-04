@@ -878,3 +878,19 @@ def test_simulation_report_runs(tmp_path):
     # ohne Reddit-Antworten gibt es keine Reddit-Aufträge
     _, data0 = simulation.report(cfg, {"antworten_pro_tag": 0})
     assert data0["base"]["mittel"]["reddit"] == 0
+
+
+def test_cover_text_short_and_fits():
+    rows, sub = demo_mod.cover_text("I will edit short form reels", "gold_de")
+    assert rows == ["Short-Form", "Video Editing"] and "Reels" in sub
+    rows, sub = demo_mod.cover_text("I will create faceless gold and finance shorts in german", "unbekannt")
+    assert 1 <= len(rows) <= 2 and sub == ""
+    font = demo_mod.find_font()
+    if font:
+        from PIL import ImageFont
+        for name in demo_mod.COVER_TEXT:
+            r = demo_mod.COVER_TEXT[name][0]
+            size = demo_mod.cover_font_size(r, font[0])
+            face = ImageFont.truetype(font[0], size)
+            assert size == 48 or max(face.getlength(x) for x in r) <= 520
+    assert demo_mod.cover_font_size(["x" * 40]) == 48  # Schätzung ohne Schriftdatei
