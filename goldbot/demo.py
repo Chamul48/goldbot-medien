@@ -677,9 +677,23 @@ def cover_headline(title: str) -> list[str]:
 COVER_TEXT: dict[str, tuple[list[str], str]] = {
     "gold_de": (["Short-Form", "Video Editing"], "Reels · TikTok · Shorts"),
     "finanzen_de": (["Faceless", "Finance Shorts"], "Gold · Money · Markets"),
-    "krypto_de": (["AI Video", "Automation"], "For faceless channels"),
+    "krypto_de": (["AI Video", "Automation"], "Faceless Shorts on autopilot"),
 }
 COVER_BADGE = "DE · EN"
+# Standbilder links, Mitte, rechts (fehlt eines, gelten die hellsten Standbilder des Videos).
+# Gig 3 verkauft die Automatisierung, nicht Krypto: drei verschiedene Kanäle aus EINEM Ablauf.
+COVER_STILLS: dict[str, list[str]] = {
+    "gold_de": ["gold_de_0", "gold_de_3", "gold_de_4"],
+    "finanzen_de": ["finanzen_de_0", "finanzen_de_1", "finanzen_de_4"],
+    "krypto_de": ["gold_de_3", "krypto_de_4", "finanzen_de_4"],
+}
+# Untertitel im Shorts-Stil auf dem mittleren Handy (Text, Höhe 0–1): zeigt „fertiges Short“
+# statt Stockfoto. Bei Gig 3 oben, damit das Bitcoin-„B“ frei bleibt.
+COVER_CAPTION: dict[str, tuple[str, float]] = {
+    "gold_de": ("EDIBLE GOLD?", 0.62),
+    "finanzen_de": ("50% NEEDS", 0.30),
+    "krypto_de": ("BLOCKCHAIN?", 0.22),
+}
 
 
 def cover_text(title: str, name: str) -> tuple[list[str], str]:
@@ -711,6 +725,18 @@ def cover_font_size(rows: list[str], font_file: str | None = None, width: int = 
     return max(48, min(largest, int(width / (0.8 * longest))))
 
 
+def _fit(text: str, font_file: str, width: int, largest: int) -> int:
+    """Wie cover_font_size, aber für kleine Schriften (Unterzeile) ohne Untergrenze 48."""
+    try:
+        from PIL import ImageFont
+        for size in range(largest, 19, -1):
+            if ImageFont.truetype(font_file, size).getlength(text) <= width:
+                return size
+        return 20
+    except (ImportError, OSError):
+        return max(20, min(largest, int(width / (0.62 * max(1, len(text))))))
+
+
 def _phone(k: int, w: int, h: int) -> str:
     """Standbild k als Handy: Bild + dunkler Rahmen + feiner heller Rand."""
     return (f"[{k}:v]format=rgb24,scale={w}:{h}:force_original_aspect_ratio=increase:flags=lanczos,"
@@ -728,7 +754,12 @@ def render_cover(videos: list[Path], title: str, accent: str, target: Path, ffmp
         cmd = [ffmpeg, "-y", "-hide_banner", "-loglevel", "error"]
         stills_dir = videos[0].parent / "standbilder"
         name = videos[0].stem
-        stills = pick_stills(sorted(stills_dir.glob(f"{name}_*.jpg")), ffmpeg)
+        chosen = [stills_dir / f"{n}.jpg" for n in COVER_STILLS.get(name, [])]
+        if chosen and all(p.exists() for p in chosen):
+            # Reihenfolge links, Mitte, rechts → Eingänge 0 (links), 1 (Mitte), 2 (rechts)
+            stills = chosen
+        else:
+            stills = pick_stills(sorted(stills_dir.glob(f"{name}_*.jpg")), ffmpeg)
         if len(stills) == 3:
             for f in stills:
                 cmd += ["-loop", "1", "-i", str(f)]
@@ -738,10 +769,13 @@ def render_cover(videos: list[Path], title: str, accent: str, target: Path, ffmp
             for f in (0.30, 0.52, 0.74):
                 cmd += ["-ss", f"{length * f:.2f}", "-i", str(videos[0])]
         W, H = COVER_W, COVER_H
-        cw, ch, sw, sh = 300, 533, 240, 427          # Bildgröße Handy Mitte / Seiten
-        cx = 780
-        lx, rx = cx - (sw + 26) + 100, cx + (cw + 26) - 100
+        cw, ch, sw, sh = 290, 516, 232, 412          # Bildgröße Handy Mitte / Seiten
+        overlap = 80
+        rx = W - 40 - (sw + 26)                       # 40 px Rand rechts (Fiverr-Herz, runde Ecken)
+        cx = rx - (cw + 26) + overlap
+        lx = cx - (sw + 26) + overlap
         cy, sy = (H - ch - 26) // 2, (H - sh - 26) // 2
+        text_w = lx - 56 - 24
         fg = [
             "[1:v]split=2[c1][b1]",
             f"[b1]format=rgb24,scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},"
@@ -755,26 +789,34 @@ def render_cover(videos: list[Path], title: str, accent: str, target: Path, ffmp
         fg.append(f"[3:v]format=rgba,geq=r=0:g=0:b=0:a='max(0,min(235,235*(1-(X-380)/420)))'[g]")
         fg.append(f"[bg][g]overlay=0:0:format=rgb[b0];[b0][p0]overlay={lx}:{sy}:format=rgb[b1x];"
                   f"[b1x][p2]overlay={rx}:{sy}:format=rgb[b2x];[b2x][p1]overlay={cx}:{cy}:format=rgb")
+        if name in COVER_CAPTION and stills == chosen:
+            cap, pos = COVER_CAPTION[name]
+            (work / "cap.txt").write_text(cap, encoding="utf-8")
+            cap_size = _fit(cap, font[0], cw - 30, 46)
+            fg[-1] += (f",drawtext=fontfile=font.ttf:textfile=cap.txt:expansion=none:fontsize={cap_size}:"
+                       f"fontcolor=white:borderw=5:bordercolor=black:x={cx + 13}+({cw}-text_w)/2:"
+                       f"y={cy + 13 + int(ch * pos)}-text_h/2")
         rows, sub = cover_text(title, name)
-        size = cover_font_size(rows, font[0])
+        size = cover_font_size(rows, font[0], width=text_w)
         line = int(size * 1.12)
-        block = 48 + 34 + len(rows) * line + (28 + 26 + 40 if sub else 0)
+        block = 62 + 34 + len(rows) * line + (28 + 26 + 50 if sub else 0)
         y = (H - block) // 2
         # Sprach-Abzeichen
         (work / "badge.txt").write_text(COVER_BADGE, encoding="utf-8")
-        fg[-1] += (f",drawbox=x=56:y={y}:w=150:h=48:color={accent}@1:t=fill,"
-                   f"drawtext=fontfile=font.ttf:textfile=badge.txt:expansion=none:fontsize=28:fontcolor=0x111111:"
-                   f"x=56+(150-text_w)/2:y={y}+(48-text_h)/2")
-        y += 48 + 34
+        fg[-1] += (f",drawbox=x=56:y={y}:w=196:h=62:color={accent}@1:t=fill,"
+                   f"drawtext=fontfile=font.ttf:textfile=badge.txt:expansion=none:fontsize=36:fontcolor=0x111111:"
+                   f"x=56+(196-text_w)/2:y={y}+(62-text_h)/2")
+        y += 62 + 34
         for k, row in enumerate(rows):
             (work / f"r{k}.txt").write_text(row, encoding="utf-8")
             fg[-1] += (f",drawtext=fontfile=font.ttf:textfile=r{k}.txt:expansion=none:fontsize={size}:"
                        f"fontcolor=white:x=56:y={y + k * line}:shadowcolor=black@0.7:shadowx=3:shadowy=3")
         y += len(rows) * line + 28
         if sub:
+            sub_size = _fit(sub, font[0], text_w, 44)
             (work / "sub.txt").write_text(sub, encoding="utf-8")
             fg[-1] += (f",drawbox=x=58:y={y}:w=90:h=6:color={accent}@1:t=fill,"
-                       f"drawtext=fontfile=font.ttf:textfile=sub.txt:expansion=none:fontsize=34:"
+                       f"drawtext=fontfile=font.ttf:textfile=sub.txt:expansion=none:fontsize={sub_size}:"
                        f"fontcolor={accent}:x=56:y={y + 26}:shadowcolor=black@0.7:shadowx=2:shadowy=2")
         fg[-1] += ",format=rgb24[v]"
         cmd += ["-filter_complex", ";".join(fg), "-map", "[v]", "-frames:v", "1", "-q:v", "2",
