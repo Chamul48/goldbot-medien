@@ -38,6 +38,27 @@ GIG_FOLDERS = ["Gig 1 - Kurzvideos bearbeiten", "Gig 2 - Faceless Gold und Finan
                "Gig 3 - KI-Video-Automatisierung"]
 UPLOAD_DIR = "fiverr_hochladen"
 
+# Portfolio-Projekte im Fiverr-Profil (Englisch = Kundensprache). Ehrlich als Muster gekennzeichnet:
+# keine erfundenen Kunden oder Zahlen. Je Projekt beide Sprachfassungen als Medien.
+PORTFOLIO = [
+    {"title": "Gold Facts Short (EN + DE)", "videos": ["gold_en", "gold_de"],
+     "description": "Sample faceless short for a precious-metals channel: 3 surprising gold facts in about "
+                    "20 seconds. Real stock footage, AI voiceover, word-by-word captions, smooth zoom cuts "
+                    "and a music bed. Made in English and German. Sample edit, not financial advice."},
+    {"title": "50/30/20 Budget Rule Short (EN + DE)", "videos": ["finance_en", "finanzen_de"],
+     "description": "Sample personal-finance short that explains the 50/30/20 budget rule in 15 seconds. "
+                    "Clear hook, one idea per scene, highlighted key numbers and a save-this call to action. "
+                    "English and German version. Sample edit, not financial advice."},
+    {"title": "Blockchain Explained Short (EN + DE)", "videos": ["crypto_en", "krypto_de"],
+     "description": "Sample explainer short for a crypto basics channel: what a blockchain is, in three "
+                    "simple steps. Stock footage matched to every line, AI voiceover and captions in the "
+                    "channel colour. English and German version. Sample edit, not financial advice."},
+    {"title": "Ocean Facts Short (EN + DE)", "videos": ["ocean_en", "ozean_de"],
+     "description": "Sample short for a facts and nature channel: 3 ocean facts with underwater footage. "
+                    "Built with the same AI-assisted workflow as my finance shorts, which shows it works "
+                    "for any faceless niche. English and German version."},
+]
+
 
 def gallery_video(folder: Path, gig: int) -> Path | None:
     """Das eine Galerie-Video für Gig `gig` (1-basiert): Wunsch-Video, sonst erstes vorhandene (EN zuerst)."""
@@ -79,11 +100,15 @@ def upload_folder(folder: Path, gigs: int = 3) -> Path | None:
             _link(video, d / "2_Video.mp4")
             used.add(video)
         made = True
-    rest = [v for v in sorted(folder.glob("*.mp4")) if v not in used]
-    if rest:
-        (target / "Portfolio (weitere Videos)").mkdir(parents=True, exist_ok=True)
-        for v in rest:
-            _link(v, target / "Portfolio (weitere Videos)" / v.name)
+    # Portfolio: je Projekt ein Ordner mit beiden Sprachfassungen
+    for n, project in enumerate(PORTFOLIO, 1):
+        files = [folder / f"{v}.mp4" for v in project["videos"] if (folder / f"{v}.mp4").exists()]
+        if not files:
+            continue
+        d = target / "Portfolio" / f"Projekt {n} - {project['title']}"
+        d.mkdir(parents=True, exist_ok=True)
+        for f in files:
+            _link(f, d / f.name)
         made = True
     return target if made else None
 
@@ -113,6 +138,34 @@ def _videos(folder: Path | None, names: list[str]) -> str:
             f'<p>{" · ".join(files)}</p>{extra}</section>')
 
 
+PROFILE_CHECK = (
+    '<section class="field info"><div class="head"><h3>Profil vollständig? (macht Fiverr-Käufer sicherer)</h3></div>'
+    "<ul>"
+    "<li><b>Profilbild:</b> echtes Foto von dir, Gesicht gut sichtbar, heller Hintergrund. Fiverr verlangt eine echte "
+    "Person, kein Logo, keine KI-Figur.</li>"
+    "<li><b>Einzeiler, Über mich, Fähigkeiten, Sprachen:</b> Felder oben.</li>"
+    "<li><b>Portfolio:</b> 4 Projekte unten, je Titel + Beschreibung + beide Videos.</li>"
+    "<li><b>Ausbildung / Zertifikate:</b> nur eintragen, was wirklich stimmt, sonst leer lassen.</li>"
+    "<li><b>E-Mail und Telefon bestätigen:</b> Fiverr → Einstellungen → Sicherheit (machst du selbst).</li>"
+    "<li><b>Antwortzeit:</b> neue Anfragen innerhalb weniger Stunden beantworten, das zählt im Ranking.</li>"
+    "</ul></section>"
+)
+
+
+def _portfolio_files(folder: Path | None, n: int, project: dict[str, Any]) -> str:
+    if not folder:
+        return ""
+    files = [folder / f"{v}.mp4" for v in project["videos"] if (folder / f"{v}.mp4").exists()]
+    if not files:
+        return ""
+    d = folder / UPLOAD_DIR / "Portfolio" / f"Projekt {n} - {project['title']}"
+    where = d if d.exists() else folder
+    links = " · ".join(f'<a href="{f.as_uri()}">{html.escape(f.name)}</a>' for f in files)
+    return (f'<section class="field info"><div class="head"><h3>Portfolio {n} – Medien</h3></div>'
+            f'<p class="hint">Beide Videos hochladen. Ordner: <a href="{where.as_uri()}">{html.escape(str(where))}</a></p>'
+            f"<p>{links}</p></section>")
+
+
 def build_page(pack: dict[str, Any], languages: list[str] | None = None, videos: Path | None = None) -> str:
     parts = [
         '<h2>1 · Profil</h2>',
@@ -123,6 +176,11 @@ def build_page(pack: dict[str, Any], languages: list[str] | None = None, videos:
     ]
     if languages:
         parts.append(_field("Sprachen", "\n".join(languages), "„Sprache hinzufügen“ – nur, was du wirklich sprichst."))
+    parts.append(PROFILE_CHECK)
+    for n, project in enumerate(PORTFOLIO, 1):
+        parts.append(_field(f"Portfolio {n} – Titel", project["title"], "Profil → „Portfolio“ → „Projekt hinzufügen“.", 50))
+        parts.append(_field(f"Portfolio {n} – Beschreibung", project["description"], "", 500))
+        parts.append(_portfolio_files(videos, n, project))
     for i, gig in enumerate(pack.get("gigs", []), 1):
         parts.append(f"<h2>{i + 1} · Gig {i}</h2>")
         # Fiverr zeigt „I will“ fest vor dem Feld – nur den Rest kopieren

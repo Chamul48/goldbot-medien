@@ -77,6 +77,9 @@ leads:
   check_every_hours: 1
   # KI schreibt zu jedem neuen Auftrag einen Antwort-Entwurf (du schickst ihn selbst ab)
   reply_drafts: true
+  # Link zu deinen Arbeitsproben, ersetzt [PORTFOLIO-LINK] in den Entwürfen (leer = Platzhalter bleibt).
+  # Sobald dein Fiverr-Profil mit Portfolio online ist, z. B.: https://www.fiverr.com/chuchcapone
+  portfolio_link: ""
 
 notify:
   # Windows-Hinweis bei neuen Aufträgen
