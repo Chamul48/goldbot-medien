@@ -67,6 +67,10 @@ ist Deutsch mit echten Umlauten. Fiverr-Texte und Reddit-Antworten bleiben Engli
 - **ffmpeg drawbox kennt keine Zeit** (`t` = Rahmendicke) → animierte Balken per `overlay` mit `t`.
 - **Fiverr-Paketbeschreibung max. 100 Zeichen**; Gig-Titel ohne „I will“ kopieren (Fiverr setzt es davor).
 - **Update-Skript** startet Goldbot nach einem Fehler wieder; `$ProgressPreference = 'SilentlyContinue'`.
+- **Testbilder nie mit echten fremden Personen zeigen.** Eine Vorschau mit einem bekannten Fußballer (OpenCV-Beispiel)
+  wurde vom Nutzer heruntergeladen und als Fiverr-Profilbild hochgeladen. Für Tests nur neutrale/eigene Motive,
+  Testdateien nie in den Chat oder auf den PC legen.
+- **Fiverr-Beschreibung max. 600 Zeichen** – längere Texte schneidet Fiverr mitten im Wort ab.
 - `reports\` und `config.yaml` sind nicht im Repo – nichts Persönliches committen.
 
 ## Shopify-Agent (`shopify_agent/`)
