@@ -146,6 +146,9 @@ def main(argv: list[str] | None = None) -> int:
         covers = demo.render_covers(target, pack.get("gigs", []), helper.GIG_VIDEOS)
         if covers:
             print(f"{len(covers)} Gig-Titelbilder (1280×769) für die Fiverr-Galerie erstellt.")
+        upload = helper.upload_folder(target)
+        if upload:
+            print(f"Zum Hochladen sortiert (je Gig 1 Titelbild + 1 Video): {upload}")
         return 0 if made else 1
     if args.befehl == "simulation":
         from . import simulation

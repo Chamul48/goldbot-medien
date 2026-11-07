@@ -71,6 +71,8 @@ ist Deutsch mit echten Umlauten. Fiverr-Texte und Reddit-Antworten bleiben Engli
 - **Gig-Titelbilder:** links kurzer Text aus `demo.COVER_TEXT` (Pillow misst die Breite, max. 520 px), rechts
   3 Standbilder als Handys (`COVER_STILLS`), Shorts-Untertitel auf dem mittleren (`COVER_CAPTION`). Gig 3 zeigt
   drei Kanäle (Krypto/Ozean/Finanzen, Ozean-Videos `ozean_de`/`ocean_en`) = Automatisierung, nicht Krypto. Kleine Etiketten sind als Vorschau unlesbar. Nur die Titelbilder neu: `demo.render_covers(...)` statt ganzem `muster`.
+- **Fiverr erlaubt nur 1 Video pro Gig.** `muster` baut `reports\muster\fiverr_hochladen` (harte Links): je Gig
+  `1_Titelbild.jpg` + `2_Video.mp4` (`helper.GIG_UPLOAD`), Rest unter „Portfolio“.
 - **Fiverr-Paketbeschreibung max. 100 Zeichen**; Gig-Titel ohne „I will“ kopieren (Fiverr setzt es davor).
 - **Update-Skript** startet Goldbot nach einem Fehler wieder; `$ProgressPreference = 'SilentlyContinue'`.
 - **Testbilder nie mit echten fremden Personen zeigen.** Eine Vorschau mit einem bekannten Fußballer (OpenCV-Beispiel)

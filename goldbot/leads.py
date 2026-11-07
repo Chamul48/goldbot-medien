@@ -184,7 +184,19 @@ def template_reply(item: TrendItem, cfg: dict[str, Any]) -> str:
     )
 
 
+def fill_portfolio_link(drafts: dict[str, str], cfg: dict[str, Any]) -> dict[str, str]:
+    """[PORTFOLIO-LINK] durch leads.portfolio_link ersetzen, sobald der Link eingetragen ist."""
+    link = str((cfg.get("leads") or {}).get("portfolio_link") or "").strip()
+    if not link:
+        return drafts
+    return {k: v.replace("[PORTFOLIO-LINK]", link) for k, v in drafts.items()}
+
+
 def draft_replies(cfg: dict[str, Any], items: list[TrendItem]) -> dict[str, str]:
+    return fill_portfolio_link(_draft_replies(cfg, items), cfg)
+
+
+def _draft_replies(cfg: dict[str, Any], items: list[TrendItem]) -> dict[str, str]:
     if not items:
         return {}
     drafts = {_key(i): template_reply(i, cfg) for i in items}
