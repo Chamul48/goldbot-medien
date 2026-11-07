@@ -22,8 +22,12 @@ Der Inhaber ist kein Programmierer: alles für ihn auf Deutsch, Ergebnis zuerst,
   und danach die Datei mit `read_file` lesen (`%TEMP%` = `C:\Users\User\AppData\Local\Temp`) (direkte Konsolenausgabe verliert unter Windows das €-Zeichen).
   (JSON: Titel, Beschreibung, JSON-LD-Angebote, Beträge mit Kontext, `captcha`-Hinweis; wartet selbst 10 s je Domain).
   Ist der PC aus/nicht erreichbar: ohne ihn weitermachen und das im Bericht sagen.
-  **Höchstens 3 URLs pro Aufruf** und Ausgabe mit `> %TEMP%\x.log 2>&1` umleiten: Dann endet `start_process` erst,
-  wenn alles gelesen ist (`read_process_output` wartet nicht zuverlässig, längere Läufe wirken sonst „verschwunden“).
+  **Höchstens 3 URLs pro Aufruf**, Ausgabe mit `-o %TEMP%\x.json` in eine Datei. Desktop Commander wartet bei
+  Fernaufrufen **höchstens 3 s**; danach läuft der Prozess im Hintergrund weiter. Also starten, kurz anderes tun
+  und dann die Datei mit `read_file` lesen. Fehlt sie noch, später erneut versuchen. Den Prozess nicht neu starten,
+  sonst ist die Datei gesperrt. Vorher mit `list_devices` prüfen, ob der PC online ist.
+- **Aufgestaute Läufe** (Sitzung war inaktiv): nur einen Lauf für heute machen und die verpassten Tage im Journal
+  nennen.
   Für Auswertungen die JSON-Datei mit einem kurzen `python -c` filtern (Zeilen mit „Lieferzeit“ = Händlerangebote).
 - **Bewährte Preisquellen** (gold.de-Seiten listen je Produkt die günstigsten Händler, Kurs steht in der Kopfzeile):
   `gold.de/kaufen/goldmuenzen/wiener-philharmoniker/`, `…/kruegerrand/`, `…/maple-leaf/`, `…/kaenguru/`,
