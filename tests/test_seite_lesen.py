@@ -49,3 +49,13 @@ def test_ausgabe_in_datei_als_utf8(monkeypatch, tmp_path):
     ziel = tmp_path / "e.json"
     assert sl.main(["-o", str(ziel), "https://b.at/ok"]) == 0
     assert "3.712,50 €" in ziel.read_text(encoding="utf-8")
+
+
+def test_profilseite_liefert_bild_und_volle_beschreibung():
+    lang = "Hi, I'm Chucha. " + "x" * 300
+    seite = ('<script>{"description":"kurz","x":{"description":"' + lang + '",'
+             '"profileImageUrl":"https:\\/\\/img.example\\/p.png"}}</script>')
+    r = sl.auswerten("https://www.fiverr.com/u", seite)
+    assert r["profilbild"] == "https://img.example/p.png"
+    assert r["beschreibung_lang"] == lang
+    assert sl.auswerten("u", PROBE)["profilbild"] is None

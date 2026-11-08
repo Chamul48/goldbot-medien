@@ -86,7 +86,22 @@ def auswerten(url: str, seite: str) -> dict:
         "angebote": _angebote(seite),
         "betraege": betraege,
         "captcha": bool(re.search(r"px-captcha|captcha|Press & Hold|Access denied", seite, re.I)),
+        # Profilseiten (z. B. Fiverr): Bildadresse und volle Beschreibung, damit ein Abruf pro Tag reicht
+        "profilbild": _json_text(seite, "profileImageUrl"),
+        "beschreibung_lang": _json_text(seite, "description", mindestens=200),
     }
+
+
+def _json_text(seite: str, schluessel: str, mindestens: int = 1) -> str | None:
+    """Erster JSON-Textwert zu `schluessel` im Seitenquelltext, der mindestens so lang ist."""
+    for roh in re.findall(r'"%s"\s*:\s*"((?:[^"\\]|\\.){0,5000})"' % re.escape(schluessel), seite):
+        try:
+            wert = json.loads('"' + roh + '"')
+        except ValueError:
+            continue
+        if len(wert) >= mindestens:
+            return wert
+    return None
 
 
 def holen(url: str, timeout: float = 25.0) -> str:

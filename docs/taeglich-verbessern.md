@@ -32,7 +32,8 @@ Der Inhaber ist kein Programmierer: alles für ihn auf Deutsch, Ergebnis zuerst,
 - **Bewährte Preisquellen** (gold.de-Seiten listen je Produkt die günstigsten Händler, Kurs steht in der Kopfzeile):
   `gold.de/kaufen/goldmuenzen/wiener-philharmoniker/`, `…/kruegerrand/`, `…/maple-leaf/`, `…/kaenguru/`,
   `gold.de/kaufen/goldbarren/1-gramm/`, `…/10-gramm/`, `…/50-gramm/`, `…/1-oz/`, `…/tafeln-kombi-barren/`,
-  `…/muenze-oesterreich/`; Österreich: `philoro.at` (Startseite zeigt Kauf/Verkauf Philharmoniker); Kurs:
+  `…/muenze-oesterreich/`; kleine Stückelungen: Tabelle „Stückelungen“ auf `…/wiener-philharmoniker/kurs/` bzw.
+  `…/kruegerrand/kurs/` (Datenstand prüfen: Ankauf > Verkauf = veraltet); Österreich: `philoro.at` (Startseite zeigt Kauf/Verkauf Philharmoniker); Kurs:
   `goldpreis.de`. Diese Seiten zeigen die 1-oz-Größe – für Bruchstücke (1/10, 1/25 oz) eigene Seiten suchen.
 - **Repo**: Branch `claude/peaceful-rubin-0bk72i`. Zu Beginn `git fetch origin main && git merge --no-edit origin/main`.
 
@@ -93,7 +94,7 @@ Der Inhaber ist kein Programmierer: alles für ihn auf Deutsch, Ergebnis zuerst,
 2. Commit (Nachricht Englisch, mit den Attribution-Zeilen aus dem System) und `git push -u origin claude/peaceful-rubin-0bk72i`
    (bei Ablehnung: `git pull --rebase`, testen, erneut pushen). Keinen Pull Request anlegen, nichts auf GitHub kommentieren.
 3. Hat sich Code geändert, auf den PC bringen: im Ordner `C:\Users\User\Desktop\goldbot-medien`
-   `.venv\Scripts\python.exe pc_sync.py <commit-sha>` (meldet lokal geänderte Dateien – nicht überschreiben),
+   `.venv\Scripts\python.exe pc_sync.py <volle 40-stellige commit-sha>` (`git rev-parse HEAD`; kurze IDs ergeben 404) (meldet lokal geänderte Dateien – nicht überschreiben),
    danach dort `pytest` (Ausgabe in eine Datei umleiten und lesen). Fehlen Pakete:
    `.venv\Scripts\python.exe -m pip install -q -r requirements.txt`.
 4. **Schlussnachricht** (geht als Push ans Handy) auf Deutsch, höchstens 8 Zeilen:

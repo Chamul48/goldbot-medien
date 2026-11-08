@@ -1,5 +1,28 @@
 # Journal – tägliche Verbesserung (neueste oben)
 
+## 2026-11-08
+- **Erledigt aus „Nächstes Mal“:**
+  - PC war an → Live-Preise von gold.de und philoro gelesen; die kleinen Münzen über gold.de-Kursseiten
+    (`…/wiener-philharmoniker/kurs/`, `…/kruegerrand/kurs/` mit Tabelle „Stückelungen“).
+  - Fiverr-Profil gelesen.
+- **Vorgeschlagen:** `autopilot/preise-2026-11-08.md`. Online-Händler bei 1 oz nur +0,3–0,8 %, philoro +3,0 % →
+  Empfehlung: Geschenk- und Kleinstückelungen in den Vordergrund stellen.
+- **Im Shop geändert:** nichts. Die offenen Maße sind weiter widersprüchlich belegt.
+- **Übernommen vom Inhaber:**
+  - Shop: weiterhin nichts (keine Preise, keine Fotos, Testdaten noch da).
+  - Fiverr: Die Beschreibung ist noch die alte (beginnt mit „…workflows that handle“ statt „…for repetitive tasks“).
+    Das Profilbild war nicht prüfbar.
+- **Was nicht ging / verbessert:**
+  - `pc_sync.py` mit verkürzter Commit-ID → 404 (codeload braucht die volle SHA).
+  - `seite_lesen.py` lieferte bei Profilseiten nur 150 Zeichen Beschreibung und kein Bild. → Neue Felder
+    `profilbild` und `beschreibung_lang` (mit Test), damit ein Abruf am Tag reicht.
+  - gold.de-Kursseiten: Bei den kleinen Stückelungen ist der Ankauf teils höher als der Verkauf → Werte als unsicher
+    markiert.
+- **Nächstes Mal:**
+  - Fiverr: prüfen, ob `profilbild` noch die Testvorschau ist. Die Adresse der Testvorschau enthielt
+    `a8fd8e712d140a73722b96cb37b747e7-1793752128522`.
+  - Weiter kurze Berichte, die To-dos für den Inhaber stehen oben.
+
 ## 2026-11-07 (Läufe vom 4., 5. und 6.11. kamen erst heute an – Sitzung war nicht aktiv)
 - **Erledigt aus „Nächstes Mal“:**
   - Preise für Philharmoniker 1/10 oz und 1/25 oz (Geschenk), Krügerrand 1/10 oz, Valcambi 1 g Taufe und
