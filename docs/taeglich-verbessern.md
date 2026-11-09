@@ -17,7 +17,8 @@ Der Inhaber ist kein Programmierer: alles für ihn auf Deutsch, Ergebnis zuerst,
 ## Werkzeuge
 - **Shopify**: Connector-Tools (`get-shop-info`, `graphql_query`, `graphql_mutation`). Jede Operation vorher mit
   `graphql_schema` prüfen (CLAUDE.md, Lehre 3).
-- **PC des Inhabers** (Desktop Commander, Gerät DESKTOP-0GHOAH2, immer `shell: "cmd"`): öffentliche Seiten lesen mit
+- **PC des Inhabers** (Desktop Commander, Gerät DESKTOP-0GHOAH2, `deviceId: af79fa25-b14a-45f7-b441-26cd20d896b9` –
+  Pflicht, sobald mehrere Geräte online sind; immer `shell: "cmd"`): öffentliche Seiten lesen mit
   `C:\Users\User\Desktop\goldbot-medien\.venv\Scripts\python.exe C:\Users\User\Desktop\goldbot-medien\windows\seite_lesen.py -o %TEMP%\seiten.json <url> [<url> …]`
   und danach die Datei mit `read_file` lesen (`%TEMP%` = `C:\Users\User\AppData\Local\Temp`) (direkte Konsolenausgabe verliert unter Windows das €-Zeichen).
   (JSON: Titel, Beschreibung, JSON-LD-Angebote, Beträge mit Kontext, `captcha`-Hinweis; wartet selbst 10 s je Domain).

@@ -1,5 +1,17 @@
 # Journal – tägliche Verbesserung (neueste oben)
 
+## 2026-11-09
+- **Erledigt aus „Nächstes Mal“:** Fiverr-Profilbild geprüft. Es ist **immer noch die Testvorschau mit dem Fußballer**
+  (dieselbe Bild-ID `a8fd8e712d140a73722b96cb37b747e7-1793752128522`). Die Beschreibung ist unverändert und bricht
+  bei „…best solut“ ab.
+- **Vorgeschlagen:** `autopilot/preise-2026-11-09.md`. Kurs 3.664,15 € (+0,4 %), Philharmoniker 1 oz 3.719–3.763 €.
+- **Im Shop geändert:** nichts. Keine neuen belegten Fakten, nur ein kurzer Lauf.
+- **Übernommen vom Inhaber:** seit 5 Tagen nichts, weder im Shop noch auf Fiverr. → Die Erinnerung an den Inhaber kommt
+  jetzt ganz nach oben im Bericht, mit Schritt-für-Schritt-Anleitung.
+- **Was nicht ging:** nichts. Mit zwei PCs online braucht Desktop Commander die `deviceId` des Hauptrechners
+  (`af79fa25-…`, DESKTOP-0GHOAH2), sonst ist unklar, welcher Rechner gemeint ist.
+- **Nächstes Mal:** Profilbild erneut prüfen. Ist es weiter die Vorschau, die Meldung wiederholen.
+
 ## 2026-11-08
 - **Erledigt aus „Nächstes Mal“:**
   - PC war an → Live-Preise von gold.de und philoro gelesen; die kleinen Münzen über gold.de-Kursseiten
