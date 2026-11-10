@@ -1,5 +1,18 @@
 # Journal – tägliche Verbesserung (neueste oben)
 
+## 2026-11-10
+- **Erledigt aus „Nächstes Mal“:** Fiverr-Profilbild erneut geprüft: **weiter die Fußballer-Testvorschau** (3. Tag in
+  Folge, dieselbe Bild-ID). Die Beschreibung ist unverändert abgeschnitten.
+- **Vorgeschlagen:** `autopilot/preise-2026-11-10.md`. Kurs 3.601,70 € (−1,7 %), Philharmoniker 1 oz 3.656–3.699 €.
+  philoro liegt bei +4,0 % (Kursrückgang noch nicht weitergegeben).
+- **Im Shop geändert:** nichts.
+- **Übernommen vom Inhaber:** seit 6 Tagen nichts.
+- **Was nicht ging:** nichts.
+- **Erkenntnis:** Feste Preise im Shop veralten bei Gold täglich. Bevor der Shop live geht, muss eine Lösung für
+  tägliche Preis-Updates her: entweder du passt selbst an, oder eine Preis-App wird angebunden. Das entscheidest du,
+  Claude setzt keine Preise.
+- **Nächstes Mal:** Profilbild prüfen. Ist es weiter die Vorschau: Meldung wiederholen und ganz oben in den Bericht stellen.
+
 ## 2026-11-09
 - **Erledigt aus „Nächstes Mal“:** Fiverr-Profilbild geprüft. Es ist **immer noch die Testvorschau mit dem Fußballer**
   (dieselbe Bild-ID `a8fd8e712d140a73722b96cb37b747e7-1793752128522`). Die Beschreibung ist unverändert und bricht
