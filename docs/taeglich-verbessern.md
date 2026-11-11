@@ -98,6 +98,8 @@ Der Inhaber ist kein Programmierer: alles für ihn auf Deutsch, Ergebnis zuerst,
    `.venv\Scripts\python.exe pc_sync.py <volle 40-stellige commit-sha>` (`git rev-parse HEAD`; kurze IDs ergeben 404) (meldet lokal geänderte Dateien – nicht überschreiben),
    danach dort `pytest` (Ausgabe in eine Datei umleiten und lesen). Fehlen Pakete:
    `.venv\Scripts\python.exe -m pip install -q -r requirements.txt`.
-4. **Schlussnachricht** (geht als Push ans Handy) auf Deutsch, höchstens 8 Zeilen:
+4. **Schlussnachricht** auf Deutsch, höchstens 8 Zeilen. Hat sich seit dem Vortag nichts Wesentliches geändert
+   (Kurs < 1 %, Inhaber hat nichts umgesetzt), dann **höchstens 3 Zeilen**: Kurs, Empfehlung, wichtigstes offenes To-do.
+   Sonst:
    Goldkurs heute · wichtigste Preisempfehlung · was im Shop verbessert wurde · Fiverr-Vorschlag (ja/nein, was) ·
    **was du heute tun solltest** (1–3 Punkte) · Dateien zum Nachlesen.

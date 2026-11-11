@@ -1,5 +1,17 @@
 # Journal – tägliche Verbesserung (neueste oben)
 
+## 2026-11-11
+- **Erledigt aus „Nächstes Mal“:** Fiverr-Profilbild geprüft: **weiter die Fußballer-Testvorschau** (4. Tag). Die
+  Beschreibung ist weiter abgeschnitten.
+- **Vorgeschlagen:** `autopilot/preise-2026-11-11.md`. Kurs 3.599,55 €, Philharmoniker 1 oz 3.654–3.697 €.
+- **Korrigiert:** Die Vermutung vom 10.11. („philoro gibt den Kursrückgang verzögert weiter“) war falsch. philoros
+  Aufschlag liegt stabil bei 3,9–4,0 %. Lehre: eine Erklärung erst nach einem zweiten Messpunkt als Tatsache melden.
+- **Im Shop geändert:** nichts. **Übernommen vom Inhaber:** seit 7 Tagen nichts.
+- **Nächstes Mal:**
+  - Profilbild prüfen.
+  - Die Läufe bringen seit Tagen dieselben Ergebnisse, weil der Inhaber nichts umsetzt. Den Bericht deshalb auf 3 Zeilen
+    kürzen, solange sich am Kurs (< 1 %) und an seinen offenen Punkten nichts ändert.
+
 ## 2026-11-10
 - **Erledigt aus „Nächstes Mal“:** Fiverr-Profilbild erneut geprüft: **weiter die Fußballer-Testvorschau** (3. Tag in
   Folge, dieselbe Bild-ID). Die Beschreibung ist unverändert abgeschnitten.
