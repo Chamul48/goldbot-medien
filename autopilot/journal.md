@@ -1,5 +1,15 @@
 # Journal – tägliche Verbesserung (neueste oben)
 
+## 2026-11-12
+- **Erledigt aus „Nächstes Mal“:**
+  - Fiverr geprüft. **Die Beschreibung ist neu** und endet jetzt sauber mit „…updates in English or German. Message me
+    before you order.“ Sie wird also nicht mehr abgeschnitten. Es ist nicht unser Vorschlag vom 04.11., vermutlich der
+    Text aus der Goldbot-Fiverr-Hilfe.
+  - Profilbild: **weiter die Fußballer-Testvorschau** (5. Tag).
+- **Vorgeschlagen:** `autopilot/preise-2026-11-12.md`. Kurs −2,4 % auf 3.512,05 €, Philharmoniker 1 oz 3.565–3.607 €.
+- **Im Shop geändert:** nichts. **Übernommen vom Inhaber:** Fiverr-Beschreibung ✔, Profilbild ✘, Shop ✘ (8 Tage).
+- **Nächstes Mal:** Profilbild prüfen. Die Beschreibung nur noch beobachten, kein neuer Vorschlag nötig.
+
 ## 2026-11-11
 - **Erledigt aus „Nächstes Mal“:** Fiverr-Profilbild geprüft: **weiter die Fußballer-Testvorschau** (4. Tag). Die
   Beschreibung ist weiter abgeschnitten.
