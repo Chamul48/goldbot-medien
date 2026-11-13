@@ -1,5 +1,12 @@
 # Journal – tägliche Verbesserung (neueste oben)
 
+## 2026-11-13 (Kurzlauf)
+- Fiverr-Profilbild: **weiter die Testvorschau** (6. Tag). Die Beschreibung ist unverändert und in Ordnung.
+- Kurs 3.520,75 € (+0,25 %), Philharmoniker 1 oz 3.574–3.616 €. Shop unverändert (9 Tage), nichts geändert.
+- Auffällig: Im gold.de-Auszug war heute nur 1 Angebot. Vermutlich hat die Seite mehr Kopfzeilen-Beträge als die
+  120er-Grenze in `seite_lesen.py` erlaubt. Hält das an: Händlerzeilen bevorzugt behalten.
+- **Nächstes Mal:** Profilbild prüfen. Wieder nur 1 gold.de-Angebot → `seite_lesen.py` anpassen.
+
 ## 2026-11-12
 - **Erledigt aus „Nächstes Mal“:**
   - Fiverr geprüft. **Die Beschreibung ist neu** und endet jetzt sauber mit „…updates in English or German. Message me
