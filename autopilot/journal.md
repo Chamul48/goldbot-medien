@@ -1,5 +1,14 @@
 # Journal – tägliche Verbesserung (neueste oben)
 
+## 2026-11-14 (Kurzlauf, Samstag)
+- Fiverr-Profilbild: **weiter die Testvorschau** (7. Tag). Die Beschreibung ist in Ordnung. Shop unverändert (10 Tage).
+- Kurs 3.518,55 €, Philharmoniker 1 oz 3.571–3.614 €.
+- **Fehler gefunden (13./14.11.):** Die gold.de-Seite lieferte 46 Beträge, die 120er-Grenze war also nicht das Problem.
+  Der Auswertefilter `b.startswith('Spotpreis')` hängt aber davon ab, wo das 70-Zeichen-Fenster beginnt. Dadurch fehlen
+  Händlerzeilen. → In der Checkliste steht jetzt: Händlerangebote mit `'Lieferzeit' in b` filtern und den letzten
+  €-Betrag der Zeile nehmen.
+- **Nächstes Mal:** neuen Filter nutzen und prüfen, ob wieder 4–8 gold.de-Angebote erscheinen. Profilbild prüfen.
+
 ## 2026-11-13 (Kurzlauf)
 - Fiverr-Profilbild: **weiter die Testvorschau** (6. Tag). Die Beschreibung ist unverändert und in Ordnung.
 - Kurs 3.520,75 € (+0,25 %), Philharmoniker 1 oz 3.574–3.616 €. Shop unverändert (9 Tage), nichts geändert.

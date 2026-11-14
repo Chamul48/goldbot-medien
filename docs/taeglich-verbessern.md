@@ -29,7 +29,8 @@ Der Inhaber ist kein Programmierer: alles für ihn auf Deutsch, Ergebnis zuerst,
   sonst ist die Datei gesperrt. Vorher mit `list_devices` prüfen, ob der PC online ist.
 - **Aufgestaute Läufe** (Sitzung war inaktiv): nur einen Lauf für heute machen und die verpassten Tage im Journal
   nennen.
-  Für Auswertungen die JSON-Datei mit einem kurzen `python -c` filtern (Zeilen mit „Lieferzeit“ = Händlerangebote).
+  Für Auswertungen die JSON-Datei mit einem kurzen `python -c` filtern: Händlerangebote = Einträge mit `'Lieferzeit' in b`
+  (nicht `startswith(...)` – der Ausschnitt beginnt je nach Seite an anderer Stelle). Preis = vorletzter €-Betrag (letzter = inkl. Versand).
 - **Bewährte Preisquellen** (gold.de-Seiten listen je Produkt die günstigsten Händler, Kurs steht in der Kopfzeile):
   `gold.de/kaufen/goldmuenzen/wiener-philharmoniker/`, `…/kruegerrand/`, `…/maple-leaf/`, `…/kaenguru/`,
   `gold.de/kaufen/goldbarren/1-gramm/`, `…/10-gramm/`, `…/50-gramm/`, `…/1-oz/`, `…/tafeln-kombi-barren/`,
