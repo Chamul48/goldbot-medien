@@ -1,5 +1,12 @@
 # Journal – tägliche Verbesserung (neueste oben)
 
+## 2026-11-15 (Kurzlauf, Sonntag)
+- Neuer gold.de-Filter (`'Lieferzeit' in b`, vorletzter €-Betrag) funktioniert und findet 3 Angebote, ab 3.558,79 €.
+  Er erfasst aber auch Versandkosten (14,90 / 26,95 / 29,00 €) → nur Beträge über 100 € als Preis werten
+  (in der Checkliste ergänzt).
+- Fiverr-Profilbild: **weiter die Testvorschau** (8. Tag). Shop unverändert (11 Tage). Nichts geändert.
+- **Nächstes Mal:** Profilbild prüfen.
+
 ## 2026-11-14 (Kurzlauf, Samstag)
 - Fiverr-Profilbild: **weiter die Testvorschau** (7. Tag). Die Beschreibung ist in Ordnung. Shop unverändert (10 Tage).
 - Kurs 3.518,55 €, Philharmoniker 1 oz 3.571–3.614 €.
