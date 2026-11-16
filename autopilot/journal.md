@@ -1,5 +1,11 @@
 # Journal – tägliche Verbesserung (neueste oben)
 
+## 2026-11-16 (Kurzlauf)
+- Filter mit 100-€-Grenze: 4 saubere gold.de-Angebote ✔.
+- Kurs 3.497,55 € (−0,6 %), Philharmoniker 1 oz 3.550–3.592 €.
+- Fiverr-Profilbild: **weiter die Testvorschau** (9. Tag). Shop unverändert (12 Tage). Nichts geändert.
+- **Nächstes Mal:** Profilbild prüfen.
+
 ## 2026-11-15 (Kurzlauf, Sonntag)
 - Neuer gold.de-Filter (`'Lieferzeit' in b`, vorletzter €-Betrag) funktioniert und findet 3 Angebote, ab 3.558,79 €.
   Er erfasst aber auch Versandkosten (14,90 / 26,95 / 29,00 €) → nur Beträge über 100 € als Preis werten
