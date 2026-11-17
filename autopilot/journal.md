@@ -1,5 +1,11 @@
 # Journal – tägliche Verbesserung (neueste oben)
 
+## 2026-11-17 (Kurzlauf)
+- Kurs 3.502,25 €, Philharmoniker 1 oz 3.555–3.597 €. Der günstigste gold.de-Händler liegt heute bei +1,5 % (sonst
+  +0,7–1,0 %), es sind nur 3 Angebote erfasst.
+- Fiverr-Profilbild: **weiter die Testvorschau** (10. Tag). Shop unverändert (13 Tage). Nichts geändert.
+- **Nächstes Mal:** Profilbild prüfen.
+
 ## 2026-11-16 (Kurzlauf)
 - Filter mit 100-€-Grenze: 4 saubere gold.de-Angebote ✔.
 - Kurs 3.497,55 € (−0,6 %), Philharmoniker 1 oz 3.550–3.592 €.
