@@ -20,13 +20,13 @@ def cfg():
 
 
 def test_parse_google_trends_rss():
-    items = trends.parse_feed((FIX / "google_trends.xml").read_text(), "Google Trends AT")
+    items = trends.parse_feed((FIX / "google_trends.xml").read_text(encoding="utf-8"), "Google Trends AT")
     assert [i.title for i in items] == ["Goldpreis", "Fußball Ergebnis", "KI Video Generator"]
     assert items[0].traffic == 20000
 
 
 def test_parse_reddit_atom_and_detect_leads(cfg):
-    items = trends.parse_feed((FIX / "reddit.xml").read_text(), "Reddit r/forhire")
+    items = trends.parse_feed((FIX / "reddit.xml").read_text(encoding="utf-8"), "Reddit r/forhire")
     assert items[0].url == "https://www.reddit.com/r/forhire/1"
     assert "short form edits" in items[0].summary
     scored = trends.score(items, cfg["trends"]["keywords"])
@@ -37,7 +37,7 @@ def test_parse_reddit_atom_and_detect_leads(cfg):
 
 
 def test_score_prefers_niche_over_raw_traffic(cfg):
-    items = trends.parse_feed((FIX / "google_trends.xml").read_text(), "Google Trends AT")
+    items = trends.parse_feed((FIX / "google_trends.xml").read_text(encoding="utf-8"), "Google Trends AT")
     scored = trends.score(items, cfg["trends"]["keywords"])
     assert scored[-1].title == "Fußball Ergebnis"
 
@@ -61,9 +61,9 @@ def test_collect_survives_failing_sources(cfg):
     class FakeFetcher:
         def get(self, url):
             if "trends.google" in url:
-                return FakeResp((FIX / "google_trends.xml").read_text())
+                return FakeResp((FIX / "google_trends.xml").read_text(encoding="utf-8"))
             if "reddit" in url:
-                return FakeResp((FIX / "reddit.xml").read_text())
+                return FakeResp((FIX / "reddit.xml").read_text(encoding="utf-8"))
             return None
 
     fetched = []
@@ -105,8 +105,8 @@ def test_enforce_limits_truncates():
 
 def test_ideas_and_report(cfg, tmp_path):
     items = trends.score(
-        trends.parse_feed((FIX / "reddit.xml").read_text(), "Reddit r/forhire")
-        + trends.parse_feed((FIX / "google_trends.xml").read_text(), "Google Trends AT"),
+        trends.parse_feed((FIX / "reddit.xml").read_text(encoding="utf-8"), "Reddit r/forhire")
+        + trends.parse_feed((FIX / "google_trends.xml").read_text(encoding="utf-8"), "Google Trends AT"),
         cfg["trends"]["keywords"],
     )
     result, source = ideas.build_ideas(cfg, items)
@@ -116,9 +116,9 @@ def test_ideas_and_report(cfg, tmp_path):
 
     folder = report.write(tmp_path, profile=profile.build_profile(cfg), trends=(items, ["HN"]),
                           ideas=(result, source))
-    text = (folder / "bericht.md").read_text()
+    text = (folder / "bericht.md").read_text(encoding="utf-8")
     assert "Vertriebsideen" in text and "Mögliche Aufträge" in text and "Gig 1" in text
-    assert json.loads((folder / "daten.json").read_text())["profile"]["gigs"]
+    assert json.loads((folder / "daten.json").read_text(encoding="utf-8"))["profile"]["gigs"]
 
 
 def test_llm_offline():
@@ -347,7 +347,7 @@ def test_leads_reported_only_once(lead_cfg):
     second = leads.check(lead_cfg, items, now=_dt(2026, 11, 3, 9, 0))
     assert len(first) == 2 and second == []
     assert len(lead_cfg["_sent"]) == 1 and "2 neue Aufträge" in lead_cfg["_sent"][0][0]
-    md = (Path(lead_cfg["output_dir"]) / "auftraege" / "2026-11-03.md").read_text()
+    md = (Path(lead_cfg["output_dir"]) / "auftraege" / "2026-11-03.md").read_text(encoding="utf-8")
     assert md.count("**Antwort-Entwurf:**") == 2 and "[PORTFOLIO-LINK]" in md
 
 
@@ -535,7 +535,7 @@ def test_insert_helper_page(cfg, tmp_path):
     from goldbot import helper
     pack, _, _ = profile.build_profile(cfg)
     page = helper.write(tmp_path / "e.html", pack, pack.get("languages"))
-    text = page.read_text()
+    text = page.read_text(encoding="utf-8")
     assert text.count("data-copy=") >= 3 + 3 * 5  # Profil + je Gig Titel/Kategorie/Tags/Beschreibung/FAQ
     import html as _hh
     assert _hh.escape(pack["one_liner"]) in text and "seller_onboarding" in text

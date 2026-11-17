@@ -1,0 +1,324 @@
+{
+ "date": "2026-11-04",
+ "shop": "chuchcapone.myshopify.com",
+ "hinweis": "Nur die 12 Gold-Entwürfe (nur diese werden im täglichen Lauf bearbeitet). Stand vor dem Lauf, live gelesen; Shopify formatiert Leerzeichen im HTML um.",
+ "products": [
+  {
+   "id": "gid://shopify/Product/15939489530196",
+   "title": "Goldbarren 1 g – Münze Österreich",
+   "handle": "goldbarren-1-g-munze-osterreich",
+   "descriptionHtml": "<p>Ein Goldbarren mit 1,00 g Feingewicht und einem Feingehalt von 999,9, hergestellt von der Münze Österreich AG, Wien. Geliefert in einer Blisterkarte mit Zertifikat.</p>\n\n<h3>Details</h3>\n<ul>\n  <li><strong>Feingewicht:</strong> 1,00 g (0,0322 oz)</li>\n  <li><strong>Feingehalt:</strong> 999,9 (das bedeutet 999,9 Teile Gold von 1.000)</li>\n  <li><strong>Hersteller:</strong> Münze Österreich AG, Wien</li>\n  <li><strong>Maße:</strong> ca. 15 × 8,7 × 0,5 mm (Kinebar-Ausführung) [BITTE ERGAENZEN: Maße der aktuell gelieferten Ausführung bestätigen]</li>\n  <li><strong>Zustand und Verpackung:</strong> [BITTE ERGAENZEN: Zustand]; Blister (Blisterkarte)</li>\n  <li><strong>Zertifikat:</strong> mit Zertifikat [BITTE ERGAENZEN: Art des Zertifikats laut Hersteller]</li>\n</ul>\n\n<h3>Lieferung</h3>\n<p>[BITTE ERGAENZEN: Versanddienstleister und Versicherung]</p>\n<p>[BITTE ERGAENZEN: Versand- und Rückgaberichtlinie im Shop anlegen]</p>",
+   "productType": "Goldbarren",
+   "tags": [
+    "feingehalt-999-9",
+    "geschenk",
+    "gewicht-0-0322oz",
+    "gewicht-1g",
+    "goldbarren",
+    "hersteller-muenze-oesterreich"
+   ],
+   "seo": {
+    "title": "Goldbarren 1 g Münze Österreich",
+    "description": "Goldbarren mit 1,00 g Feingewicht und Feingehalt 999,9 von der Münze Österreich AG, Wien. Geliefert in Blisterkarte mit Zertifikat."
+   },
+   "media": [],
+   "prices": [
+    {
+     "id": "gid://shopify/ProductVariant/58102501736788",
+     "price": "0.00",
+     "compareAtPrice": null
+    }
+   ]
+  },
+  {
+   "id": "gid://shopify/Product/15939489595732",
+   "title": "Wiener Philharmoniker 1 oz Gold – Münze Österreich",
+   "handle": "wiener-philharmoniker-1-oz-gold-munze-osterreich",
+   "descriptionHtml": "<p>Eine Goldmünze Wiener Philharmoniker mit 31,10 g (1,00 oz) Feingewicht, hergestellt von der Münze Österreich AG, Wien. Der Feingehalt beträgt 999,9, das bedeutet 999,9 Teile Gold von 1.000.</p>\n\n<h3>Details</h3>\n<ul>\n  <li><strong>Feingewicht:</strong> 31,10 g (1,00 oz)</li>\n  <li><strong>Feingehalt:</strong> 999,9</li>\n  <li><strong>Hersteller:</strong> Münze Österreich AG, Wien</li>\n  <li><strong>Maße:</strong> Durchmesser 37,00 mm × Dicke [BITTE ERGAENZEN: Dicke in mm, Angaben bisher nicht übereinstimmend belegt]</li>\n  <li><strong>Zustand und Verpackung:</strong> [BITTE ERGAENZEN: Zustand]; Verpackung: [BITTE ERGAENZEN: Verpackung der Einzelmünze – laut Recherche liefert der Hersteller in Tuben zu 10 Stück]</li>\n  <li><strong>Zertifikat:</strong> [BITTE ERGAENZEN: Zertifikat vorhanden ja/nein und welche Art – in den geprüften Unterlagen kein Zertifikat gefunden]</li>\n</ul>\n\n<h3>Lieferung</h3>\n<p>[BITTE ERGAENZEN: Versanddienstleister und Versicherung]</p>\n<p>[BITTE ERGAENZEN: Lieferzeit]</p>\n<p>[BITTE ERGAENZEN: Versand- und Rückgaberichtlinie im Shop anlegen]</p>",
+   "productType": "Goldmünze",
+   "tags": [
+    "feingehalt-999-9",
+    "gewicht-1-00oz",
+    "gewicht-31-10g",
+    "goldmuenzen",
+    "hersteller-muenze-oesterreich"
+   ],
+   "seo": {
+    "title": "Wiener Philharmoniker 1 oz Gold",
+    "description": "Goldmünze Wiener Philharmoniker mit 31,10 g (1,00 oz) Feingewicht, Feingehalt 999,9, hergestellt von der Münze Österreich AG, Wien."
+   },
+   "media": [],
+   "prices": [
+    {
+     "id": "gid://shopify/ProductVariant/58102501802324",
+     "price": "0.00",
+     "compareAtPrice": null
+    }
+   ]
+  },
+  {
+   "id": "gid://shopify/Product/15939489628500",
+   "title": "Krugerrand 1 oz Gold – South African Mint",
+   "handle": "krugerrand-1-oz-gold-south-african-mint",
+   "descriptionHtml": "<p>Die Goldmünze Krugerrand hat ein Feingewicht von 1 oz (31,10 g). Geprägt wird sie von der South African Mint, Markeninhaberin des Namens „Krugerrand“ ist die Rand Refinery.</p>\n\n<h3>Details</h3>\n<ul>\n  <li><strong>Feingewicht:</strong> 31,10 g (1 oz)</li>\n  <li><strong>Gesamtgewicht:</strong> 33,93 g</li>\n  <li><strong>Feingehalt:</strong> 916,7 (22 Karat), das heißt 916,7 Teile Gold von 1.000</li>\n  <li><strong>Hersteller:</strong> South African Mint (Prägung); Markeninhaberin „Krugerrand“: Rand Refinery</li>\n  <li><strong>Maße:</strong> [BITTE ERGAENZEN: Durchmesser × Dicke in mm]</li>\n  <li><strong>Zustand und Verpackung:</strong> [BITTE ERGAENZEN: Zustand und Verpackung, z. B. Kapsel oder Tube]</li>\n  <li><strong>Zertifikat:</strong> [BITTE ERGAENZEN: Zertifikat vorhanden ja/nein und Art]</li>\n</ul>\n\n<h3>Lieferung</h3>\n<p>[BITTE ERGAENZEN: Versanddienstleister und Versicherung]</p>\n<p>[BITTE ERGAENZEN: Lieferzeit]</p>\n<p>[BITTE ERGAENZEN: Versand- und Rückgaberichtlinie im Shop anlegen]</p>",
+   "productType": "Goldmünze",
+   "tags": [
+    "feingehalt-916-7",
+    "gewicht-1oz",
+    "gewicht-31-10g",
+    "goldmuenzen",
+    "hersteller-south-african-mint"
+   ],
+   "seo": {
+    "title": "Krugerrand 1 oz Gold",
+    "description": "Goldmünze Krugerrand: 1 oz (31,10 g) Feingewicht, Feingehalt 916,7 (22 Karat), Gesamtgewicht 33,93 g, geprägt von der South African Mint."
+   },
+   "media": [],
+   "prices": [
+    {
+     "id": "gid://shopify/ProductVariant/58102501835092",
+     "price": "0.00",
+     "compareAtPrice": null
+    }
+   ]
+  },
+  {
+   "id": "gid://shopify/Product/15939489694036",
+   "title": "Goldbarren 50 x 1 g CombiBar – Valcambi",
+   "handle": "goldbarren-50-x-1-g-combibar-valcambi",
+   "descriptionHtml": "<p>Ein Goldbarren von Valcambi SA mit 50,00 g Feingewicht, aufgeteilt in ein Raster aus 50 Segmenten zu je 1 g. Hergestellt von Valcambi SA in Balerna, Schweiz.</p>\n\n<h3>Details</h3>\n<ul>\n  <li><strong>Feingewicht:</strong> 50,00 g (50 x 1 g) bzw. 1,6075 oz</li>\n  <li><strong>Feingehalt:</strong> 999,9 (das bedeutet 999,9 Teile Gold von 1.000)</li>\n  <li><strong>Hersteller:</strong> Valcambi SA, Balerna, Schweiz</li>\n  <li><strong>Maße:</strong> 74,0 x 52,5 x 0,85 mm (ganze Tafel, Raster aus 10 x 5 Segmenten)</li>\n  <li><strong>Zustand und Verpackung:</strong> Blister; Zustand: [BITTE ERGAENZEN: Zustand]</li>\n  <li><strong>Zertifikat:</strong> Seriennummeriertes Echtheitszertifikat (Assay-Karte)</li>\n</ul>\n\n<h3>Lieferung</h3>\n<p>[BITTE ERGAENZEN: Versanddienstleister und Versicherung]</p>\n<p>Lieferzeit: [BITTE ERGAENZEN: Lieferzeit]</p>\n<p>[BITTE ERGAENZEN: Versand- und Rückgaberichtlinie im Shop anlegen]</p>",
+   "productType": "Goldbarren",
+   "tags": [
+    "feingehalt-999-9",
+    "geschenk",
+    "gewicht-1-6075oz",
+    "gewicht-50g",
+    "goldbarren",
+    "hersteller-valcambi"
+   ],
+   "seo": {
+    "title": "Valcambi CombiBar 50 x 1 g Gold",
+    "description": "Goldbarren Valcambi 50 x 1 g, Feingewicht 50,00 g, Feingehalt 999,9, von Valcambi SA, Schweiz. Mit seriennummeriertem Echtheitszertifikat."
+   },
+   "media": [],
+   "prices": [
+    {
+     "id": "gid://shopify/ProductVariant/58102501900628",
+     "price": "0.00",
+     "compareAtPrice": null
+    }
+   ]
+  },
+  {
+   "id": "gid://shopify/Product/15939489726804",
+   "title": "Goldbarren 10 g – Münze Österreich",
+   "handle": "goldbarren-10-g-munze-osterreich",
+   "descriptionHtml": "<p>Ein Goldbarren mit 10,00 g Feingewicht und einem Feingehalt von 999,9, herausgegeben von der Münze Österreich AG, Wien. Geliefert im versiegelten Blister mit Seriennummer.</p>\n\n<h3>Details</h3>\n<ul>\n  <li><strong>Feingewicht:</strong> 10,00 g</li>\n  <li><strong>Feingehalt:</strong> 999,9 (das bedeutet 999,9 Teile Gold von 1.000)</li>\n  <li><strong>Hersteller:</strong> Münze Österreich AG, Wien (Herausgeber/Marke)</li>\n  <li><strong>Maße:</strong> [BITTE ERGAENZEN: Länge × Breite × Dicke in mm]</li>\n  <li><strong>Zustand und Verpackung:</strong> Versiegelter Blister mit Seriennummer; Zustand: [BITTE ERGAENZEN: Zustand laut Shop]</li>\n  <li><strong>Zertifikat:</strong> [BITTE ERGAENZEN: Art des Zertifikats laut Hersteller]</li>\n</ul>\n\n<h3>Lieferung</h3>\n<p>[BITTE ERGAENZEN: Versanddienstleister, Versicherung und Lieferzeit]</p>\n<p>[BITTE ERGAENZEN: Versand- und Rückgaberichtlinie im Shop anlegen]</p>",
+   "productType": "Goldbarren",
+   "tags": [
+    "feingehalt-999-9",
+    "gewicht-10g",
+    "goldbarren",
+    "hersteller-muenze-oesterreich"
+   ],
+   "seo": {
+    "title": "Goldbarren 10 g Münze Österreich",
+    "description": "Goldbarren mit 10,00 g Feingewicht und Feingehalt 999,9 von der Münze Österreich AG, Wien. Im versiegelten Blister mit Seriennummer."
+   },
+   "media": [],
+   "prices": [
+    {
+     "id": "gid://shopify/ProductVariant/58102501933396",
+     "price": "0.00",
+     "compareAtPrice": null
+    }
+   ]
+  },
+  {
+   "id": "gid://shopify/Product/15939489792340",
+   "title": "Wiener Philharmoniker 1/25 oz Gold in Geschenkverpackung – Münze Österreich",
+   "handle": "wiener-philharmoniker-1-25-oz-gold-in-geschenkverpackung-munze-osterreich",
+   "descriptionHtml": "<p>Die Goldmünze mit 1,24 g (1/25 oz) Feingewicht von der Münze Österreich AG, Wien. Geliefert in der Geschenkverpackung des Herstellers und damit auch als Geschenk geeignet.</p>\n\n<h3>Details</h3>\n<ul>\n  <li><strong>Feingewicht:</strong> 1,24 g (1/25 oz, 0,04 oz)</li>\n  <li><strong>Feingehalt:</strong> 999,9 (das bedeutet 999,9 Teile Gold von 1.000)</li>\n  <li><strong>Hersteller:</strong> Münze Österreich AG, Wien</li>\n  <li><strong>Maße:</strong> Durchmesser 13,00 mm, Dicke [BITTE ERGAENZEN: Dicke in mm]</li>\n  <li><strong>Zustand und Verpackung:</strong> [BITTE ERGAENZEN: Zustand], Geschenkverpackung des Herstellers (Münze Österreich)</li>\n  <li><strong>Zertifikat:</strong> [BITTE ERGAENZEN: Art des Zertifikats laut Hersteller, falls vorhanden]</li>\n</ul>\n\n<h3>Lieferung</h3>\n<p>[BITTE ERGAENZEN: Versanddienstleister und Versicherung]</p>\n<p>[BITTE ERGAENZEN: Lieferzeit]</p>\n<p>[BITTE ERGAENZEN: Versand- und Rückgaberichtlinie im Shop anlegen]</p>",
+   "productType": "Goldmünze",
+   "tags": [
+    "feingehalt-999-9",
+    "geschenk",
+    "gewicht-0-04oz",
+    "gewicht-1-24g",
+    "goldmuenzen",
+    "hersteller-muenze-oesterreich"
+   ],
+   "seo": {
+    "title": "Wiener Philharmoniker 1/25 oz Gold Geschenk",
+    "description": "Goldmünze 1/25 oz, 1,24 g Feingewicht, Feingehalt 999,9, von der Münze Österreich AG, Wien. In Geschenkverpackung des Herstellers."
+   },
+   "media": [],
+   "prices": [
+    {
+     "id": "gid://shopify/ProductVariant/58102501998932",
+     "price": "0.00",
+     "compareAtPrice": null
+    }
+   ]
+  },
+  {
+   "id": "gid://shopify/Product/15939489825108",
+   "title": "Maple Leaf 1 oz Gold – Royal Canadian Mint",
+   "handle": "maple-leaf-1-oz-gold-royal-canadian-mint",
+   "descriptionHtml": "<p>Die Goldmünze Gold Maple Leaf in der Bullion-Ausführung hat 31,10 g (1 oz) Feingewicht und wird von der Royal Canadian Mint, Kanada, hergestellt. Der Feingehalt 999,9 bedeutet 999,9 Teile Gold von 1.000.</p>\n\n<h3>Details</h3>\n<ul>\n  <li><strong>Feingewicht:</strong> 31,10 g (1 oz)</li>\n  <li><strong>Gesamtgewicht:</strong> 31,11 g</li>\n  <li><strong>Feingehalt:</strong> 999,9</li>\n  <li><strong>Hersteller:</strong> Royal Canadian Mint, Kanada</li>\n  <li><strong>Maße:</strong> Durchmesser 30 mm, Dicke [BITTE ERGAENZEN: Dicke in mm]</li>\n  <li><strong>Zustand und Verpackung:</strong> [BITTE ERGAENZEN: Zustand]; Verpackung: Röhre (Tube)</li>\n  <li><strong>Zertifikat:</strong> [BITTE ERGAENZEN: Zertifikat vorhanden ja/nein – für die Bullion-Version nicht belegt]</li>\n</ul>\n\n<h3>Lieferung</h3>\n<p>[BITTE ERGAENZEN: Versanddienstleister und Versicherung]</p>\n<p>[BITTE ERGAENZEN: Lieferzeit]</p>\n<p>[BITTE ERGAENZEN: Versand- und Rückgaberichtlinie im Shop anlegen]</p>",
+   "productType": "Goldmünze",
+   "tags": [
+    "feingehalt-999-9",
+    "gewicht-1oz",
+    "gewicht-31-10g",
+    "goldmuenzen",
+    "hersteller-royal-canadian-mint"
+   ],
+   "seo": {
+    "title": "Maple Leaf 1 oz Gold",
+    "description": "Goldmünze Gold Maple Leaf der Royal Canadian Mint, Kanada: 31,10 g (1 oz) Feingewicht, Feingehalt 999,9, Durchmesser 30 mm, geliefert in der Röhre."
+   },
+   "media": [],
+   "prices": [
+    {
+     "id": "gid://shopify/ProductVariant/58102502031700",
+     "price": "0.00",
+     "compareAtPrice": null
+    }
+   ]
+  },
+  {
+   "id": "gid://shopify/Product/15939489890644",
+   "title": "Wiener Philharmoniker 1/10 oz Gold – Münze Österreich",
+   "handle": "wiener-philharmoniker-1-10-oz-gold-munze-osterreich",
+   "descriptionHtml": "<p>Die Goldmünze Wiener Philharmoniker hat ein Feingewicht von 3,11 g (0,1 oz) und wird von der Münze Österreich AG, Wien, hergestellt. Der Feingehalt 999,9 bedeutet 999,9 Teile Gold von 1.000.</p>\n\n<h3>Details</h3>\n<ul>\n  <li><strong>Feingewicht:</strong> 3,11 g (0,1 oz, 1/10 Feinunze)</li>\n  <li><strong>Feingehalt:</strong> 999,9</li>\n  <li><strong>Hersteller:</strong> Münze Österreich AG, Wien</li>\n  <li><strong>Maße:</strong> Durchmesser 16 mm, Dicke [BITTE ERGAENZEN: Dicke in mm]</li>\n  <li><strong>Zustand und Verpackung:</strong> [BITTE ERGAENZEN: Zustand und Verpackung, z. B. Kapsel oder Etui]</li>\n  <li><strong>Zertifikat:</strong> [BITTE ERGAENZEN: Art des Zertifikats laut Hersteller]</li>\n</ul>\n\n<h3>Lieferung</h3>\n<p>[BITTE ERGAENZEN: Versanddienstleister und Versicherung]</p>\n<p>[BITTE ERGAENZEN: Lieferzeit]</p>\n<p>[BITTE ERGAENZEN: Versand- und Rückgaberichtlinie im Shop anlegen]</p>",
+   "productType": "Goldmünze",
+   "tags": [
+    "feingehalt-999-9",
+    "geschenk",
+    "gewicht-0-1oz",
+    "gewicht-3-11g",
+    "goldmuenzen",
+    "hersteller-muenze-oesterreich"
+   ],
+   "seo": {
+    "title": "Wiener Philharmoniker 1/10 oz Gold",
+    "description": "Goldmünze Wiener Philharmoniker mit 3,11 g (0,1 oz) Feingewicht, Feingehalt 999,9, Durchmesser 16 mm, von der Münze Österreich AG, Wien."
+   },
+   "media": [],
+   "prices": [
+    {
+     "id": "gid://shopify/ProductVariant/58102502097236",
+     "price": "0.00",
+     "compareAtPrice": null
+    }
+   ]
+  },
+  {
+   "id": "gid://shopify/Product/15939489956180",
+   "title": "Goldbarren 1 oz (31,10 g) – Heraeus",
+   "handle": "goldbarren-1-oz-31-10-g-heraeus",
+   "descriptionHtml": "<p>Ein geprägter Goldbarren mit 31,10 g (1 oz) Feingewicht, hergestellt von Heraeus (Heraeus Precious Metals, Hanau). Geliefert in einer Blisterkarte mit Zertifikat.</p>\n\n<h3>Details</h3>\n<ul>\n  <li><strong>Feingewicht:</strong> 31,10 g (1 oz)</li>\n  <li><strong>Feingehalt:</strong> 999,9 (das bedeutet 999,9 Teile Gold von 1.000)</li>\n  <li><strong>Hersteller:</strong> Heraeus (Heraeus Precious Metals, Hanau)</li>\n  <li><strong>Maße:</strong> 40,4 × 23,3 mm, Dicke: [BITTE ERGAENZEN: Dicke in mm]</li>\n  <li><strong>Zustand und Verpackung:</strong> [BITTE ERGAENZEN: Zustand]; geprägter Barren in Blisterkarte (85 × 54 mm laut Heraeus-Flyer)</li>\n  <li><strong>Zertifikat:</strong> Zertifikat auf der Blisterkarte, Barren mit Seriennummer</li>\n</ul>\n\n<h3>Lieferung</h3>\n<p>[BITTE ERGAENZEN: Versanddienstleister und Versicherung]</p>\n<p>[BITTE ERGAENZEN: Lieferzeit]</p>\n<p>[BITTE ERGAENZEN: Versand- und Rückgaberichtlinie im Shop anlegen]</p>",
+   "productType": "Goldbarren",
+   "tags": [
+    "feingehalt-999-9",
+    "gewicht-1oz",
+    "gewicht-31-10g",
+    "goldbarren",
+    "hersteller-heraeus"
+   ],
+   "seo": {
+    "title": "Goldbarren 1 oz Heraeus",
+    "description": "Geprägter Goldbarren von Heraeus mit 31,10 g (1 oz) Feingewicht, Feingehalt 999,9. Im Blister mit Zertifikat und Seriennummer."
+   },
+   "media": [],
+   "prices": [
+    {
+     "id": "gid://shopify/ProductVariant/58102502130004",
+     "price": "0.00",
+     "compareAtPrice": null
+    }
+   ]
+  },
+  {
+   "id": "gid://shopify/Product/15939490021716",
+   "title": "Goldbarren 1 g auf Geschenkkarte – Valcambi",
+   "handle": "goldbarren-1-g-auf-geschenkkarte-valcambi",
+   "descriptionHtml": "<p>Ein Goldbarren mit 1 g Feingewicht, hergestellt von Valcambi SA, Schweiz. Geliefert auf einer Geschenkkarte im Plastikblister und damit als Geschenk geeignet.</p>\n\n<h3>Details</h3>\n<ul>\n  <li><strong>Feingewicht:</strong> 1,00 g</li>\n  <li><strong>Feingehalt:</strong> 999,9 (das Zertifikat nennt 99,99 %). Feingehalt 999,9 bedeutet 999,9 Teile Gold von 1.000.</li>\n  <li><strong>Hersteller:</strong> Valcambi SA, Schweiz</li>\n  <li><strong>Maße:</strong> Karte bzw. Blister 83 × 61 × 5 mm; Barren: [BITTE ERGAENZEN: Maße des Barrens in mm]</li>\n  <li><strong>Zustand und Verpackung:</strong> Geschenkkarte im Plastikblister; Anlass/Aufschrift: [BITTE ERGAENZEN: Anlass/Aufschrift der Geschenkkarte]; Zustand: [BITTE ERGAENZEN: Zustand]</li>\n  <li><strong>Zertifikat:</strong> Echtheitszertifikat auf der Rückseite der Karte; Seriennummer: [BITTE ERGAENZEN: Seriennummer vorhanden ja/nein]</li>\n</ul>\n\n<h3>Lieferung</h3>\n<p>[BITTE ERGAENZEN: Versanddienstleister und Versicherung]</p>\n<p>[BITTE ERGAENZEN: Lieferzeit]</p>\n<p>[BITTE ERGAENZEN: Versand- und Rückgaberichtlinie im Shop anlegen]</p>",
+   "productType": "Goldbarren",
+   "tags": [
+    "feingehalt-999-9",
+    "geschenk",
+    "gewicht-1g",
+    "goldbarren",
+    "hersteller-valcambi"
+   ],
+   "seo": {
+    "title": "Goldbarren 1 g Geschenkkarte Valcambi",
+    "description": "Goldbarren 1 g, Feingehalt 999,9, von Valcambi SA, Schweiz. Geliefert auf einer Geschenkkarte im Plastikblister mit Echtheitszertifikat auf der Rückseite."
+   },
+   "media": [],
+   "prices": [
+    {
+     "id": "gid://shopify/ProductVariant/58102502195540",
+     "price": "0.00",
+     "compareAtPrice": null
+    }
+   ]
+  },
+  {
+   "id": "gid://shopify/Product/15939490054484",
+   "title": "Krugerrand 1/10 oz Gold – South African Mint",
+   "handle": "krugerrand-1-10-oz-gold-south-african-mint",
+   "descriptionHtml": "<p>Der Krugerrand 1/10 oz ist eine Goldmünze der South African Mint. Sie enthält 3,11 g (0,1 oz) Feingold bei einem Gesamtgewicht von 3,393 g.</p>\n\n<h3>Details</h3>\n<ul>\n  <li><strong>Feingewicht:</strong> 3,11 g (0,1 oz)</li>\n  <li><strong>Gesamtgewicht:</strong> 3,393 g</li>\n  <li><strong>Feingehalt:</strong> 916,7/1000 (22 Karat, Rest Kupfer). Ein Feingehalt von 916,7 bedeutet 916,7 Teile Gold von 1.000.</li>\n  <li><strong>Hersteller:</strong> South African Mint</li>\n  <li><strong>Maße:</strong> [BITTE ERGAENZEN: Durchmesser × Dicke in mm]</li>\n  <li><strong>Zustand und Verpackung:</strong> [BITTE ERGAENZEN: Zustand und Verpackung, z. B. Kapsel]</li>\n  <li><strong>Zertifikat:</strong> [BITTE ERGAENZEN: Zertifikat vorhanden ja/nein und Art]</li>\n</ul>\n\n<h3>Lieferung</h3>\n<p>[BITTE ERGAENZEN: Versanddienstleister und Versicherung]</p>\n<p>[BITTE ERGAENZEN: Lieferzeit]</p>\n<p>[BITTE ERGAENZEN: Versand- und Rückgaberichtlinie im Shop anlegen]</p>",
+   "productType": "Goldmünze",
+   "tags": [
+    "feingehalt-916-7",
+    "gewicht-0-1oz",
+    "gewicht-3-11g",
+    "goldmuenzen",
+    "hersteller-south-african-mint"
+   ],
+   "seo": {
+    "title": "Krugerrand 1/10 oz Gold",
+    "description": "Krugerrand 1/10 oz Goldmünze der South African Mint. Feingewicht 3,11 g (0,1 oz), Feingehalt 916,7/1000 (22 Karat)."
+   },
+   "media": [],
+   "prices": [
+    {
+     "id": "gid://shopify/ProductVariant/58102502228308",
+     "price": "0.00",
+     "compareAtPrice": null
+    }
+   ]
+  },
+  {
+   "id": "gid://shopify/Product/15939490120020",
+   "title": "Känguru 1 oz Gold – The Perth Mint",
+   "handle": "kanguru-1-oz-gold-the-perth-mint",
+   "descriptionHtml": "<p>Diese Goldmünze hat ein Feingewicht von 31,10 g (1 oz) und stammt von The Perth Mint in Perth, Westaustralien. Der Feingehalt 999,9 bedeutet 999,9 Teile Gold von 1.000.</p>\n\n<h3>Details</h3>\n<ul>\n  <li><strong>Feingewicht:</strong> 31,10 g (1 oz)</li>\n  <li><strong>Feingehalt:</strong> 999,9</li>\n  <li><strong>Hersteller:</strong> The Perth Mint (Perth, Westaustralien), Münzzeichen „P“</li>\n  <li><strong>Maße:</strong> Durchmesser max. 32,60 mm; Dicke max. 2,95 mm</li>\n  <li><strong>Zustand und Verpackung:</strong> Münzkapsel (Schutzkapsel); Zustand: [BITTE ERGAENZEN: Zustand]</li>\n  <li><strong>Zertifikat:</strong> [BITTE ERGAENZEN: Zertifikat – ein Echtheitszertifikat ist für die Anlagemünze nicht belegt]</li>\n</ul>\n\n<h3>Lieferung</h3>\n<p>[BITTE ERGAENZEN: Versanddienstleister, Versicherung und Lieferzeit]</p>\n<p>[BITTE ERGAENZEN: Versand- und Rückgaberichtlinie im Shop anlegen]</p>",
+   "productType": "Goldmünze",
+   "tags": [
+    "feingehalt-999-9",
+    "gewicht-1oz",
+    "gewicht-31-10g",
+    "goldmuenzen",
+    "hersteller-the-perth-mint"
+   ],
+   "seo": {
+    "title": "Känguru 1 oz Gold Perth Mint",
+    "description": "Goldmünze mit 31,10 g (1 oz) Feingewicht, Feingehalt 999,9, von The Perth Mint. Geliefert in einer Münzkapsel."
+   },
+   "media": [],
+   "prices": [
+    {
+     "id": "gid://shopify/ProductVariant/58102502293844",
+     "price": "0.00",
+     "compareAtPrice": null
+    }
+   ]
+  }
+ ],
+ "collections": [],
+ "pages": []
+}
