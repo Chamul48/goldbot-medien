@@ -1,5 +1,10 @@
 # Journal – tägliche Verbesserung (neueste oben)
 
+## 2026-11-19 (Kurzlauf)
+- Kurs 3.349,90 € (−8,2 % seit 07.11., der 3. Tag mit deutlichem Rückgang). Philharmoniker 1 oz 3.400–3.440 €.
+- Fiverr-Profilbild: **weiter die Testvorschau** (12. Tag). Shop unverändert (15 Tage). Nichts geändert.
+- **Nächstes Mal:** Profilbild prüfen.
+
 ## 2026-11-18
 - Kurs −2,8 % auf 3.404,10 € (−6,7 % seit 07.11.). Philharmoniker 1 oz 3.455–3.496 €.
 - Fiverr-Profilbild: **weiter die Testvorschau** (11. Tag). Shop unverändert (14 Tage). Nichts geändert.
