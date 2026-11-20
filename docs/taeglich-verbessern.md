@@ -51,6 +51,8 @@ Der Inhaber ist kein Programmierer: alles für ihn auf Deutsch, Ergebnis zuerst,
      pro aurum, Degussa, Gold & Co.) und Vergleichswerte von gold.de. Erst Produktseiten per WebSearch finden, dann am PC
      mit `seite_lesen.py` lesen. Gleiches Produkt sicherstellen (Gewicht, Hersteller, Jahrgang).
    - Tabelle: Produkt | Händler | Preis € | Aufgeld % (= Preis / (Feingewicht in oz × Kurs) − 1) | Quelle | Abgerufen.
+   - Bei starker Kursbewegung (> 2 % zum Vortag) hinken Händler hinterher → Empfehlung dann zwischen günstigstem
+     Online-Händler und philoro ansetzen, nicht „Kurs + Aufschlag“.
    - **Empfehlung als Spanne** (z. B. „zwischen günstigstem und mittlerem Händler“) mit kurzer Begründung –
      als Vorschlag für den Inhaber. **Nicht** in den Shop schreiben.
    - Vergleich zum Vortag (letzte `preise-*.md`): Kurs- und Aufgeld-Änderung in einem Satz.

@@ -1,5 +1,13 @@
 # Journal – tägliche Verbesserung (neueste oben)
 
+## 2026-11-20
+- Kurs −4,2 % auf 3.210,10 € (−12 % seit 07.11.). Die Händler hinken hinterher: günstigster online +2,2 %, philoro
+  +4,5 %, philoro-Rückkauf sogar über dem Kurs.
+- **Gelernt:** Bei starken Kursbewegungen (> 2 % am Tag) die Empfehlung an den Händlerpreisen ausrichten (zwischen
+  günstigstem Online-Händler und philoro), nicht am Kurs + Aufschlag. In der Checkliste ergänzt.
+- Fiverr-Profilbild: **weiter die Testvorschau** (13. Tag). Shop unverändert (16 Tage). Nichts geändert.
+- **Nächstes Mal:** Profilbild prüfen.
+
 ## 2026-11-19 (Kurzlauf)
 - Kurs 3.349,90 € (−8,2 % seit 07.11., der 3. Tag mit deutlichem Rückgang). Philharmoniker 1 oz 3.400–3.440 €.
 - Fiverr-Profilbild: **weiter die Testvorschau** (12. Tag). Shop unverändert (15 Tage). Nichts geändert.
