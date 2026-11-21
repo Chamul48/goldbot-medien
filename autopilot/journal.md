@@ -1,5 +1,11 @@
 # Journal – tägliche Verbesserung (neueste oben)
 
+## 2026-11-21 (Kurzlauf, Samstag)
+- Kurs 3.213,10 €. Die Händler-Aufschläge sind weiter erhöht (online +2,5 %, philoro +4,6 %) → Empfehlung nach der
+  Händlerregel: 3.295–3.330 €.
+- Fiverr-Profilbild: **weiter die Testvorschau** (14. Tag). Shop unverändert (17 Tage). Nichts geändert.
+- **Nächstes Mal:** Profilbild prüfen. Beobachten, ob die Aufschläge wieder auf ~1 % fallen.
+
 ## 2026-11-20
 - Kurs −4,2 % auf 3.210,10 € (−12 % seit 07.11.). Die Händler hinken hinterher: günstigster online +2,2 %, philoro
   +4,5 %, philoro-Rückkauf sogar über dem Kurs.
