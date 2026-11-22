@@ -1,5 +1,15 @@
 # Journal – tägliche Verbesserung (neueste oben)
 
+## 2026-11-22 (Kurzlauf, Sonntag)
+- „Nächstes Mal“ von gestern erledigt:
+  - Fiverr-Profilbild geprüft: **weiter die Testvorschau** (15. Tag).
+  - Händler-Aufschläge: weiter erhöht (+2,5 % / +4,6 %).
+- Kurs 3.213,10 € (Wochenende, unverändert). Empfehlung bleibt bei 3.295–3.330 €.
+- Neu bemerkt: Das günstigste gold.de-Angebot hat ca. 14 Tage Lieferzeit. Schnelle Lieferung ist also ein Argument für
+  einen Preis am oberen Rand.
+- Shop unverändert (18 Tage, Preise 0 €, Testdaten noch aktiv). Nichts geändert.
+- **Nächstes Mal (Montag):** Kurs bewegt sich wieder → voller Vergleich inkl. Barren und kleiner Münzen. Profilbild prüfen.
+
 ## 2026-11-21 (Kurzlauf, Samstag)
 - Kurs 3.213,10 €. Die Händler-Aufschläge sind weiter erhöht (online +2,5 %, philoro +4,6 %) → Empfehlung nach der
   Händlerregel: 3.295–3.330 €.
