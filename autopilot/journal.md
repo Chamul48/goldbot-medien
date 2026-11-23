@@ -1,5 +1,21 @@
 # Journal – tägliche Verbesserung (neueste oben)
 
+## 2026-11-23 (voller Vergleich, Montag)
+- **„Nächstes Mal“ von gestern erledigt:**
+  - Voller Vergleich über 9 gold.de-Produktseiten, philoro und die Kursseite → `autopilot/preise-2026-11-23.md`.
+    Das ist der erste volle Live-Vergleich seit dem 08.11.; alle Produkte haben jetzt aktuelle Spannen.
+  - Fiverr-Profilbild: weiter die Testvorschau (16. Tag).
+- Kurs +4,5 % auf 3.358,85 €. Philoro hinkt jetzt nach oben hinterher (+2,05 %, also günstiger als die meisten
+  Online-Händler). **Gelernt:** Die Händlerregel gilt in beide Richtungen.
+- **Fehler und Lehre:** In einer cmd-Zeile `set G=… && (… %G% …)` wird `%G%` schon vor dem `set` eingesetzt. Die
+  gold.de-URLs waren dadurch leer, das Skript meldete trotzdem „3 Seiten gelesen“. Ich habe den Abruf mit
+  ausgeschriebenen URLs wiederholt und die Regel in `docs/taeglich-verbessern.md` ergänzt.
+- Fiverr-Wettbewerb (WebSearch): Ein Shorts-Gig zeigt Basic 25 $ / Standard 75 $. Unsere Preise (25/60/150) passen
+  weiter. Kein neuer Vorschlag.
+- Shop unverändert (19 Tage). Nichts geändert.
+- **Nächstes Mal:** Profilbild prüfen. Kleine Stückelungen (1/10 oz) einmal live auf gold.de lesen, bisher sind sie
+  nur hochgerechnet.
+
 ## 2026-11-22 (Kurzlauf, Sonntag)
 - „Nächstes Mal“ von gestern erledigt:
   - Fiverr-Profilbild geprüft: **weiter die Testvorschau** (15. Tag).

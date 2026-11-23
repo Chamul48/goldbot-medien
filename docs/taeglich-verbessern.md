@@ -27,6 +27,10 @@ Der Inhaber ist kein Programmierer: alles für ihn auf Deutsch, Ergebnis zuerst,
   Fernaufrufen **höchstens 3 s**; danach läuft der Prozess im Hintergrund weiter. Also starten, kurz anderes tun
   und dann die Datei mit `read_file` lesen. Fehlt sie noch, später erneut versuchen. Den Prozess nicht neu starten,
   sonst ist die Datei gesperrt. Vorher mit `list_devices` prüfen, ob der PC online ist.
+  **URLs immer ausschreiben.** Keine cmd-Variablen wie `set G=… && (… %G% …)` in derselben Zeile verwenden, denn cmd
+  setzt `%G%` beim Einlesen der Zeile ein, also bevor `set` gelaufen ist. Die URL ist dann leer, und das Skript
+  meldet trotzdem „3 Seiten gelesen“ (Fehler 23.11.). Mehrere Aufrufe nacheinander: `(aufruf1 & aufruf2) > log 2>&1`.
+  Den Fortschritt mit `type log` prüfen.
 - **Aufgestaute Läufe** (Sitzung war inaktiv): nur einen Lauf für heute machen und die verpassten Tage im Journal
   nennen.
   Für Auswertungen die JSON-Datei mit einem kurzen `python -c` filtern: Händlerangebote = Einträge mit `'Lieferzeit' in b`
