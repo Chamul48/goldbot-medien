@@ -39,7 +39,8 @@ Der Inhaber ist kein Programmierer: alles für ihn auf Deutsch, Ergebnis zuerst,
   `gold.de/kaufen/goldmuenzen/wiener-philharmoniker/`, `…/kruegerrand/`, `…/maple-leaf/`, `…/kaenguru/`,
   `gold.de/kaufen/goldbarren/1-gramm/`, `…/10-gramm/`, `…/50-gramm/`, `…/1-oz/`, `…/tafeln-kombi-barren/`,
   `…/muenze-oesterreich/`; kleine Stückelungen: Tabelle „Stückelungen“ auf `…/wiener-philharmoniker/kurs/` bzw.
-  `…/kruegerrand/kurs/` (Datenstand prüfen: Ankauf > Verkauf = veraltet); Österreich: `philoro.at` (Startseite zeigt Kauf/Verkauf Philharmoniker); Kurs:
+  `…/kruegerrand/kurs/` (Datenstand prüfen: Ankauf > Verkauf = veraltet); Österreich: **`philoro.at/en/pricelist/all`**. Die Preisliste zeigt alle Produkte mit Ankauf und Verkauf; Reihenfolge
+  im Text: Ankauf, dann Verkauf. Die Startseite zeigt seit 24.11. nur noch Silber, deshalb nicht mehr verwenden; Kurs:
   `goldpreis.de`. Diese Seiten zeigen die 1-oz-Größe – für Bruchstücke (1/10, 1/25 oz) eigene Seiten suchen.
 - **Repo**: Branch `claude/peaceful-rubin-0bk72i`. Zu Beginn `git fetch origin main && git merge --no-edit origin/main`.
 

@@ -1,5 +1,17 @@
 # Journal – tägliche Verbesserung (neueste oben)
 
+## 2026-11-24
+- **„Nächstes Mal“ von gestern erledigt:**
+  - Kleine Stückelungen jetzt **live** über die gold.de-Kursseiten und die philoro-Produktseite:
+    Philharmoniker 1/10 oz ab 353,50 € (+8,8 %), Krügerrand 1/10 oz ab 350,50 € (+7,9 %), 1/25 oz ab 161,92 € (+24,6 %).
+    Die Hochrechnungen vom 07.11. lagen nahe dran.
+  - Fiverr-Profilbild: weiter die Testvorschau (17. Tag).
+- Kurs −3,3 % auf 3.247,95 €. Empfehlung Philharmoniker 1 oz: 3.315–3.350 €.
+- **Gelernt:** Die philoro-Startseite zeigt seit heute nur Silber, der Jahrgang 2026 ist ausverkauft. Neue feste Quelle
+  ist `philoro.at/en/pricelist/all` (alle Produkte, Ankauf/Verkauf). Das steht jetzt in `docs/taeglich-verbessern.md`.
+- Shop unverändert (20 Tage). Nichts geändert.
+- **Nächstes Mal:** Philoro über die Preisliste lesen. Profilbild prüfen.
+
 ## 2026-11-23 (voller Vergleich, Montag)
 - **„Nächstes Mal“ von gestern erledigt:**
   - Voller Vergleich über 9 gold.de-Produktseiten, philoro und die Kursseite → `autopilot/preise-2026-11-23.md`.
