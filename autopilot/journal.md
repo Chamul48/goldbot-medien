@@ -1,5 +1,14 @@
 # Journal – tägliche Verbesserung (neueste oben)
 
+## 2026-11-25 (Kurzlauf)
+- „Nächstes Mal“ von gestern erledigt:
+  - philoro über die Preisliste gelesen. Das klappt: 1 oz 3.341,32 €, Jahrgang 2027 3.365,83 €.
+  - Fiverr-Profilbild: weiter die Testvorschau (18. Tag).
+- Kurs −1,1 % auf 3.212,30 €. Händler-Aufschläge bei +2,3 % bis +3,0 % (über den üblichen +1,5 %). Empfehlung
+  3.295–3.320 €.
+- Shop unverändert (21 Tage). Nichts geändert.
+- **Nächstes Mal:** Profilbild prüfen. Beobachten, ob die Aufschläge wieder unter +2 % fallen.
+
 ## 2026-11-24
 - **„Nächstes Mal“ von gestern erledigt:**
   - Kleine Stückelungen jetzt **live** über die gold.de-Kursseiten und die philoro-Produktseite:
