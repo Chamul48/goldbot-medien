@@ -1,5 +1,17 @@
 # Journal – tägliche Verbesserung (neueste oben)
 
+## 2026-11-26 (Kurzlauf)
+- „Nächstes Mal“ von gestern erledigt:
+  - Fiverr-Profilbild: weiter die Testvorschau (19. Tag).
+  - Aufschläge: Das günstigste Angebot liegt wieder bei +1,7 % (auf Lager), die Spanne ist damit normaler.
+- Kurs +1,2 % auf 3.251,05 €. Empfehlung 3.310–3.340 €.
+- **Auffällig:** Die philoro-Preisliste zeigt auf den Cent dieselben Werte wie gestern, obwohl sich der Kurs bewegt hat.
+  Die Seite liefert die Preise vermutlich zwischengespeichert aus, die aktuellen lädt wohl erst der Browser nach. Heute nicht
+  gewertet.
+- Shop unverändert (22 Tage). Nichts geändert.
+- **Nächstes Mal:** Ist philoro wieder gleich, die Preisliste als unzuverlässig markieren. Dann die philoro-Produktseite
+  (JSON-LD `price`) testen, sie hatte am 24.11. einen eigenen Preis. Profilbild prüfen.
+
 ## 2026-11-25 (Kurzlauf)
 - „Nächstes Mal“ von gestern erledigt:
   - philoro über die Preisliste gelesen. Das klappt: 1 oz 3.341,32 €, Jahrgang 2027 3.365,83 €.
