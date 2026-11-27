@@ -17,13 +17,19 @@ root.withdraw()
 try:
     wert = root.clipboard_get().strip()
 except tkinter.TclError:
+    root.destroy()
     sys.exit("Zwischenablage ist leer.")
+root.update()
 root.destroy()
 
 if not wert or "\n" in wert or " " in wert:
     sys.exit("In der Zwischenablage steht kein einzelner Wert (leer oder mehrere Woerter).")
-if key == "ANTHROPIC_API_KEY" and not wert.startswith("sk-ant-"):
-    sys.exit("Das sieht nicht nach einem Claude-API-Schluessel aus (beginnt nicht mit sk-ant-). Nichts gespeichert.")
+if key == "ANTHROPIC_API_KEY":
+    if not wert.startswith("sk-ant-"):
+        sys.exit("Das sieht nicht nach einem Claude-API-Schluessel aus (beginnt nicht mit sk-ant-). Nichts gespeichert.")
+    if len(wert) < 60 or re.search(r"[.*\u2026]", wert):
+        sys.exit("Das ist nur die gekuerzte Anzeige des Schluessels (zu kurz bzw. mit ... oder *). "
+                 "Den vollen Schluessel sieht man nur beim Anlegen: in der Console 'Create Key' und dort kopieren. Nichts gespeichert.")
 if key == "SHOPIFY_STORE":
     m = re.search(r"([a-z0-9][a-z0-9-]*)\.myshopify\.com", wert.lower())
     # admin.shopify.com/store/<name>/... is what the browser shows in the admin
