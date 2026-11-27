@@ -1,5 +1,15 @@
 # Journal – tägliche Verbesserung (neueste oben)
 
+## 2026-11-27 (Kurzlauf)
+- „Nächstes Mal“ von gestern erledigt:
+  - philoro-Preisliste hat heute neue Werte (3.448,22 €). Die Produktseite `…/gold-philharmonic-1-oz-1506v` nennt
+    per JSON-LD 3.449,36 €, also passen beide zusammen. Die gleichen Werte am 25./26. waren wohl ein echter
+    Preisstillstand bei philoro und kein Lesefehler. Die Preisliste bleibt die Quelle, die Produktseite dient zur Kontrolle.
+  - Fiverr-Profilbild: weiter die Testvorschau (20. Tag).
+- Kurs +2,7 % auf 3.337,35 €. Nach der Händlerregel: Empfehlung 3.400–3.435 €.
+- Shop unverändert (23 Tage). Nichts geändert.
+- **Nächstes Mal:** Profilbild prüfen. Am Wochenende nur einen Kurzlauf.
+
 ## 2026-11-26 (Kurzlauf)
 - „Nächstes Mal“ von gestern erledigt:
   - Fiverr-Profilbild: weiter die Testvorschau (19. Tag).
